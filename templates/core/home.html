@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="{{ current_language }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ labels.page_title }}</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <main class="card">
+    <h1>{{ labels.page_title }}</h1>
+
+    <form action="{% url 'set_language' %}" method="post" class="row compact">
+      {% csrf_token %}
+      <input name="next" type="hidden" value="{{ request.path }}">
+      <label for="language">{{ labels.language }}</label>
+      <select id="language" name="language">
+        {% for lang in language_options %}
+          <option value="{{ lang.code }}" {% if lang.code == current_language %}selected{% endif %}>{{ lang.name }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">{{ labels.change_language }}</button>
+    </form>
+
+    {% if chart %}
+      <section class="chart-box">
+        <h2>{{ labels.chart_title }}</h2>
+        <svg
+          viewBox="0 0 {{ chart.width }} {{ chart.height }}"
+          width="100%"
+          height="auto"
+          role="img"
+          aria-label="{{ labels.chart_title }}"
+        >
+          <line x1="{{ chart.left }}" y1="{{ chart.top }}" x2="{{ chart.left }}" y2="{{ chart.bottom_y }}" class="axis"/>
+          <line x1="{{ chart.left }}" y1="{{ chart.bottom_y }}" x2="{{ chart.right_x }}" y2="{{ chart.bottom_y }}" class="axis"/>
+          <line x1="{{ chart.left }}" y1="{{ chart.x_axis_y }}" x2="{{ chart.right_x }}" y2="{{ chart.x_axis_y }}" class="grid"/>
+          <line x1="{{ chart.y_axis_x }}" y1="{{ chart.top }}" x2="{{ chart.y_axis_x }}" y2="{{ chart.bottom_y }}" class="grid"/>
+          <path d="{{ chart.path }}" class="curve"/>
+
+          <circle cx="{{ chart.p1x }}" cy="{{ chart.p1y }}" r="5" class="point"/>
+          <circle cx="{{ chart.p2x }}" cy="{{ chart.p2y }}" r="5" class="point"/>
+          <circle cx="{{ chart.opx }}" cy="{{ chart.opy }}" r="6" class="optimal"/>
+
+          <text x="{{ chart.left }}" y="{{ chart.height|add:'-8' }}" class="tick">{{ labels.chart_x }} ({{ chart.x_min }} - {{ chart.x_max }})</text>
+          <text x="8" y="14" class="tick">{{ labels.chart_y }} ({{ chart.y_min }} - {{ chart.y_max }})</text>
+        </svg>
+        <div class="legend">
+          <span><i class="legend-curve"></i>{{ labels.legend_curve }}</span>
+          <span><i class="legend-point"></i>{{ labels.legend_data_points }}</span>
+          <span><i class="legend-optimal"></i>{{ labels.legend_optimal }}</span>
+        </div>
+      </section>
+    {% endif %}
+
+    <form method="post" class="form-grid">
+      {% csrf_token %}
+      <h2>{{ labels.point_1 }}</h2>
+      <div class="row">
+        <label for="price_1">{{ labels.price_1 }}</label>
+        <input id="price_1" name="price_1" value="{{ inputs.price_1|default:'' }}" required>
+      </div>
+      <div class="row">
+        <label for="demand_1">{{ labels.demand_1 }}</label>
+        <input id="demand_1" name="demand_1" value="{{ inputs.demand_1|default:'' }}" required>
+      </div>
+
+      <h2>{{ labels.point_2 }}</h2>
+      <div class="row">
+        <label for="price_2">{{ labels.price_2 }}</label>
+        <input id="price_2" name="price_2" value="{{ inputs.price_2|default:'' }}" required>
+      </div>
+      <div class="row">
+        <label for="demand_2">{{ labels.demand_2 }}</label>
+        <input id="demand_2" name="demand_2" value="{{ inputs.demand_2|default:'' }}" required>
+      </div>
+
+      <div class="row">
+        <label for="currency">{{ labels.currency }}</label>
+        <select id="currency" name="currency">
+          {% for code, symbol in currencies.items %}
+            <option value="{{ code }}" {% if selected_currency == code %}selected{% endif %}>{{ code }} ({{ symbol }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <button type="submit" class="wide">{{ labels.calculate }}</button>
+    </form>
+
+    {% if error %}
+      <p class="error">{{ error }}</p>
+    {% endif %}
+
+    {% if result %}
+      <section class="result">
+        <h2>{{ labels.results }}</h2>
+        <p>{{ labels.demand_formula }}: talep = {{ result.a }} + ({{ result.b }}) * fiyat</p>
+        <p>{{ labels.profit_formula }}: kazanc = fiyat * talep</p>
+        <p>{{ labels.best_price }}: {{ selected_symbol }}{{ result.optimal_price }}</p>
+        <p>{{ labels.expected_demand }}: {{ result.expected_demand }}</p>
+        <p>{{ labels.max_profit }}: {{ selected_symbol }}{{ result.max_profit }}</p>
+      </section>
+    {% endif %}
+  </main>
+</body>
+</html>

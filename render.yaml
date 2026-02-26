@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: priceoptimize-web
+    env: python
+    plan: starter
+    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate"
+    startCommand: "gunicorn config.wsgi:application --log-file -"
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: false
+      - key: DJANGO_ALLOWED_HOSTS
+        value: priceoptimize-web.onrender.com,www.priceoptimize.ai,priceoptimize.ai
+      - key: DJANGO_CSRF_TRUSTED_ORIGINS
+        value: https://www.priceoptimize.ai,https://priceoptimize.ai
+      - key: DJANGO_SUPERUSER_USERNAME
+        value: admin
+      - key: DJANGO_SUPERUSER_EMAIL
+        value: admin@priceoptimize.ai
+      - key: DJANGO_SUPERUSER_PASSWORD
+        sync: false
+
+disks:
+  - name: priceoptimize-data
+    mountPath: /var/data
+    sizeGB: 1
