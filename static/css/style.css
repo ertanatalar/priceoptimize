@@ -30,10 +30,13 @@ body {
 .page {
   width: 100%;
   max-width: 920px;
+  display: flex;
+  justify-content: center;
 }
 
 .card {
   width: 100%;
+  max-width: 860px;
   padding: 1.5rem;
   background: var(--card);
   border: 1px solid var(--line);
