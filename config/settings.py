@@ -101,7 +101,12 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 if importlib.util.find_spec("whitenoise"):
-    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    # Safer default for first deployments; manifest mode can 500 if collectstatic
+    # was skipped on the platform.
+    STATICFILES_STORAGE = os.getenv(
+        "DJANGO_STATICFILES_STORAGE",
+        "whitenoise.storage.CompressedStaticFilesStorage",
+    )
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
