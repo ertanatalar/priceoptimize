@@ -356,3 +356,7 @@ def home(request):
     }
     context["chart"] = _build_chart_data(a, b, p1, q1, p2, q2, optimal_price)
     return render(request, "core/home.html", context)
+
+
+def portal(request):
+    return render(request, "core/portal.html")
