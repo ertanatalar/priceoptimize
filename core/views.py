@@ -33,17 +33,18 @@ TEXTS = {
         "price_2": "Fiyat 2",
         "demand_2": "Talep 2",
         "currency": "Para Birimi",
+        "unit_cost": "Birim Maliyet",
         "calculate": "Hesapla",
         "results": "Sonuçlar",
         "demand_formula": "Talep denklemi",
-        "profit_formula": "Kazanç denklemi",
+        "profit_formula": "Kar denklemi",
         "best_price": "En iyi fiyat",
         "expected_demand": "Beklenen talep",
-        "max_profit": "Maksimum kazanç",
-        "chart_title": "Kazanç Grafiği (fiyata göre)",
+        "max_profit": "Maksimum kar",
+        "chart_title": "Kar Grafigi (fiyata gore)",
         "chart_x": "Fiyat",
-        "chart_y": "Kazanç",
-        "legend_curve": "Kazanç eğrisi",
+        "chart_y": "Kar",
+        "legend_curve": "Kar egrisi",
         "legend_data_points": "Veri noktaları",
         "legend_optimal": "Optimal fiyat",
         "error_numbers": "Lütfen tüm alanlara sayı giriniz.",
@@ -61,6 +62,7 @@ TEXTS = {
         "price_2": "Price 2",
         "demand_2": "Demand 2",
         "currency": "Currency",
+        "unit_cost": "Unit Cost",
         "calculate": "Calculate",
         "results": "Results",
         "demand_formula": "Demand formula",
@@ -89,6 +91,7 @@ TEXTS = {
         "price_2": "Preis 2",
         "demand_2": "Nachfrage 2",
         "currency": "Währung",
+        "unit_cost": "Stückkosten",
         "calculate": "Berechnen",
         "results": "Ergebnisse",
         "demand_formula": "Nachfragegleichung",
@@ -117,6 +120,7 @@ TEXTS = {
         "price_2": "Precio 2",
         "demand_2": "Demanda 2",
         "currency": "Moneda",
+        "unit_cost": "Costo Unitario",
         "calculate": "Calcular",
         "results": "Resultados",
         "demand_formula": "Ecuación de demanda",
@@ -145,6 +149,7 @@ TEXTS = {
         "price_2": "Prezzo 2",
         "demand_2": "Domanda 2",
         "currency": "Valuta",
+        "unit_cost": "Costo Unitario",
         "calculate": "Calcola",
         "results": "Risultati",
         "demand_formula": "Equazione della domanda",
@@ -173,6 +178,7 @@ TEXTS = {
         "price_2": "Цена 2",
         "demand_2": "Спрос 2",
         "currency": "Валюта",
+        "unit_cost": "Себестоимость за единицу",
         "calculate": "Рассчитать",
         "results": "Результаты",
         "demand_formula": "Формула спроса",
@@ -201,6 +207,7 @@ TEXTS = {
         "price_2": "Prix 2",
         "demand_2": "Demande 2",
         "currency": "Devise",
+        "unit_cost": "Cout Unitaire",
         "calculate": "Calculer",
         "results": "Résultats",
         "demand_formula": "Équation de la demande",
@@ -225,7 +232,16 @@ def _to_decimal(value: str) -> Decimal:
     return Decimal(str(value).replace(",", ".").strip())
 
 
-def _build_chart_data(a: Decimal, b: Decimal, p1: Decimal, q1: Decimal, p2: Decimal, q2: Decimal, p_opt: Decimal):
+def _build_chart_data(
+    a: Decimal,
+    b: Decimal,
+    unit_cost: Decimal,
+    p1: Decimal,
+    q1: Decimal,
+    p2: Decimal,
+    q2: Decimal,
+    p_opt: Decimal,
+):
     width, height = 700, 280
     left, right, top, bottom = 56, 20, 20, 42
     chart_width = width - left - right
@@ -238,14 +254,14 @@ def _build_chart_data(a: Decimal, b: Decimal, p1: Decimal, q1: Decimal, p2: Deci
     if x_max <= x_min:
         x_max = x_min + 10.0
 
-    def revenue(price: float) -> float:
+    def profit(price: float) -> float:
         demand = float(a) + float(b) * price
-        return price * demand
+        return (price - float(unit_cost)) * demand
 
     raw_points = []
     for i in range(60):
         x = x_min + ((x_max - x_min) * i / 59)
-        y = revenue(x)
+        y = profit(x)
         if isfinite(y):
             raw_points.append((x, y))
 
@@ -253,7 +269,13 @@ def _build_chart_data(a: Decimal, b: Decimal, p1: Decimal, q1: Decimal, p2: Deci
         return None
 
     y_values = [point[1] for point in raw_points]
-    y_values.extend([float(p1 * q1), float(p2 * q2), float(p_opt * (a + b * p_opt))])
+    y_values.extend(
+        [
+            float((p1 - unit_cost) * q1),
+            float((p2 - unit_cost) * q2),
+            float((p_opt - unit_cost) * (a + b * p_opt)),
+        ]
+    )
     y_min = min(y_values)
     y_max = max(y_values)
     if y_max == y_min:
@@ -272,9 +294,9 @@ def _build_chart_data(a: Decimal, b: Decimal, p1: Decimal, q1: Decimal, p2: Deci
     p1x = float(p1)
     p2x = float(p2)
     opx = float(p_opt)
-    p1y = float(p1 * q1)
-    p2y = float(p2 * q2)
-    opy = float(p_opt * (a + b * p_opt))
+    p1y = float((p1 - unit_cost) * q1)
+    p2y = float((p2 - unit_cost) * q2)
+    opy = float((p_opt - unit_cost) * (a + b * p_opt))
 
     return {
         "width": width,
@@ -319,6 +341,7 @@ def home(request):
         q1 = _to_decimal(request.POST.get("demand_1", ""))
         p2 = _to_decimal(request.POST.get("price_2", ""))
         q2 = _to_decimal(request.POST.get("demand_2", ""))
+        unit_cost = _to_decimal(request.POST.get("unit_cost", ""))
     except (InvalidOperation, ValueError):
         context["error"] = labels["error_numbers"]
         return render(request, "core/home.html", context)
@@ -336,7 +359,7 @@ def home(request):
 
     optimal_price = -(a / (2 * b))
     expected_demand = a + (b * optimal_price)
-    max_profit = optimal_price * expected_demand
+    max_profit = (optimal_price - unit_cost) * expected_demand
 
     def round2(value: Decimal) -> Decimal:
         return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
@@ -344,6 +367,7 @@ def home(request):
     context["result"] = {
         "a": round2(a),
         "b": round2(b),
+        "unit_cost": round2(unit_cost),
         "optimal_price": round2(optimal_price),
         "expected_demand": round2(expected_demand),
         "max_profit": round2(max_profit),
@@ -353,8 +377,9 @@ def home(request):
         "demand_1": q1,
         "price_2": p2,
         "demand_2": q2,
+        "unit_cost": unit_cost,
     }
-    context["chart"] = _build_chart_data(a, b, p1, q1, p2, q2, optimal_price)
+    context["chart"] = _build_chart_data(a, b, unit_cost, p1, q1, p2, q2, optimal_price)
     return render(request, "core/home.html", context)
 
 

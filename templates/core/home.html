@@ -181,6 +181,10 @@
               {% endfor %}
             </select>
           </div>
+          <div class="row">
+            <label for="unit_cost">{{ labels.unit_cost }}</label>
+            <input id="unit_cost" name="unit_cost" value="{{ inputs.unit_cost|default:'' }}" required>
+          </div>
         </section>
 
         <button type="submit" class="wide">{{ labels.calculate }}</button>
@@ -195,7 +199,7 @@
           <h2>{{ labels.results }}</h2>
           <div class="results-grid">
             <p>{{ labels.demand_formula }}: talep = {{ result.a }} + ({{ result.b }}) * fiyat</p>
-            <p>{{ labels.profit_formula }}: kazanc = fiyat * talep</p>
+            <p>{{ labels.profit_formula }}: kar = (fiyat - {{ result.unit_cost }}) * talep</p>
             <p>{{ labels.best_price }}: {{ selected_symbol }}{{ result.optimal_price }}</p>
             <p>{{ labels.expected_demand }}: {{ result.expected_demand }}</p>
             <p>{{ labels.max_profit }}: {{ selected_symbol }}{{ result.max_profit }}</p>
