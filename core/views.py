@@ -34,6 +34,10 @@ TEXTS = {
         "demand_2": "Talep 2",
         "currency": "Para Birimi",
         "unit_cost": "Birim Maliyet",
+        "method": "Optimizasyon Yontemi",
+        "method_closed_form": "Kapali Form",
+        "method_grg": "Nonlinear GRG (iteratif)",
+        "method_used": "Kullanilan yontem",
         "calculate": "Hesapla",
         "results": "Sonuçlar",
         "demand_formula": "Talep denklemi",
@@ -63,6 +67,10 @@ TEXTS = {
         "demand_2": "Demand 2",
         "currency": "Currency",
         "unit_cost": "Unit Cost",
+        "method": "Optimization Method",
+        "method_closed_form": "Closed Form",
+        "method_grg": "Nonlinear GRG (iterative)",
+        "method_used": "Method used",
         "calculate": "Calculate",
         "results": "Results",
         "demand_formula": "Demand formula",
@@ -321,14 +329,75 @@ def _build_chart_data(
     }
 
 
+def _profit_value(price: Decimal, a: Decimal, b: Decimal, unit_cost: Decimal) -> Decimal:
+    demand = a + (b * price)
+    return (price - unit_cost) * demand
+
+
+def _grg_optimal_price(a: Decimal, b: Decimal, unit_cost: Decimal, p1: Decimal, p2: Decimal) -> Decimal:
+    if b == 0:
+        return Decimal("0")
+
+    base = max(abs(p1), abs(p2), abs(unit_cost), Decimal("1"))
+    upper = max(p1, p2, unit_cost, Decimal("0")) + (base * Decimal("4"))
+    if b < 0 and a > 0:
+        demand_zero = -(a / b)
+        if demand_zero > 0:
+            upper = min(upper, demand_zero)
+    if upper <= 0:
+        upper = Decimal("100")
+
+    x = max((p1 + p2) / Decimal("2"), Decimal("0"))
+    x = min(x, upper)
+    eps = Decimal("0.0001")
+    lr = Decimal("0.15")
+
+    for i in range(120):
+        h = max(Decimal("0.001"), x.copy_abs() * Decimal("0.001"))
+        x_plus = min(x + h, upper)
+        x_minus = max(x - h, Decimal("0"))
+
+        f_plus = _profit_value(x_plus, a, b, unit_cost)
+        f_minus = _profit_value(x_minus, a, b, unit_cost)
+        grad = (f_plus - f_minus) / (x_plus - x_minus if x_plus != x_minus else Decimal("1"))
+
+        step = (lr / Decimal(1 + (i * 0.05))) * grad
+        candidate = x + step
+        candidate = min(max(candidate, Decimal("0")), upper)
+
+        current_val = _profit_value(x, a, b, unit_cost)
+        candidate_val = _profit_value(candidate, a, b, unit_cost)
+        backtrack = 0
+        while candidate_val < current_val and backtrack < 8:
+            step /= Decimal("2")
+            candidate = x + step
+            candidate = min(max(candidate, Decimal("0")), upper)
+            candidate_val = _profit_value(candidate, a, b, unit_cost)
+            backtrack += 1
+
+        if abs(candidate - x) < eps:
+            x = candidate
+            break
+        x = candidate
+
+    return x
+
+
 def home(request):
     current_language = (get_language() or "tr").split("-")[0]
-    labels = TEXTS.get(current_language, TEXTS["en"])
+    labels = {**TEXTS["en"], **TEXTS.get(current_language, TEXTS["en"])}
     selected_currency = request.POST.get("currency", "TRY")
+    selected_method = request.POST.get("method", "closed_form")
+    method_options = [
+        {"code": "closed_form", "label": labels["method_closed_form"]},
+        {"code": "grg_nonlinear", "label": labels["method_grg"]},
+    ]
     context = {
         "labels": labels,
         "current_language": current_language,
         "language_options": LANGUAGE_OPTIONS,
+        "method_options": method_options,
+        "selected_method": selected_method,
         "currencies": CURRENCIES,
         "selected_currency": selected_currency,
         "selected_symbol": CURRENCIES.get(selected_currency, "₺"),
@@ -357,7 +426,10 @@ def home(request):
         context["error"] = labels["error_no_optimum"]
         return render(request, "core/home.html", context)
 
-    optimal_price = -(a / (2 * b))
+    if selected_method == "grg_nonlinear":
+        optimal_price = _grg_optimal_price(a, b, unit_cost, p1, p2)
+    else:
+        optimal_price = -(a / (2 * b))
     expected_demand = a + (b * optimal_price)
     max_profit = (optimal_price - unit_cost) * expected_demand
 
@@ -368,6 +440,7 @@ def home(request):
         "a": round2(a),
         "b": round2(b),
         "unit_cost": round2(unit_cost),
+        "method": selected_method,
         "optimal_price": round2(optimal_price),
         "expected_demand": round2(expected_demand),
         "max_profit": round2(max_profit),

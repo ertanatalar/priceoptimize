@@ -182,6 +182,14 @@
             </select>
           </div>
           <div class="row">
+            <label for="method">{{ labels.method }}</label>
+            <select id="method" name="method">
+              {% for method in method_options %}
+                <option value="{{ method.code }}" {% if selected_method == method.code %}selected{% endif %}>{{ method.label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="row">
             <label for="unit_cost">{{ labels.unit_cost }}</label>
             <input id="unit_cost" name="unit_cost" value="{{ inputs.unit_cost|default:'' }}" required>
           </div>
@@ -198,6 +206,13 @@
         <section class="result">
           <h2>{{ labels.results }}</h2>
           <div class="results-grid">
+            <p>{{ labels.method_used }}:
+              {% if result.method == "grg_nonlinear" %}
+                {{ labels.method_grg }}
+              {% else %}
+                {{ labels.method_closed_form }}
+              {% endif %}
+            </p>
             <p>{{ labels.demand_formula }}: talep = {{ result.a }} + ({{ result.b }}) * fiyat</p>
             <p>{{ labels.profit_formula }}: kar = (fiyat - {{ result.unit_cost }}) * talep</p>
             <p>{{ labels.best_price }}: {{ selected_symbol }}{{ result.optimal_price }}</p>
