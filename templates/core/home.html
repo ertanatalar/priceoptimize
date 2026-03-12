@@ -218,6 +218,9 @@
             <p>{{ labels.best_price }}: {{ selected_symbol }}{{ result.optimal_price }}</p>
             <p>{{ labels.expected_demand }}: {{ result.expected_demand }}</p>
             <p>{{ labels.max_profit }}: {{ selected_symbol }}{{ result.max_profit }}</p>
+            {% if result.no_profit_zone %}
+              <p style="color:#b45309;font-weight:700;">{{ labels.no_profit_note }}</p>
+            {% endif %}
           </div>
         </section>
       {% endif %}

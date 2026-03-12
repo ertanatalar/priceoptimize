@@ -38,6 +38,7 @@ TEXTS = {
         "method_closed_form": "Kapali Form",
         "method_grg": "Nonlinear GRG (iteratif)",
         "method_used": "Kullanilan yontem",
+        "no_profit_note": "Bu girdilerle pozitif kar olusmuyor. En iyi sonuc zarar etmemek icin satis yapmamak (kar = 0).",
         "calculate": "Hesapla",
         "results": "Sonuçlar",
         "demand_formula": "Talep denklemi",
@@ -71,6 +72,7 @@ TEXTS = {
         "method_closed_form": "Closed Form",
         "method_grg": "Nonlinear GRG (iterative)",
         "method_used": "Method used",
+        "no_profit_note": "With these inputs, positive profit is not feasible. Best outcome is not selling (profit = 0).",
         "calculate": "Calculate",
         "results": "Results",
         "demand_formula": "Demand formula",
@@ -330,7 +332,7 @@ def _build_chart_data(
 
 
 def _profit_value(price: Decimal, a: Decimal, b: Decimal, unit_cost: Decimal) -> Decimal:
-    demand = a + (b * price)
+    demand = max(a + (b * price), Decimal("0"))
     return (price - unit_cost) * demand
 
 
@@ -383,6 +385,21 @@ def _grg_optimal_price(a: Decimal, b: Decimal, unit_cost: Decimal, p1: Decimal, 
     return x
 
 
+def _select_best_price(candidates: list[Decimal], a: Decimal, b: Decimal, unit_cost: Decimal) -> tuple[Decimal, Decimal]:
+    best_price = Decimal("0")
+    best_profit = None
+    for candidate in candidates:
+        if candidate < 0:
+            continue
+        value = _profit_value(candidate, a, b, unit_cost)
+        if best_profit is None or value > best_profit:
+            best_profit = value
+            best_price = candidate
+    if best_profit is None:
+        return Decimal("0"), Decimal("0")
+    return best_price, best_profit
+
+
 def home(request):
     current_language = (get_language() or "tr").split("-")[0]
     labels = {**TEXTS["en"], **TEXTS.get(current_language, TEXTS["en"])}
@@ -427,11 +444,18 @@ def home(request):
         return render(request, "core/home.html", context)
 
     if selected_method == "grg_nonlinear":
-        optimal_price = _grg_optimal_price(a, b, unit_cost, p1, p2)
+        raw_optimal = _grg_optimal_price(a, b, unit_cost, p1, p2)
     else:
-        optimal_price = -(a / (2 * b))
-    expected_demand = a + (b * optimal_price)
-    max_profit = (optimal_price - unit_cost) * expected_demand
+        raw_optimal = -(a / (2 * b))
+
+    candidates = [raw_optimal, Decimal("0"), unit_cost, p1, p2]
+    if b < 0:
+        choke_price = -(a / b)
+        if choke_price >= 0:
+            candidates.append(choke_price)
+    optimal_price, max_profit = _select_best_price(candidates, a, b, unit_cost)
+    expected_demand = max(a + (b * optimal_price), Decimal("0"))
+    no_profit_zone = max_profit <= 0
 
     def round2(value: Decimal) -> Decimal:
         return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
@@ -444,6 +468,7 @@ def home(request):
         "optimal_price": round2(optimal_price),
         "expected_demand": round2(expected_demand),
         "max_profit": round2(max_profit),
+        "no_profit_zone": no_profit_zone,
     }
     context["inputs"] = {
         "price_1": p1,
