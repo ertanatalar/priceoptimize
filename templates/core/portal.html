@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PriceOptimize - Hesaplayıcı Merkezi</title>
+  <title>PriceOptimize - Hesaplayici Merkezi</title>
   <style>
     :root {
       --bg: #ecf5f7;
@@ -12,6 +12,7 @@
       --text: #0f172a;
       --muted: #556274;
       --accent: #0f766e;
+      --accent-soft: #e9f7f4;
     }
     * { box-sizing: border-box; }
     body {
@@ -26,9 +27,77 @@
         linear-gradient(160deg, #dfeef2 0%, var(--bg) 58%);
       padding: 1rem;
     }
+    .menu-toggle {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 1200;
+      border: 0;
+      border-radius: 10px;
+      background: var(--accent);
+      color: #fff;
+      width: 42px;
+      height: 42px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(15, 118, 110, 0.25);
+    }
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 9, 18, 0.45);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 1000;
+    }
+    .drawer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 290px;
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 1rem;
+      transform: translateX(-102%);
+      transition: transform 0.25s ease;
+      z-index: 1100;
+      overflow-y: auto;
+    }
+    body.drawer-open .drawer { transform: translateX(0); }
+    body.drawer-open .drawer-overlay { opacity: 1; pointer-events: auto; }
+    .drawer h2 {
+      margin: 0 0 0.8rem;
+      font-size: 1.05rem;
+      color: #fff;
+    }
+    .menu-list {
+      display: grid;
+      gap: 0.55rem;
+    }
+    .menu-item {
+      display: block;
+      text-decoration: none;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 0.65rem 0.7rem;
+      background: rgba(51, 65, 85, 0.35);
+    }
+    .menu-item small {
+      display: block;
+      margin-top: 0.2rem;
+      color: #93c5fd;
+    }
+    .menu-item.active {
+      border-color: #14b8a6;
+      background: rgba(20, 184, 166, 0.18);
+    }
+
     .wrap {
       width: 100%;
-      max-width: 900px;
+      max-width: 940px;
       background: var(--card);
       border: 1px solid var(--line);
       border-radius: 16px;
@@ -46,23 +115,23 @@
       margin: 0;
       font-size: clamp(1.5rem, 2.5vw, 2rem);
     }
-    p {
+    .hero p {
       margin: 0.65rem 0 0;
       color: #e5f7f6;
     }
-    .grid {
+    .list {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 0.9rem;
+      gap: 0.8rem;
     }
     .item {
       border: 1px solid var(--line);
+      border-left: 5px solid var(--accent);
       border-radius: 12px;
       padding: 0.9rem;
       background: #fbfdff;
     }
     .item h2 {
-      margin: 0 0 0.55rem;
+      margin: 0 0 0.45rem;
       font-size: 1.1rem;
     }
     .item p {
@@ -78,22 +147,60 @@
       border-radius: 9px;
       font-weight: 700;
     }
+
+    @media (min-width: 901px) {
+      .menu-toggle { top: 18px; left: 18px; }
+    }
   </style>
 </head>
 <body>
+  <button class="menu-toggle" id="menuToggle" aria-label="menu">☰</button>
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <aside class="drawer" id="drawer">
+    <h2>Motorlar</h2>
+    <nav class="menu-list">
+      {% for engine in engines %}
+        <a class="menu-item {% if engine.enabled %}active{% endif %}" href="{{ engine.path }}">
+          {{ engine.title }}
+          <small>{{ engine.description }}</small>
+        </a>
+      {% endfor %}
+    </nav>
+  </aside>
+
   <main class="wrap">
     <section class="hero">
-      <h1>Hesaplayıcı Merkezi</h1>
-      <p>Tum motorlar tek alan adinda toplanir. Yeni motorlar bu sayfaya eklenecek.</p>
+      <h1>Hesaplayici Merkezi</h1>
+      <p>Hazirladigin tum motorlar bu listede alt alta yer alacak. Ilk motor en ustte aktif.</p>
     </section>
 
-    <section class="grid">
-      <article class="item">
-        <h2>Fiyat-Talep Motoru</h2>
-        <p>Iki veri noktasindan talep modeli kurar, optimum fiyati ve maksimum kazanci hesaplar.</p>
-        <a class="btn" href="/price-demand/">Motora Git</a>
-      </article>
+    <section class="list">
+      {% for engine in engines %}
+        <article class="item">
+          <h2>{{ forloop.counter }}. {{ engine.title }}</h2>
+          <p>{{ engine.description }}</p>
+          <a class="btn" href="{{ engine.path }}">Motora Git</a>
+        </article>
+      {% endfor %}
     </section>
   </main>
+
+  <script>
+    (function () {
+      const body = document.body;
+      const menuToggle = document.getElementById("menuToggle");
+      const overlay = document.getElementById("drawerOverlay");
+      const closeMenu = () => body.classList.remove("drawer-open");
+      const openMenu = () => body.classList.add("drawer-open");
+      menuToggle.addEventListener("click", () => {
+        if (body.classList.contains("drawer-open")) closeMenu();
+        else openMenu();
+      });
+      overlay.addEventListener("click", closeMenu);
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeMenu();
+      });
+    })();
+  </script>
 </body>
 </html>

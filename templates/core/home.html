@@ -86,6 +86,59 @@
     .legend-point { background: #2563eb; }
     .legend-optimal { background: #b45309; }
     .error { margin-top: .8rem; margin-bottom: 0; color: var(--error); font-weight: 600; }
+    .menu-toggle {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 1200;
+      border: 0;
+      border-radius: 10px;
+      background: var(--accent);
+      color: #fff;
+      width: 42px;
+      height: 42px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(15, 118, 110, 0.25);
+    }
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 9, 18, 0.45);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 1000;
+    }
+    .drawer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 290px;
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 1rem;
+      transform: translateX(-102%);
+      transition: transform 0.25s ease;
+      z-index: 1100;
+      overflow-y: auto;
+    }
+    body.drawer-open .drawer { transform: translateX(0); }
+    body.drawer-open .drawer-overlay { opacity: 1; pointer-events: auto; }
+    .drawer h2 { margin: 0 0 .8rem; color: #fff; font-size: 1.05rem; }
+    .menu-list { display: grid; gap: .55rem; }
+    .menu-item {
+      display: block;
+      text-decoration: none;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: .65rem .7rem;
+      background: rgba(51, 65, 85, 0.35);
+    }
+    .menu-item small { display: block; margin-top: .2rem; color: #93c5fd; }
+    .menu-item.active { border-color: #14b8a6; background: rgba(20, 184, 166, 0.18); }
     @media (max-width: 640px) {
       body { padding: .6rem; display: block; }
       .card { padding: 1rem; border-radius: 12px; }
@@ -96,6 +149,20 @@
   </style>
 </head>
 <body>
+  <button class="menu-toggle" id="menuToggle" aria-label="menu">☰</button>
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <aside class="drawer" id="drawer">
+    <h2>Motorlar</h2>
+    <nav class="menu-list">
+      {% for engine in engines %}
+        <a class="menu-item {% if engine.path == request.path %}active{% endif %}" href="{{ engine.path }}">
+          {{ engine.title }}
+          <small>{{ engine.description }}</small>
+        </a>
+      {% endfor %}
+    </nav>
+  </aside>
+
   <main class="page">
     <section class="card">
       <p style="margin-top:0;margin-bottom:.8rem;"><a href="/" style="color:#0f766e;font-weight:700;text-decoration:none;">&larr; Hesaplayici Merkezine Don</a></p>
@@ -226,5 +293,22 @@
       {% endif %}
     </section>
   </main>
+  <script>
+    (function () {
+      const body = document.body;
+      const menuToggle = document.getElementById("menuToggle");
+      const overlay = document.getElementById("drawerOverlay");
+      const closeMenu = () => body.classList.remove("drawer-open");
+      const openMenu = () => body.classList.add("drawer-open");
+      menuToggle.addEventListener("click", () => {
+        if (body.classList.contains("drawer-open")) closeMenu();
+        else openMenu();
+      });
+      overlay.addEventListener("click", closeMenu);
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeMenu();
+      });
+    })();
+  </script>
 </body>
 </html>

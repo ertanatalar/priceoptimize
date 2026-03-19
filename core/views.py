@@ -11,6 +11,15 @@ CURRENCIES = {
     "EUR": "€",
 }
 
+ENGINE_MENU = [
+    {
+        "title": "Fiyat-Talep Motoru",
+        "description": "Iki veri noktasindan talep modeli ve kar optimizasyonu.",
+        "path": "/price-demand/",
+        "enabled": True,
+    },
+]
+
 LANGUAGE_OPTIONS = [
     {"code": "tr", "name": "Türkçe"},
     {"code": "en", "name": "English"},
@@ -411,6 +420,7 @@ def home(request):
     ]
     context = {
         "labels": labels,
+        "engines": ENGINE_MENU,
         "current_language": current_language,
         "language_options": LANGUAGE_OPTIONS,
         "method_options": method_options,
@@ -482,4 +492,4 @@ def home(request):
 
 
 def portal(request):
-    return render(request, "core/portal.html")
+    return render(request, "core/portal.html", {"engines": ENGINE_MENU})
