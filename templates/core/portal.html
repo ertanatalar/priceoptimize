@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="tr">
+<html lang="{{ current_language }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -49,9 +49,9 @@
     }
     .menu-toggle {
       position: fixed;
-      top: 82px;
+      top: 68px;
       left: 12px;
-      z-index: 1200;
+      z-index: 1500;
       border: 0;
       border-radius: 10px;
       background: var(--accent);
@@ -124,20 +124,42 @@
       box-shadow: 0 20px 48px rgba(10, 29, 54, 0.10);
       padding: 1.4rem;
     }
-    .hero {
+    .portal-title {
+      text-align: center;
+      margin: 0 0 1rem;
+      font-size: clamp(1.3rem, 2.8vw, 2rem);
+      color: #0b7a42;
+      font-weight: 800;
+    }
+    .language-form {
+      display: grid;
+      grid-template-columns: 100px 1fr auto;
+      gap: 0.75rem;
+      align-items: center;
+      margin: 0 auto 1rem;
+      max-width: 640px;
+      background: #f6fbff;
+      border: 1px solid #d9e5ee;
       border-radius: 12px;
-      background: linear-gradient(110deg, #0f766e 0%, #14b8a6 60%, #38bdf8 100%);
+      padding: 0.65rem;
+    }
+    .language-form label {
+      font-weight: 700;
+      color: #334155;
+    }
+    .language-form select,
+    .language-form button {
+      border-radius: 8px;
+      border: 1px solid #bcd0dc;
+      padding: 0.5rem 0.6rem;
+      font-size: 1rem;
+    }
+    .language-form button {
+      background: #0f766e;
       color: #fff;
-      padding: 1rem 1.1rem;
-      margin-bottom: 1.1rem;
-    }
-    h1 {
-      margin: 0;
-      font-size: clamp(1.5rem, 2.5vw, 2rem);
-    }
-    .hero p {
-      margin: 0.65rem 0 0;
-      color: #e5f7f6;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
     }
     .list {
       display: grid;
@@ -168,8 +190,10 @@
       font-weight: 700;
     }
 
-    @media (min-width: 901px) {
-      .menu-toggle { top: 18px; left: 18px; }
+    @media (max-width: 640px) {
+      .language-form {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -192,10 +216,19 @@
   </aside>
 
   <main class="wrap">
-    <section class="hero">
-      <h1>Hesaplayici Merkezi</h1>
-      <p>Hazirladigin tum motorlar bu listede alt alta yer alacak. Ilk motor en ustte aktif.</p>
-    </section>
+    <h1 class="portal-title">{{ labels.portal_title }}</h1>
+
+    <form action="{% url 'set_language' %}" method="post" class="language-form">
+      {% csrf_token %}
+      <input name="next" type="hidden" value="{{ request.path }}">
+      <label for="language">{{ labels.language }}</label>
+      <select id="language" name="language">
+        {% for lang in language_options %}
+          <option value="{{ lang.code }}" {% if lang.code == current_language %}selected{% endif %}>{{ lang.name }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">{{ labels.change_language }}</button>
+    </form>
 
     <section class="list">
       {% for engine in engines %}

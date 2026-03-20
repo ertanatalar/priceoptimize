@@ -64,6 +64,7 @@ TEXTS = {
         "error_numbers": "Lütfen tüm alanlara sayı giriniz.",
         "error_same_price": "İki fiyat aynı olamaz.",
         "error_no_optimum": "Bu veriyle optimum fiyat hesaplanamıyor.",
+        "portal_title": "Urunlerinizin fiyatini optimize edin",
     },
     "en": {
         "page_title": "Optimal Price Calculator",
@@ -98,6 +99,7 @@ TEXTS = {
         "error_numbers": "Please enter numbers in all fields.",
         "error_same_price": "The two prices cannot be the same.",
         "error_no_optimum": "This data does not produce an optimal price.",
+        "portal_title": "Optimize your product prices",
     },
     "de": {
         "page_title": "Optimaler Preisrechner",
@@ -492,4 +494,15 @@ def home(request):
 
 
 def portal(request):
-    return render(request, "core/portal.html", {"engines": ENGINE_MENU})
+    current_language = (get_language() or "tr").split("-")[0]
+    labels = {**TEXTS["en"], **TEXTS.get(current_language, TEXTS["en"])}
+    return render(
+        request,
+        "core/portal.html",
+        {
+            "engines": ENGINE_MENU,
+            "labels": labels,
+            "current_language": current_language,
+            "language_options": LANGUAGE_OPTIONS,
+        },
+    )
