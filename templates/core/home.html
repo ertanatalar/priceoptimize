@@ -174,7 +174,7 @@
   <button class="menu-toggle" id="menuToggle" aria-label="menu">☰</button>
   <div class="drawer-overlay" id="drawerOverlay"></div>
   <aside class="drawer" id="drawer">
-    <h2>Motorlar</h2>
+    <h2>{{ labels.menu_engines }}</h2>
     <nav class="menu-list">
       {% for engine in engines %}
         <a class="menu-item {% if engine.path == request.path %}active{% endif %}" href="{{ engine.path }}">

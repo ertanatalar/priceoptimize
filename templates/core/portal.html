@@ -204,7 +204,7 @@
   <button class="menu-toggle" id="menuToggle" aria-label="menu">☰</button>
   <div class="drawer-overlay" id="drawerOverlay"></div>
   <aside class="drawer" id="drawer">
-    <h2>Motorlar</h2>
+    <h2>{{ labels.menu_engines }}</h2>
     <nav class="menu-list">
       {% for engine in engines %}
         <a class="menu-item {% if engine.enabled %}active{% endif %}" href="{{ engine.path }}">
@@ -235,7 +235,7 @@
         <article class="item">
           <h2>{{ forloop.counter }}. {{ engine.title }}</h2>
           <p>{{ engine.description }}</p>
-          <a class="btn" href="{{ engine.path }}">Motora Git</a>
+          <a class="btn" href="{{ engine.path }}">{{ labels.go_to_engine }}</a>
         </article>
       {% endfor %}
     </section>

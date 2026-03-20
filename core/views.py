@@ -12,12 +12,7 @@ CURRENCIES = {
 }
 
 ENGINE_MENU = [
-    {
-        "title": "Fiyat-Talep Motoru",
-        "description": "Iki veri noktasindan talep modeli ve kar optimizasyonu.",
-        "path": "/price-demand/",
-        "enabled": True,
-    },
+    {"path": "/price-demand/", "enabled": True},
 ]
 
 LANGUAGE_OPTIONS = [
@@ -49,6 +44,10 @@ TEXTS = {
         "method_used": "Kullanilan yontem",
         "no_profit_note": "Bu girdilerle pozitif kar olusmuyor. En iyi sonuc zarar etmemek icin satis yapmamak (kar = 0).",
         "calculate": "Hesapla",
+        "menu_engines": "Motorlar",
+        "engine_price_demand_title": "Fiyat-Talep Motoru",
+        "engine_price_demand_desc": "Iki veri noktasindan talep modeli ve kar optimizasyonu.",
+        "go_to_engine": "Motora Git",
         "results": "Sonuçlar",
         "demand_formula": "Talep denklemi",
         "profit_formula": "Kar denklemi",
@@ -84,6 +83,10 @@ TEXTS = {
         "method_used": "Method used",
         "no_profit_note": "With these inputs, positive profit is not feasible. Best outcome is not selling (profit = 0).",
         "calculate": "Calculate",
+        "menu_engines": "Engines",
+        "engine_price_demand_title": "Price-Demand Engine",
+        "engine_price_demand_desc": "Builds demand model and profit optimization from two data points.",
+        "go_to_engine": "Open Engine",
         "results": "Results",
         "demand_formula": "Demand formula",
         "profit_formula": "Profit formula",
@@ -247,6 +250,17 @@ TEXTS = {
         "error_no_optimum": "Ces données ne produisent pas de prix optimal.",
     },
 }
+
+
+def _localized_engines(labels: dict) -> list[dict]:
+    return [
+        {
+            "title": labels["engine_price_demand_title"],
+            "description": labels["engine_price_demand_desc"],
+            "path": "/price-demand/",
+            "enabled": True,
+        }
+    ]
 
 
 def _to_decimal(value: str) -> Decimal:
@@ -414,6 +428,7 @@ def _select_best_price(candidates: list[Decimal], a: Decimal, b: Decimal, unit_c
 def home(request):
     current_language = (get_language() or "tr").split("-")[0]
     labels = {**TEXTS["en"], **TEXTS.get(current_language, TEXTS["en"])}
+    engines = _localized_engines(labels)
     selected_currency = request.POST.get("currency", "TRY")
     selected_method = request.POST.get("method", "closed_form")
     method_options = [
@@ -422,7 +437,7 @@ def home(request):
     ]
     context = {
         "labels": labels,
-        "engines": ENGINE_MENU,
+        "engines": engines,
         "current_language": current_language,
         "language_options": LANGUAGE_OPTIONS,
         "method_options": method_options,
@@ -496,11 +511,12 @@ def home(request):
 def portal(request):
     current_language = (get_language() or "tr").split("-")[0]
     labels = {**TEXTS["en"], **TEXTS.get(current_language, TEXTS["en"])}
+    engines = _localized_engines(labels)
     return render(
         request,
         "core/portal.html",
         {
-            "engines": ENGINE_MENU,
+            "engines": engines,
             "labels": labels,
             "current_language": current_language,
             "language_options": LANGUAGE_OPTIONS,
