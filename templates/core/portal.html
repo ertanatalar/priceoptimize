@@ -115,14 +115,18 @@
     .brand {
       display: flex;
       align-items: center;
+      justify-content: center;
+      height: 132px;
+      overflow: hidden;
       margin-bottom: 1rem;
     }
     .brand img {
-      width: min(100%, 624px);
-      max-height: 125px;
-      object-fit: contain;
+      width: min(100%, 980px);
+      max-height: none;
       height: auto;
       display: block;
+      transform: scale(2.85);
+      transform-origin: center center;
     }
     h1 {
       margin: 0;
