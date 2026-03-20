@@ -47,21 +47,6 @@
       text-align: center;
       box-shadow: 0 10px 24px rgba(14, 116, 144, 0.22);
     }
-    .brand {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 440px;
-      margin-bottom: 1rem;
-      padding: 0.35rem 0;
-    }
-    .brand img {
-      width: min(100%, 2200px);
-      max-height: 420px;
-      object-fit: contain;
-      height: auto;
-      display: block;
-    }
     h1 { margin: 0; font-size: clamp(1.35rem, 2.4vw, 1.8rem); letter-spacing: .2px; }
     h2 { margin: 0 0 .75rem; font-size: 1.1rem; }
     .language-form {
@@ -180,9 +165,6 @@
 
   <main class="page">
     <section class="card">
-      <div class="brand">
-        <img src="{% static 'img/logo-pricetoptimize.png' %}?v=20260320" alt="PriceOptimize.ai">
-      </div>
       <p style="margin-top:0;margin-bottom:.8rem;"><a href="/" style="color:#0f766e;font-weight:700;text-decoration:none;">&larr; Hesaplayici Merkezine Don</a></p>
       <header class="topbar">
         <h1>{{ labels.page_title }}</h1>
