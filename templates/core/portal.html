@@ -207,7 +207,7 @@
     <h2>{{ labels.menu_engines }}</h2>
     <nav class="menu-list">
       {% for engine in engines %}
-        <a class="menu-item {% if engine.enabled %}active{% endif %}" href="{{ engine.path }}">
+        <a class="menu-item {% if engine.path == request.path %}active{% endif %}" href="{{ engine.path }}">
           {{ engine.title }}
           <small>{{ engine.description }}</small>
         </a>

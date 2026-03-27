@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="{{ current_language }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ labels.discount_page_title }}</title>
+  <style>
+    :root {
+      --bg: #eef4f7;
+      --bg-2: #ddebf2;
+      --text: #0b1726;
+      --card: #ffffff;
+      --line: #c7d3db;
+      --accent: #0f766e;
+      --error: #b91c1c;
+      --muted: #526272;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at 10% 10%, #ffffff 0%, rgba(255, 255, 255, 0) 45%), linear-gradient(160deg, var(--bg-2) 0%, var(--bg) 58%);
+      color: var(--text);
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      padding: 1rem;
+      padding-top: 78px;
+    }
+    .site-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 56px;
+      background: #0b7a42;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1300;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+    }
+    .site-header .brand-name {
+      color: #fff;
+      font-size: clamp(1.2rem, 2.6vw, 2rem);
+      font-weight: 700;
+    }
+    .menu-toggle {
+      position: fixed;
+      top: 82px;
+      left: 12px;
+      z-index: 1500;
+      border: 0;
+      border-radius: 10px;
+      background: var(--accent);
+      color: #fff;
+      width: 42px;
+      height: 42px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(15, 118, 110, 0.25);
+    }
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 9, 18, 0.45);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 1000;
+    }
+    .drawer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 290px;
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 1rem;
+      transform: translateX(-102%);
+      transition: transform 0.25s ease;
+      z-index: 1100;
+      overflow-y: auto;
+    }
+    body.drawer-open .drawer { transform: translateX(0); }
+    body.drawer-open .drawer-overlay { opacity: 1; pointer-events: auto; }
+    .drawer h2 { margin: 0 0 .8rem; color: #fff; font-size: 1.05rem; }
+    .menu-list { display: grid; gap: .55rem; }
+    .menu-item {
+      display: block;
+      text-decoration: none;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: .65rem .7rem;
+      background: rgba(51, 65, 85, 0.35);
+    }
+    .menu-item small { display: block; margin-top: .2rem; color: #93c5fd; }
+    .menu-item.active { border-color: #14b8a6; background: rgba(20, 184, 166, 0.18); }
+
+    .page { width: 100%; max-width: 920px; display: flex; justify-content: center; }
+    .card {
+      width: 100%;
+      max-width: 860px;
+      padding: 1.5rem;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(13, 37, 63, 0.08);
+    }
+    .topbar {
+      margin-bottom: 1.1rem;
+      padding: 1rem 1.1rem;
+      border-radius: 14px;
+      background: linear-gradient(110deg, #0f766e 0%, #0ea5a7 55%, #38bdf8 100%);
+      color: #fff;
+      text-align: center;
+    }
+    .topbar h1 { margin: 0; font-size: clamp(1.35rem, 2.4vw, 1.8rem); }
+    .language-form {
+      display: grid;
+      grid-template-columns: 110px 1fr auto;
+      gap: .75rem;
+      align-items: center;
+      margin: 0 auto 1rem;
+      max-width: 640px;
+      background: #f6fbff;
+      border: 1px solid #d9e5ee;
+      border-radius: 12px;
+      padding: .65rem;
+    }
+    .language-form label { font-weight: 700; color: #334155; }
+    .language-form select,
+    .language-form button {
+      border-radius: 8px;
+      border: 1px solid #bcd0dc;
+      padding: 0.5rem 0.6rem;
+      font-size: 1rem;
+    }
+    .language-form button {
+      background: #0f766e;
+      color: #fff;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .input-section {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fbfdff;
+      padding: .9rem;
+      margin-bottom: 0.9rem;
+    }
+    label { font-weight: 700; color: var(--muted); display: block; margin-bottom: 0.35rem; }
+    textarea, select, button {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      font-size: 1rem;
+      padding: .66rem .7rem;
+    }
+    textarea { min-height: 135px; resize: vertical; }
+    .row {
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      gap: .7rem;
+      align-items: center;
+      margin-top: .75rem;
+    }
+    .wide-btn {
+      border: none;
+      margin-top: .8rem;
+      background: linear-gradient(135deg, #0f766e 0%, #0ea5a7 100%);
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      padding: .78rem .9rem;
+    }
+    .hint { margin: .45rem 0 0; color: var(--muted); font-size: .95rem; }
+    .error { margin-top: .8rem; color: var(--error); font-weight: 700; }
+    .result {
+      margin-top: 1rem;
+      border: 1px solid var(--line);
+      background: #f9fcfb;
+      border-radius: 12px;
+      padding: .9rem;
+    }
+    .result h2 { margin-top: 0; }
+    .result-grid { display: grid; gap: .45rem; }
+    .result-grid p { margin: 0; }
+    .ok { color: #0f766e; font-weight: 700; }
+    .warn { color: #b45309; font-weight: 700; }
+    @media (max-width: 640px) {
+      .language-form, .row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand-name">PriceOptimize.ai</div>
+  </header>
+  <button class="menu-toggle" id="menuToggle" aria-label="menu">☰</button>
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <aside class="drawer" id="drawer">
+    <h2>{{ labels.menu_engines }}</h2>
+    <nav class="menu-list">
+      {% for engine in engines %}
+        <a class="menu-item {% if engine.path == request.path %}active{% endif %}" href="{{ engine.path }}">
+          {{ engine.title }}
+          <small>{{ engine.description }}</small>
+        </a>
+      {% endfor %}
+    </nav>
+  </aside>
+
+  <main class="page">
+    <section class="card">
+      <p style="margin-top:0;margin-bottom:.8rem;"><a href="/" style="color:#0f766e;font-weight:700;text-decoration:none;">&larr; Hesaplayici Merkezine Don</a></p>
+      <header class="topbar">
+        <h1>{{ labels.discount_page_title }}</h1>
+      </header>
+
+      <form action="{% url 'set_language' %}" method="post" class="language-form">
+        {% csrf_token %}
+        <input name="next" type="hidden" value="{{ request.path }}">
+        <label for="language">{{ labels.language }}</label>
+        <select id="language" name="language">
+          {% for lang in language_options %}
+            <option value="{{ lang.code }}" {% if lang.code == current_language %}selected{% endif %}>{{ lang.name }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit">{{ labels.change_language }}</button>
+      </form>
+
+      <form method="post">
+        {% csrf_token %}
+        <section class="input-section">
+          <label for="prompt_text">{{ labels.discount_prompt_label }}</label>
+          <textarea id="prompt_text" name="prompt_text" placeholder="{{ labels.discount_prompt_placeholder }}" required>{{ prompt_text|default:'' }}</textarea>
+          <p class="hint">{{ labels.discount_hint }}</p>
+          <p class="hint">{{ labels.discount_example }}</p>
+          <div class="row">
+            <label for="currency">{{ labels.currency }}</label>
+            <select id="currency" name="currency">
+              {% for code, symbol in currencies.items %}
+                <option value="{{ code }}" {% if selected_currency == code %}selected{% endif %}>{{ code }} ({{ symbol }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button class="wide-btn" type="submit">{{ labels.calculate }}</button>
+        </section>
+      </form>
+
+      {% if error %}
+        <p class="error">{{ error }}</p>
+      {% endif %}
+
+      {% if result %}
+        <section class="result">
+          <h2>{{ labels.discount_result_title }}</h2>
+          <div class="result-grid">
+            <p>{{ labels.discount_input_summary }}: adet={{ result.qty }}, fiyat={{ selected_symbol }}{{ result.price }}, indirim={{ selected_symbol }}{{ result.discount }}, ekstra adet={{ result.extra }}</p>
+            <p>{{ labels.discount_base_revenue }}: {{ selected_symbol }}{{ result.before_revenue }}</p>
+            <p>{{ labels.discount_new_revenue }}: {{ selected_symbol }}{{ result.after_revenue }}</p>
+            <p>{{ labels.discount_delta }}: {{ selected_symbol }}{{ result.delta }}</p>
+            {% if result.use_discount %}
+              <p class="ok">{{ labels.discount_recommendation }}: {{ labels.discount_scenario_discount }} (fiyat={{ selected_symbol }}{{ result.discounted_price }})</p>
+            {% else %}
+              <p class="warn">{{ labels.discount_recommendation }}: {{ labels.discount_scenario_keep }} (fiyat={{ selected_symbol }}{{ result.price }})</p>
+            {% endif %}
+          </div>
+        </section>
+      {% endif %}
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      const body = document.body;
+      const menuToggle = document.getElementById("menuToggle");
+      const overlay = document.getElementById("drawerOverlay");
+      const closeMenu = () => body.classList.remove("drawer-open");
+      const openMenu = () => body.classList.add("drawer-open");
+      menuToggle.addEventListener("click", () => {
+        if (body.classList.contains("drawer-open")) closeMenu();
+        else openMenu();
+      });
+      overlay.addEventListener("click", closeMenu);
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeMenu();
+      });
+    })();
+  </script>
+</body>
+</html>

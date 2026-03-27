@@ -1,5 +1,6 @@
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from math import isfinite
+import re
 
 from django.shortcuts import render
 from django.utils.translation import get_language
@@ -13,6 +14,7 @@ CURRENCIES = {
 
 ENGINE_MENU = [
     {"path": "/price-demand/", "enabled": True},
+    {"path": "/price-demand/discount-optimizer/", "enabled": True},
 ]
 
 LANGUAGE_OPTIONS = [
@@ -47,6 +49,8 @@ TEXTS = {
         "menu_engines": "Motorlar",
         "engine_price_demand_title": "Fiyat-Talep Motoru",
         "engine_price_demand_desc": "Iki veri noktasindan talep modeli ve kar optimizasyonu.",
+        "engine_discount_title": "Indirim Etki Motoru",
+        "engine_discount_desc": "Tek prompt ile indirim sonrasi satis adedi etkisini hesaplar ve en iyi senaryoyu onerir.",
         "go_to_engine": "Motora Git",
         "results": "Sonuçlar",
         "demand_formula": "Talep denklemi",
@@ -64,6 +68,20 @@ TEXTS = {
         "error_same_price": "İki fiyat aynı olamaz.",
         "error_no_optimum": "Bu veriyle optimum fiyat hesaplanamıyor.",
         "portal_title": "Urunlerinizin fiyatini optimize edin",
+        "discount_page_title": "Indirim Sonrasi Satis Etkisi",
+        "discount_prompt_label": "Isteginizi Yaziniz",
+        "discount_prompt_placeholder": "Ornek: Urun adedi 100, urun fiyati 250, indirim bedeli 30, indirim sonrasi 20 adet fazla sattim.",
+        "discount_hint": "Tum verileri ayri kutular yerine tek prompt icinde yazin.",
+        "discount_example": "Gerekli bilgiler: urun adedi, urun fiyati, indirim bedeli, indirim sonrasi fazla satis adedi.",
+        "discount_result_title": "Motor Sonucu",
+        "discount_input_summary": "Girilen degerler",
+        "discount_base_revenue": "Indirim oncesi gelir",
+        "discount_new_revenue": "Indirim sonrasi gelir",
+        "discount_recommendation": "Onerilen senaryo",
+        "discount_scenario_keep": "Normal fiyatla devam et",
+        "discount_scenario_discount": "Indirimli fiyatla sat",
+        "discount_delta": "Gelir farki",
+        "discount_error_parse": "Prompt icinden gerekli 4 degeri okuyamadim. Lutfen ornekteki gibi yazin.",
     },
     "en": {
         "page_title": "Optimal Price Calculator",
@@ -86,6 +104,8 @@ TEXTS = {
         "menu_engines": "Engines",
         "engine_price_demand_title": "Price-Demand Engine",
         "engine_price_demand_desc": "Builds demand model and profit optimization from two data points.",
+        "engine_discount_title": "Discount Impact Engine",
+        "engine_discount_desc": "Uses a single prompt to analyze post-discount sales impact and recommends the better scenario.",
         "go_to_engine": "Open Engine",
         "results": "Results",
         "demand_formula": "Demand formula",
@@ -103,6 +123,20 @@ TEXTS = {
         "error_same_price": "The two prices cannot be the same.",
         "error_no_optimum": "This data does not produce an optimal price.",
         "portal_title": "Optimize your product prices",
+        "discount_page_title": "Post-Discount Sales Impact",
+        "discount_prompt_label": "Write Your Request",
+        "discount_prompt_placeholder": "Example: Product quantity 100, product price 250, discount amount 30, after discount I sold 20 more units.",
+        "discount_hint": "Enter all inputs in one prompt instead of separate fields.",
+        "discount_example": "Required data: product quantity, product price, discount amount, additional units sold after discount.",
+        "discount_result_title": "Engine Result",
+        "discount_input_summary": "Input summary",
+        "discount_base_revenue": "Revenue before discount",
+        "discount_new_revenue": "Revenue after discount",
+        "discount_recommendation": "Recommended scenario",
+        "discount_scenario_keep": "Keep normal price",
+        "discount_scenario_discount": "Sell with discounted price",
+        "discount_delta": "Revenue delta",
+        "discount_error_parse": "Could not parse all 4 required values from the prompt. Please follow the example format.",
     },
     "de": {
         "page_title": "Optimaler Preisrechner",
@@ -284,8 +318,68 @@ def _localized_engines(labels: dict) -> list[dict]:
             "description": labels["engine_price_demand_desc"],
             "path": "/price-demand/",
             "enabled": True,
-        }
+        },
+        {
+            "title": labels["engine_discount_title"],
+            "description": labels["engine_discount_desc"],
+            "path": "/price-demand/discount-optimizer/",
+            "enabled": True,
+        },
     ]
+
+
+def _extract_decimal_by_patterns(text: str, patterns: list[str]) -> Decimal | None:
+    for pattern in patterns:
+        match = re.search(pattern, text, flags=re.IGNORECASE)
+        if match:
+            try:
+                return _to_decimal(match.group(1))
+            except InvalidOperation:
+                continue
+    return None
+
+
+def _parse_discount_prompt(prompt: str) -> dict[str, Decimal] | None:
+    text = prompt.lower()
+    qty = _extract_decimal_by_patterns(
+        text,
+        [
+            r"(?:urun adedi|ürün adedi|adet|miktar|quantity)\D{0,24}([-+]?\d+(?:[.,]\d+)?)",
+        ],
+    )
+    price = _extract_decimal_by_patterns(
+        text,
+        [
+            r"(?:urun fiyati|ürün fiyatı|fiyat|price)\D{0,24}([-+]?\d+(?:[.,]\d+)?)",
+        ],
+    )
+    discount = _extract_decimal_by_patterns(
+        text,
+        [
+            r"(?:indirim bedeli|indirim|discount)\D{0,24}([-+]?\d+(?:[.,]\d+)?)",
+        ],
+    )
+    extra = _extract_decimal_by_patterns(
+        text,
+        [
+            r"(?:fazla sat|ek sat|arti[sş]|artis|additional|extra)\D{0,30}([-+]?\d+(?:[.,]\d+)?)",
+        ],
+    )
+
+    if None in (qty, price, discount, extra):
+        numbers = re.findall(r"[-+]?\d+(?:[.,]\d+)?", text)
+        if len(numbers) >= 4:
+            try:
+                qty = qty or _to_decimal(numbers[0])
+                price = price or _to_decimal(numbers[1])
+                discount = discount or _to_decimal(numbers[2])
+                extra = extra or _to_decimal(numbers[3])
+            except InvalidOperation:
+                return None
+
+    if None in (qty, price, discount, extra):
+        return None
+    return {"qty": qty, "price": price, "discount": discount, "extra": extra}
 
 
 def _to_decimal(value: str) -> Decimal:
@@ -547,3 +641,63 @@ def portal(request):
             "language_options": LANGUAGE_OPTIONS,
         },
     )
+
+
+def discount_optimizer(request):
+    current_language = (get_language() or "tr").split("-")[0]
+    labels = {**TEXTS["en"], **TEXTS.get(current_language, TEXTS["en"])}
+    engines = _localized_engines(labels)
+    selected_currency = request.POST.get("currency", "TRY")
+    prompt_text = request.POST.get("prompt_text", "")
+
+    context = {
+        "labels": labels,
+        "engines": engines,
+        "current_language": current_language,
+        "language_options": LANGUAGE_OPTIONS,
+        "currencies": CURRENCIES,
+        "selected_currency": selected_currency,
+        "selected_symbol": CURRENCIES.get(selected_currency, "₺"),
+        "prompt_text": prompt_text,
+    }
+
+    if request.method != "POST":
+        return render(request, "core/discount_optimizer.html", context)
+
+    parsed = _parse_discount_prompt(prompt_text)
+    if not parsed:
+        context["error"] = labels["discount_error_parse"]
+        return render(request, "core/discount_optimizer.html", context)
+
+    qty = max(parsed["qty"], Decimal("0"))
+    price = parsed["price"]
+    discount = max(parsed["discount"], Decimal("0"))
+    extra = max(parsed["extra"], Decimal("0"))
+    discounted_price = price - discount
+
+    if price <= 0 or discounted_price <= 0:
+        context["error"] = labels["discount_error_parse"]
+        return render(request, "core/discount_optimizer.html", context)
+
+    before_revenue = price * qty
+    new_qty = qty + extra
+    after_revenue = discounted_price * new_qty
+    delta = after_revenue - before_revenue
+
+    use_discount = after_revenue > before_revenue
+
+    def round2(value: Decimal) -> Decimal:
+        return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+    context["result"] = {
+        "qty": round2(qty),
+        "price": round2(price),
+        "discount": round2(discount),
+        "discounted_price": round2(discounted_price),
+        "extra": round2(extra),
+        "before_revenue": round2(before_revenue),
+        "after_revenue": round2(after_revenue),
+        "delta": round2(delta),
+        "use_discount": use_discount,
+    }
+    return render(request, "core/discount_optimizer.html", context)
