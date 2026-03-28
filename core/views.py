@@ -69,17 +69,28 @@ TEXTS = {
         "error_no_optimum": "Bu veriyle optimum fiyat hesaplanamıyor.",
         "portal_title": "Urunlerinizin fiyatini optimize edin",
         "discount_page_title": "Indirim Sonrasi Satis Etkisi",
-        "discount_prompt_label": "Isteginizi Yaziniz",
-        "discount_prompt_placeholder": "Ornek: Urun adedi 100, urun fiyati 250, indirim bedeli 30, indirim sonrasi 20 adet fazla sattim.",
-        "discount_hint": "Tum verileri ayri kutular yerine tek prompt icinde yazin.",
-        "discount_example": "Gerekli bilgiler: urun adedi, urun fiyati, indirim bedeli, indirim sonrasi fazla satis adedi.",
+        "discount_prompt_label": "Ne Hesaplanacak? (Opsiyonel)",
+        "discount_prompt_placeholder": "Ornek: Kari maksimize et veya en iyi fiyati bul.",
+        "discount_hint": "Verileri kutulara tek tek girin. + ile yeni satir ekleyebilirsiniz.",
+        "discount_example": "Temel bilgiler: urun adedi, urun fiyati, indirim tutari, indirim sonrasi toplam adet.",
+        "discount_fields_title": "Veri Kutucuklari",
+        "discount_field_name": "Veri Adi",
+        "discount_field_value": "Deger",
+        "discount_add_row": "+ Satir Ekle",
+        "discount_remove_row": "Sil",
         "discount_result_title": "Motor Sonucu",
         "discount_input_summary": "Girilen degerler",
         "discount_base_revenue": "Indirim oncesi gelir",
         "discount_new_revenue": "Indirim sonrasi gelir",
+        "discount_base_profit": "Indirim oncesi kar",
+        "discount_new_profit": "Indirim sonrasi kar",
+        "discount_model_profit": "Modelde en yuksek kar",
         "discount_recommendation": "Onerilen senaryo",
         "discount_scenario_keep": "Normal fiyatla devam et",
         "discount_scenario_discount": "Indirimli fiyatla sat",
+        "discount_objective": "Hedef",
+        "discount_objective_profit": "Kar maksimizasyonu",
+        "discount_objective_revenue": "Gelir maksimizasyonu",
         "discount_delta": "Gelir farki",
         "discount_extra_units": "Ekstra satis adedi",
         "discount_after_units": "Indirim sonrasi toplam adet",
@@ -93,7 +104,7 @@ TEXTS = {
         "discount_case_discount": "Indirimli fiyat senaryosu",
         "discount_case_optimal": "Modelin optimum fiyat senaryosu",
         "discount_optimal_discount": "Mevcut fiyata gore onerilen optimum indirim",
-        "discount_error_parse": "Prompttan gerekli verileri okuyamadim. Ornek: 100 adet urunu 1 TL'den sattim. 0,05 TL indirim yapinca 110 adet sattim.",
+        "discount_error_parse": "Gerekli veriler okunamadi. Kutucuklarda en az urun adedi, urun fiyati, indirim tutari ve indirim sonrasi toplam adedi girin.",
     },
     "en": {
         "page_title": "Optimal Price Calculator",
@@ -136,17 +147,28 @@ TEXTS = {
         "error_no_optimum": "This data does not produce an optimal price.",
         "portal_title": "Optimize your product prices",
         "discount_page_title": "Post-Discount Sales Impact",
-        "discount_prompt_label": "Write Your Request",
-        "discount_prompt_placeholder": "Example: Product quantity 100, product price 250, discount amount 30, after discount I sold 20 more units.",
-        "discount_hint": "Enter all inputs in one prompt instead of separate fields.",
-        "discount_example": "Required data: product quantity, product price, discount amount, additional units sold after discount.",
+        "discount_prompt_label": "What Should Be Calculated? (Optional)",
+        "discount_prompt_placeholder": "Example: Maximize profit or find best price.",
+        "discount_hint": "Enter values in separate boxes. Use + to add new rows.",
+        "discount_example": "Core fields: product quantity, product price, discount amount, total quantity after discount.",
+        "discount_fields_title": "Data Boxes",
+        "discount_field_name": "Field Name",
+        "discount_field_value": "Value",
+        "discount_add_row": "+ Add Row",
+        "discount_remove_row": "Remove",
         "discount_result_title": "Engine Result",
         "discount_input_summary": "Input summary",
         "discount_base_revenue": "Revenue before discount",
         "discount_new_revenue": "Revenue after discount",
+        "discount_base_profit": "Profit before discount",
+        "discount_new_profit": "Profit after discount",
+        "discount_model_profit": "Highest model profit",
         "discount_recommendation": "Recommended scenario",
         "discount_scenario_keep": "Keep normal price",
         "discount_scenario_discount": "Sell with discounted price",
+        "discount_objective": "Objective",
+        "discount_objective_profit": "Profit maximization",
+        "discount_objective_revenue": "Revenue maximization",
         "discount_delta": "Revenue delta",
         "discount_extra_units": "Extra units sold",
         "discount_after_units": "Total units after discount",
@@ -160,7 +182,7 @@ TEXTS = {
         "discount_case_discount": "Discounted price scenario",
         "discount_case_optimal": "Model optimal scenario",
         "discount_optimal_discount": "Recommended optimal discount from current price",
-        "discount_error_parse": "Could not parse the required inputs from your prompt. Example: I sold 100 units at 1 TL. After a 0.05 TL discount, I sold 110 units.",
+        "discount_error_parse": "Could not read required values. Please enter at least quantity, price, discount amount, and post-discount total quantity.",
     },
     "de": {
         "page_title": "Optimaler Preisrechner",
@@ -442,6 +464,70 @@ def _parse_discount_prompt(prompt: str) -> dict[str, Decimal] | None:
     }
 
 
+def _normalize_field_name(name: str) -> str:
+    text = (name or "").strip().lower()
+    replacements = {
+        "ü": "u",
+        "ğ": "g",
+        "ş": "s",
+        "ı": "i",
+        "ö": "o",
+        "ç": "c",
+    }
+    for src, dst in replacements.items():
+        text = text.replace(src, dst)
+    return " ".join(text.split())
+
+
+def _parse_discount_fields(post_data) -> dict[str, Decimal] | None:
+    names = post_data.getlist("field_name[]")
+    values = post_data.getlist("field_value[]")
+    parsed_values: dict[str, Decimal] = {}
+
+    for raw_name, raw_value in zip(names, values):
+        name = _normalize_field_name(raw_name)
+        value_text = (raw_value or "").strip()
+        if not name or not value_text:
+            continue
+        try:
+            value = _to_decimal(value_text)
+        except InvalidOperation:
+            continue
+
+        if name in {"urun adedi", "adet", "miktar", "quantity", "units", "satilan adet"}:
+            parsed_values["qty"] = value
+        elif name in {"urun fiyati", "fiyat", "price", "satis fiyati"}:
+            parsed_values["price"] = value
+        elif name in {"indirim", "indirim tutari", "discount", "indirim bedeli"}:
+            parsed_values["discount"] = value
+        elif name in {"indirim sonrasi adet", "indirim sonrasi toplam adet", "sonraki adet", "yeni adet", "after quantity"}:
+            parsed_values["after_qty"] = value
+        elif name in {"ekstra adet", "fazla satis", "extra units", "additional units"}:
+            parsed_values["extra"] = value
+        elif name in {"birim maliyet", "maliyet", "unit cost", "cost"}:
+            parsed_values["unit_cost"] = value
+
+    if "qty" not in parsed_values or "price" not in parsed_values or "discount" not in parsed_values:
+        return None
+    if "after_qty" not in parsed_values and "extra" not in parsed_values:
+        return None
+    if "after_qty" not in parsed_values:
+        parsed_values["after_qty"] = parsed_values["qty"] + parsed_values["extra"]
+    if "extra" not in parsed_values:
+        parsed_values["extra"] = parsed_values["after_qty"] - parsed_values["qty"]
+
+    return parsed_values
+
+
+def _detect_objective(goal_text: str) -> str:
+    text = _normalize_field_name(goal_text)
+    profit_words = ["kar", "profit", "maksimum kar", "max profit"]
+    for word in profit_words:
+        if word in text:
+            return "profit"
+    return "revenue"
+
+
 def _to_decimal(value: str) -> Decimal:
     return Decimal(str(value).replace(",", ".").strip())
 
@@ -709,6 +795,15 @@ def discount_optimizer(request):
     engines = _localized_engines(labels)
     selected_currency = request.POST.get("currency", "TRY")
     prompt_text = request.POST.get("prompt_text", "")
+    field_names = request.POST.getlist("field_name[]")
+    field_values = request.POST.getlist("field_value[]")
+    if not field_names:
+        field_names = ["urun adedi", "urun fiyati", "indirim tutari", "indirim sonrasi toplam adet"]
+    if not field_values:
+        field_values = ["", "", "", ""]
+    field_rows = [{"name": n, "value": v} for n, v in zip(field_names, field_values)]
+    if not field_rows:
+        field_rows = [{"name": "", "value": ""}]
 
     context = {
         "labels": labels,
@@ -719,12 +814,15 @@ def discount_optimizer(request):
         "selected_currency": selected_currency,
         "selected_symbol": CURRENCIES.get(selected_currency, "₺"),
         "prompt_text": prompt_text,
+        "field_rows": field_rows,
     }
 
     if request.method != "POST":
         return render(request, "core/discount_optimizer.html", context)
 
-    parsed = _parse_discount_prompt(prompt_text)
+    parsed = _parse_discount_fields(request.POST)
+    if not parsed and prompt_text.strip():
+        parsed = _parse_discount_prompt(prompt_text)
     if not parsed:
         context["error"] = labels["discount_error_parse"]
         return render(request, "core/discount_optimizer.html", context)
@@ -734,17 +832,24 @@ def discount_optimizer(request):
     discount = parsed["discount"]
     extra = parsed["extra"]
     after_qty = parsed["after_qty"]
+    unit_cost = max(parsed.get("unit_cost", Decimal("0")), Decimal("0"))
     discounted_price = price - discount
 
     if qty <= 0 or price <= 0 or discounted_price <= 0 or after_qty <= 0 or discount < 0:
         context["error"] = labels["discount_error_parse"]
         return render(request, "core/discount_optimizer.html", context)
 
+    objective = _detect_objective(prompt_text)
     before_revenue = price * qty
     after_revenue = discounted_price * after_qty
+    before_profit = (price - unit_cost) * qty
+    after_profit = (discounted_price - unit_cost) * after_qty
     delta = after_revenue - before_revenue
 
-    use_discount = after_revenue > before_revenue
+    if objective == "profit":
+        use_discount = after_profit > before_profit
+    else:
+        use_discount = after_revenue > before_revenue
 
     delta_price = discounted_price - price
     b = Decimal("0")
@@ -755,11 +860,16 @@ def discount_optimizer(request):
     model_optimal_price = Decimal("0")
     model_optimal_qty = Decimal("0")
     model_optimal_revenue = Decimal("0")
+    model_optimal_profit = Decimal("0")
     demand_formula = None
     if b != 0:
-        model_optimal_price = max(-(a / (2 * b)), Decimal("0"))
+        if objective == "profit":
+            model_optimal_price = max(((b * unit_cost) - a) / (2 * b), Decimal("0"))
+        else:
+            model_optimal_price = max(-(a / (2 * b)), Decimal("0"))
         model_optimal_qty = max(a + (b * model_optimal_price), Decimal("0"))
         model_optimal_revenue = model_optimal_price * model_optimal_qty
+        model_optimal_profit = (model_optimal_price - unit_cost) * model_optimal_qty
         demand_formula = f"Q = {a.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)} + ({b.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)}) * P"
 
     scenarios = [
@@ -768,12 +878,14 @@ def discount_optimizer(request):
             "price": price,
             "qty": qty,
             "revenue": before_revenue,
+            "profit": before_profit,
         },
         {
             "name": labels["discount_case_discount"],
             "price": discounted_price,
             "qty": after_qty,
             "revenue": after_revenue,
+            "profit": after_profit,
         },
     ]
     if demand_formula is not None:
@@ -783,10 +895,12 @@ def discount_optimizer(request):
                 "price": model_optimal_price,
                 "qty": model_optimal_qty,
                 "revenue": model_optimal_revenue,
+                "profit": model_optimal_profit,
             }
         )
 
-    best_scenario = max(scenarios, key=lambda item: item["revenue"])
+    metric_key = "profit" if objective == "profit" else "revenue"
+    best_scenario = max(scenarios, key=lambda item: item[metric_key])
 
     def round2(value: Decimal) -> Decimal:
         return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
@@ -796,16 +910,21 @@ def discount_optimizer(request):
         "price": round2(price),
         "discount": round2(discount),
         "discounted_price": round2(discounted_price),
+        "unit_cost": round2(unit_cost),
         "extra": round2(extra),
         "after_qty": round2(after_qty),
         "before_revenue": round2(before_revenue),
         "after_revenue": round2(after_revenue),
+        "before_profit": round2(before_profit),
+        "after_profit": round2(after_profit),
         "delta": round2(delta),
         "use_discount": use_discount,
+        "objective": objective,
         "demand_formula": demand_formula,
         "model_optimal_price": round2(model_optimal_price),
         "model_optimal_qty": round2(model_optimal_qty),
         "model_optimal_revenue": round2(model_optimal_revenue),
+        "model_optimal_profit": round2(model_optimal_profit),
         "optimal_discount_from_current": round2(max(price - model_optimal_price, Decimal("0"))),
         "scenarios": [
             {
@@ -813,9 +932,11 @@ def discount_optimizer(request):
                 "price": round2(scenario["price"]),
                 "qty": round2(scenario["qty"]),
                 "revenue": round2(scenario["revenue"]),
+                "profit": round2(scenario["profit"]),
             }
             for scenario in scenarios
         ],
         "best_scenario_name": best_scenario["name"],
+        "best_metric": metric_key,
     }
     return render(request, "core/discount_optimizer.html", context)
