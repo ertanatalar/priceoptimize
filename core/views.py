@@ -81,7 +81,18 @@ TEXTS = {
         "discount_scenario_keep": "Normal fiyatla devam et",
         "discount_scenario_discount": "Indirimli fiyatla sat",
         "discount_delta": "Gelir farki",
-        "discount_error_parse": "Prompt icinden gerekli 4 degeri okuyamadim. Lutfen ornekteki gibi yazin.",
+        "discount_extra_units": "Ekstra satis adedi",
+        "discount_after_units": "Indirim sonrasi toplam adet",
+        "discount_after_price": "Indirimli fiyat",
+        "discount_model_formula": "Talep modeli",
+        "discount_best_price": "Modelin onerilen en iyi fiyati",
+        "discount_best_demand": "Modelde beklenen satis adedi",
+        "discount_best_revenue": "Modelde en yuksek gelir",
+        "discount_all_scenarios": "Tum senaryo karsilastirmasi",
+        "discount_case_current": "Mevcut fiyat senaryosu",
+        "discount_case_discount": "Indirimli fiyat senaryosu",
+        "discount_case_optimal": "Modelin optimum fiyat senaryosu",
+        "discount_error_parse": "Prompttan gerekli verileri okuyamadim. Ornek: 100 adet urunu 1 TL'den sattim. 0,05 TL indirim yapinca 110 adet sattim.",
     },
     "en": {
         "page_title": "Optimal Price Calculator",
@@ -136,7 +147,18 @@ TEXTS = {
         "discount_scenario_keep": "Keep normal price",
         "discount_scenario_discount": "Sell with discounted price",
         "discount_delta": "Revenue delta",
-        "discount_error_parse": "Could not parse all 4 required values from the prompt. Please follow the example format.",
+        "discount_extra_units": "Extra units sold",
+        "discount_after_units": "Total units after discount",
+        "discount_after_price": "Discounted price",
+        "discount_model_formula": "Demand model",
+        "discount_best_price": "Model recommended best price",
+        "discount_best_demand": "Expected units at best price",
+        "discount_best_revenue": "Highest revenue in model",
+        "discount_all_scenarios": "All scenario comparison",
+        "discount_case_current": "Current price scenario",
+        "discount_case_discount": "Discounted price scenario",
+        "discount_case_optimal": "Model optimal scenario",
+        "discount_error_parse": "Could not parse the required inputs from your prompt. Example: I sold 100 units at 1 TL. After a 0.05 TL discount, I sold 110 units.",
     },
     "de": {
         "page_title": "Optimaler Preisrechner",
@@ -341,24 +363,34 @@ def _extract_decimal_by_patterns(text: str, patterns: list[str]) -> Decimal | No
 
 def _parse_discount_prompt(prompt: str) -> dict[str, Decimal] | None:
     text = prompt.lower()
-    qty = _extract_decimal_by_patterns(
-        text,
-        [
-            r"(?:urun adedi|ürün adedi|adet|miktar|quantity)\D{0,24}([-+]?\d+(?:[.,]\d+)?)",
-        ],
-    )
+    qty_matches = re.findall(r"([-+]?\d+(?:[.,]\d+)?)\s*(?:adet|unit|units?)", text, flags=re.IGNORECASE)
+    qty = None
+    if qty_matches:
+        qty = _to_decimal(qty_matches[0])
+
+    if qty is None:
+        qty = _extract_decimal_by_patterns(
+            text,
+            [
+                r"(?:urun adedi|ürün adedi|adet|miktar|quantity)\D{0,24}([-+]?\d+(?:[.,]\d+)?)",
+            ],
+        )
+
     price = _extract_decimal_by_patterns(
         text,
         [
+            r"([-+]?\d+(?:[.,]\d+)?)\s*(?:tl|try|usd|eur|\$|€|₺)\s*(?:den|dan|from)?",
             r"(?:urun fiyati|ürün fiyatı|fiyat|price)\D{0,24}([-+]?\d+(?:[.,]\d+)?)",
         ],
     )
     discount = _extract_decimal_by_patterns(
         text,
         [
-            r"(?:indirim bedeli|indirim|discount)\D{0,24}([-+]?\d+(?:[.,]\d+)?)",
+            r"([-+]?\d+(?:[.,]\d+)?)\s*(?:tl|try|usd|eur|\$|€|₺)?\s*(?:indirim bedeli|indirim|discount)",
+            r"(?:indirim bedeli|indirim|discount)\D{0,12}([-+]?\d+(?:[.,]\d+)?)",
         ],
     )
+
     extra = _extract_decimal_by_patterns(
         text,
         [
@@ -366,20 +398,46 @@ def _parse_discount_prompt(prompt: str) -> dict[str, Decimal] | None:
         ],
     )
 
-    if None in (qty, price, discount, extra):
+    after_qty = _extract_decimal_by_patterns(
+        text,
+        [
+            r"(?:indirim[^.\n]{0,80}|yapinca[^.\n]{0,80}|sonra[^.\n]{0,80})\b([-+]?\d+(?:[.,]\d+)?)\s*(?:adet|unit|units?)",
+            r"(?:sattim|sold)\D{0,18}([-+]?\d+(?:[.,]\d+)?)\s*(?:adet|unit|units?)",
+        ],
+    )
+    if after_qty is None and len(qty_matches) >= 2:
+        after_qty = _to_decimal(qty_matches[1])
+
+    if None in (qty, price, discount) or (extra is None and after_qty is None):
         numbers = re.findall(r"[-+]?\d+(?:[.,]\d+)?", text)
         if len(numbers) >= 4:
             try:
                 qty = qty or _to_decimal(numbers[0])
                 price = price or _to_decimal(numbers[1])
                 discount = discount or _to_decimal(numbers[2])
-                extra = extra or _to_decimal(numbers[3])
+                if after_qty is None and extra is None:
+                    after_qty = _to_decimal(numbers[3])
             except InvalidOperation:
                 return None
 
-    if None in (qty, price, discount, extra):
+    if None in (qty, price, discount) or (extra is None and after_qty is None):
         return None
-    return {"qty": qty, "price": price, "discount": discount, "extra": extra}
+
+    if after_qty is None and extra is not None:
+        after_qty = qty + extra
+    if extra is None and after_qty is not None:
+        extra = after_qty - qty
+
+    if after_qty is None or extra is None:
+        return None
+
+    return {
+        "qty": qty,
+        "price": price,
+        "discount": discount,
+        "extra": extra,
+        "after_qty": after_qty,
+    }
 
 
 def _to_decimal(value: str) -> Decimal:
@@ -669,22 +727,64 @@ def discount_optimizer(request):
         context["error"] = labels["discount_error_parse"]
         return render(request, "core/discount_optimizer.html", context)
 
-    qty = max(parsed["qty"], Decimal("0"))
+    qty = parsed["qty"]
     price = parsed["price"]
-    discount = max(parsed["discount"], Decimal("0"))
-    extra = max(parsed["extra"], Decimal("0"))
+    discount = parsed["discount"]
+    extra = parsed["extra"]
+    after_qty = parsed["after_qty"]
     discounted_price = price - discount
 
-    if price <= 0 or discounted_price <= 0:
+    if qty <= 0 or price <= 0 or discounted_price <= 0 or after_qty <= 0 or discount < 0:
         context["error"] = labels["discount_error_parse"]
         return render(request, "core/discount_optimizer.html", context)
 
     before_revenue = price * qty
-    new_qty = qty + extra
-    after_revenue = discounted_price * new_qty
+    after_revenue = discounted_price * after_qty
     delta = after_revenue - before_revenue
 
     use_discount = after_revenue > before_revenue
+
+    delta_price = discounted_price - price
+    b = Decimal("0")
+    a = qty
+    if delta_price != 0:
+        b = (after_qty - qty) / delta_price
+        a = qty - (b * price)
+    model_optimal_price = Decimal("0")
+    model_optimal_qty = Decimal("0")
+    model_optimal_revenue = Decimal("0")
+    demand_formula = None
+    if b != 0:
+        model_optimal_price = max(-(a / (2 * b)), Decimal("0"))
+        model_optimal_qty = max(a + (b * model_optimal_price), Decimal("0"))
+        model_optimal_revenue = model_optimal_price * model_optimal_qty
+        demand_formula = f"Q = {a.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)} + ({b.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)}) * P"
+
+    scenarios = [
+        {
+            "name": labels["discount_case_current"],
+            "price": price,
+            "qty": qty,
+            "revenue": before_revenue,
+        },
+        {
+            "name": labels["discount_case_discount"],
+            "price": discounted_price,
+            "qty": after_qty,
+            "revenue": after_revenue,
+        },
+    ]
+    if demand_formula is not None:
+        scenarios.append(
+            {
+                "name": labels["discount_case_optimal"],
+                "price": model_optimal_price,
+                "qty": model_optimal_qty,
+                "revenue": model_optimal_revenue,
+            }
+        )
+
+    best_scenario = max(scenarios, key=lambda item: item["revenue"])
 
     def round2(value: Decimal) -> Decimal:
         return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
@@ -695,9 +795,24 @@ def discount_optimizer(request):
         "discount": round2(discount),
         "discounted_price": round2(discounted_price),
         "extra": round2(extra),
+        "after_qty": round2(after_qty),
         "before_revenue": round2(before_revenue),
         "after_revenue": round2(after_revenue),
         "delta": round2(delta),
         "use_discount": use_discount,
+        "demand_formula": demand_formula,
+        "model_optimal_price": round2(model_optimal_price),
+        "model_optimal_qty": round2(model_optimal_qty),
+        "model_optimal_revenue": round2(model_optimal_revenue),
+        "scenarios": [
+            {
+                "name": scenario["name"],
+                "price": round2(scenario["price"]),
+                "qty": round2(scenario["qty"]),
+                "revenue": round2(scenario["revenue"]),
+            }
+            for scenario in scenarios
+        ],
+        "best_scenario_name": best_scenario["name"],
     }
     return render(request, "core/discount_optimizer.html", context)

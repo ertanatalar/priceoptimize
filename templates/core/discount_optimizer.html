@@ -260,7 +260,7 @@
         <section class="result">
           <h2>{{ labels.discount_result_title }}</h2>
           <div class="result-grid">
-            <p>{{ labels.discount_input_summary }}: adet={{ result.qty }}, fiyat={{ selected_symbol }}{{ result.price }}, indirim={{ selected_symbol }}{{ result.discount }}, ekstra adet={{ result.extra }}</p>
+            <p>{{ labels.discount_input_summary }}: adet={{ result.qty }}, fiyat={{ selected_symbol }}{{ result.price }}, indirim={{ selected_symbol }}{{ result.discount }}, {{ labels.discount_after_units|default:'Indirim sonrasi toplam adet' }}={{ result.after_qty }}, {{ labels.discount_extra_units|default:'Ekstra satis adedi' }}={{ result.extra }}</p>
             <p>{{ labels.discount_base_revenue }}: {{ selected_symbol }}{{ result.before_revenue }}</p>
             <p>{{ labels.discount_new_revenue }}: {{ selected_symbol }}{{ result.after_revenue }}</p>
             <p>{{ labels.discount_delta }}: {{ selected_symbol }}{{ result.delta }}</p>
@@ -269,6 +269,18 @@
             {% else %}
               <p class="warn">{{ labels.discount_recommendation }}: {{ labels.discount_scenario_keep }} (fiyat={{ selected_symbol }}{{ result.price }})</p>
             {% endif %}
+            {% if result.demand_formula %}
+              <p>{{ labels.discount_model_formula|default:'Talep modeli' }}: {{ result.demand_formula }}</p>
+              <p>{{ labels.discount_best_price|default:'Modelin onerilen en iyi fiyati' }}: {{ selected_symbol }}{{ result.model_optimal_price }}</p>
+              <p>{{ labels.discount_best_demand|default:'Modelde beklenen satis adedi' }}: {{ result.model_optimal_qty }}</p>
+              <p>{{ labels.discount_best_revenue|default:'Modelde en yuksek gelir' }}: {{ selected_symbol }}{{ result.model_optimal_revenue }}</p>
+            {% endif %}
+            <h3 style="margin: .75rem 0 .35rem;">{{ labels.discount_all_scenarios|default:'Tum senaryo karsilastirmasi' }}</h3>
+            {% for scenario in result.scenarios %}
+              <p{% if scenario.name == result.best_scenario_name %} class="ok"{% endif %}>
+                {{ scenario.name }}: fiyat={{ selected_symbol }}{{ scenario.price }}, adet={{ scenario.qty }}, gelir={{ selected_symbol }}{{ scenario.revenue }}
+              </p>
+            {% endfor %}
           </div>
         </section>
       {% endif %}
