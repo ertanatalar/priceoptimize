@@ -160,7 +160,6 @@
       font-size: 1rem;
       padding: .66rem .7rem;
     }
-    textarea { min-height: 135px; resize: vertical; }
     .field-grid {
       display: grid;
       gap: .55rem;
@@ -168,7 +167,7 @@
     }
     .field-row {
       display: grid;
-      grid-template-columns: 1.2fr 1fr auto;
+      grid-template-columns: 1fr auto;
       gap: .55rem;
       align-items: center;
     }
@@ -259,20 +258,19 @@
       <form method="post">
         {% csrf_token %}
         <section class="input-section">
-          <label>{{ labels.discount_fields_title|default:'Veri Kutucuklari' }}</label>
+          <label>{{ labels.discount_fields_title|default:'Veri Cumleleri' }}</label>
           <div class="field-grid" id="fieldGrid">
-            {% for row in field_rows %}
+            {% for row in sentence_rows %}
               <div class="field-row">
-                <input type="text" name="field_name[]" placeholder="{{ labels.discount_field_name|default:'Veri Adi' }}" value="{{ row.name }}">
-                <input type="text" name="field_value[]" placeholder="{{ labels.discount_field_value|default:'Deger' }}" value="{{ row.value }}">
+                <input type="text" name="sentence_line[]" placeholder="{{ labels.discount_field_name|default:'Cumle' }} (or: 100 adet urunu 1 TL den sattim)" value="{{ row }}">
                 <button type="button" class="remove-row-btn">{{ labels.discount_remove_row|default:'Sil' }}</button>
               </div>
             {% endfor %}
           </div>
-          <button type="button" class="add-row-btn" id="addRowBtn">{{ labels.discount_add_row|default:'+ Satir Ekle' }}</button>
+          <button type="button" class="add-row-btn" id="addRowBtn">{{ labels.discount_add_row|default:'+ Cumle Ekle' }}</button>
 
-          <label for="prompt_text">{{ labels.discount_prompt_label }}</label>
-          <textarea id="prompt_text" name="prompt_text" placeholder="{{ labels.discount_prompt_placeholder }}">{{ prompt_text|default:'' }}</textarea>
+          <label for="goal_text">{{ labels.discount_prompt_label }}</label>
+          <input id="goal_text" name="goal_text" placeholder="{{ labels.discount_prompt_placeholder }}" value="{{ prompt_text|default:'' }}">
           <p class="hint">{{ labels.discount_hint }}</p>
           <p class="hint">{{ labels.discount_example }}</p>
           <div class="row">
@@ -364,8 +362,7 @@
         const row = document.createElement("div");
         row.className = "field-row";
         row.innerHTML = `
-          <input type="text" name="field_name[]" placeholder="{{ labels.discount_field_name|default:'Veri Adi' }}">
-          <input type="text" name="field_value[]" placeholder="{{ labels.discount_field_value|default:'Deger' }}">
+          <input type="text" name="sentence_line[]" placeholder="{{ labels.discount_field_name|default:'Cumle' }} (or: 0,05 TL indirim yapinca 110 adet sattim)">
           <button type="button" class="remove-row-btn">{{ labels.discount_remove_row|default:'Sil' }}</button>
         `;
         fieldGrid.appendChild(row);

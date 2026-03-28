@@ -71,12 +71,11 @@ TEXTS = {
         "discount_page_title": "Indirim Sonrasi Satis Etkisi",
         "discount_prompt_label": "Ne Hesaplanacak? (Opsiyonel)",
         "discount_prompt_placeholder": "Ornek: Kari maksimize et veya en iyi fiyati bul.",
-        "discount_hint": "Verileri kutulara tek tek girin. + ile yeni satir ekleyebilirsiniz.",
-        "discount_example": "Temel bilgiler: urun adedi, urun fiyati, indirim tutari, indirim sonrasi toplam adet.",
-        "discount_fields_title": "Veri Kutucuklari",
-        "discount_field_name": "Veri Adi",
-        "discount_field_value": "Deger",
-        "discount_add_row": "+ Satir Ekle",
+        "discount_hint": "Her satira bir cumle yazin. + ile yeni cumle satiri ekleyebilirsiniz.",
+        "discount_example": "Ornek satirlar: 100 adet urunu 1 TL'den sattim. / 0,05 TL indirim yapinca 110 adet sattim.",
+        "discount_fields_title": "Veri Cumleleri",
+        "discount_field_name": "Cumle",
+        "discount_add_row": "+ Cumle Ekle",
         "discount_remove_row": "Sil",
         "discount_result_title": "Motor Sonucu",
         "discount_input_summary": "Girilen degerler",
@@ -149,12 +148,11 @@ TEXTS = {
         "discount_page_title": "Post-Discount Sales Impact",
         "discount_prompt_label": "What Should Be Calculated? (Optional)",
         "discount_prompt_placeholder": "Example: Maximize profit or find best price.",
-        "discount_hint": "Enter values in separate boxes. Use + to add new rows.",
-        "discount_example": "Core fields: product quantity, product price, discount amount, total quantity after discount.",
-        "discount_fields_title": "Data Boxes",
-        "discount_field_name": "Field Name",
-        "discount_field_value": "Value",
-        "discount_add_row": "+ Add Row",
+        "discount_hint": "Write one sentence per line. Use + to add a new sentence line.",
+        "discount_example": "Example lines: I sold 100 units at 1 TL. / After a 0.05 TL discount, I sold 110 units.",
+        "discount_fields_title": "Data Sentences",
+        "discount_field_name": "Sentence",
+        "discount_add_row": "+ Add Sentence",
         "discount_remove_row": "Remove",
         "discount_result_title": "Engine Result",
         "discount_input_summary": "Input summary",
@@ -455,12 +453,20 @@ def _parse_discount_prompt(prompt: str) -> dict[str, Decimal] | None:
     if after_qty is None or extra is None:
         return None
 
+    unit_cost = _extract_decimal_by_patterns(
+        text,
+        [
+            r"(?:birim maliyet|maliyet|unit cost|cost)\D{0,12}([-+]?\d+(?:[.,]\d+)?)",
+        ],
+    )
+
     return {
         "qty": qty,
         "price": price,
         "discount": discount,
         "extra": extra,
         "after_qty": after_qty,
+        "unit_cost": unit_cost if unit_cost is not None else Decimal("0"),
     }
 
 
@@ -483,6 +489,13 @@ def _parse_discount_fields(post_data) -> dict[str, Decimal] | None:
     names = post_data.getlist("field_name[]")
     values = post_data.getlist("field_value[]")
     parsed_values: dict[str, Decimal] = {}
+    base_prices: list[Decimal] = []
+    discount_prices: list[Decimal] = []
+    generic_prices: list[Decimal] = []
+    base_qtys: list[Decimal] = []
+    after_qtys: list[Decimal] = []
+    generic_qtys: list[Decimal] = []
+    discount_amounts: list[Decimal] = []
 
     for raw_name, raw_value in zip(names, values):
         name = _normalize_field_name(raw_name)
@@ -494,18 +507,67 @@ def _parse_discount_fields(post_data) -> dict[str, Decimal] | None:
         except InvalidOperation:
             continue
 
-        if name in {"urun adedi", "adet", "miktar", "quantity", "units", "satilan adet"}:
-            parsed_values["qty"] = value
-        elif name in {"urun fiyati", "fiyat", "price", "satis fiyati"}:
-            parsed_values["price"] = value
-        elif name in {"indirim", "indirim tutari", "discount", "indirim bedeli"}:
-            parsed_values["discount"] = value
-        elif name in {"indirim sonrasi adet", "indirim sonrasi toplam adet", "sonraki adet", "yeni adet", "after quantity"}:
-            parsed_values["after_qty"] = value
-        elif name in {"ekstra adet", "fazla satis", "extra units", "additional units"}:
-            parsed_values["extra"] = value
-        elif name in {"birim maliyet", "maliyet", "unit cost", "cost"}:
+        if name in {"birim maliyet", "maliyet", "unit cost", "cost"}:
             parsed_values["unit_cost"] = value
+            continue
+
+        has_price = any(token in name for token in ["fiyat", "price", "ucret"])
+        has_qty = any(token in name for token in ["adet", "quantity", "units", "miktar", "satis"])
+        has_discount = any(token in name for token in ["indirim", "discount"])
+        has_after = any(token in name for token in ["sonrasi", "after", "yeni"])
+        has_base = any(token in name for token in ["normal", "once", "before", "ilk", "mevcut"])
+
+        if has_price:
+            if has_discount or has_after:
+                discount_prices.append(value)
+            elif has_base:
+                base_prices.append(value)
+            else:
+                generic_prices.append(value)
+            continue
+
+        if has_qty:
+            if has_discount or has_after:
+                after_qtys.append(value)
+            elif has_base:
+                base_qtys.append(value)
+            else:
+                generic_qtys.append(value)
+            continue
+
+        if has_discount:
+            discount_amounts.append(value)
+
+    if base_prices:
+        parsed_values["price"] = base_prices[0]
+    elif len(generic_prices) >= 2:
+        sorted_prices = sorted(generic_prices, reverse=True)
+        parsed_values["price"] = sorted_prices[0]
+        parsed_values["discounted_price"] = sorted_prices[-1]
+    elif len(generic_prices) == 1:
+        parsed_values["price"] = generic_prices[0]
+
+    if discount_prices:
+        parsed_values["discounted_price"] = discount_prices[0]
+    elif "discounted_price" not in parsed_values and "price" in parsed_values and discount_amounts:
+        parsed_values["discounted_price"] = parsed_values["price"] - discount_amounts[0]
+
+    if "price" in parsed_values and "discounted_price" in parsed_values:
+        parsed_values["discount"] = parsed_values["price"] - parsed_values["discounted_price"]
+    elif discount_amounts:
+        parsed_values["discount"] = discount_amounts[0]
+
+    if base_qtys:
+        parsed_values["qty"] = base_qtys[0]
+    elif len(generic_qtys) >= 2:
+        sorted_qtys = sorted(generic_qtys)
+        parsed_values["qty"] = sorted_qtys[0]
+        parsed_values["after_qty"] = sorted_qtys[-1]
+    elif len(generic_qtys) == 1:
+        parsed_values["qty"] = generic_qtys[0]
+
+    if after_qtys:
+        parsed_values["after_qty"] = after_qtys[0]
 
     if "qty" not in parsed_values or "price" not in parsed_values or "discount" not in parsed_values:
         return None
@@ -794,16 +856,10 @@ def discount_optimizer(request):
     labels = {**TEXTS["en"], **TEXTS.get(current_language, TEXTS["en"])}
     engines = _localized_engines(labels)
     selected_currency = request.POST.get("currency", "TRY")
-    prompt_text = request.POST.get("prompt_text", "")
-    field_names = request.POST.getlist("field_name[]")
-    field_values = request.POST.getlist("field_value[]")
-    if not field_names:
-        field_names = ["urun adedi", "urun fiyati", "indirim tutari", "indirim sonrasi toplam adet"]
-    if not field_values:
-        field_values = ["", "", "", ""]
-    field_rows = [{"name": n, "value": v} for n, v in zip(field_names, field_values)]
-    if not field_rows:
-        field_rows = [{"name": "", "value": ""}]
+    prompt_text = request.POST.get("goal_text", "")
+    sentence_rows = request.POST.getlist("sentence_line[]")
+    if not sentence_rows:
+        sentence_rows = [""]
 
     context = {
         "labels": labels,
@@ -814,15 +870,14 @@ def discount_optimizer(request):
         "selected_currency": selected_currency,
         "selected_symbol": CURRENCIES.get(selected_currency, "₺"),
         "prompt_text": prompt_text,
-        "field_rows": field_rows,
+        "sentence_rows": sentence_rows,
     }
 
     if request.method != "POST":
         return render(request, "core/discount_optimizer.html", context)
 
-    parsed = _parse_discount_fields(request.POST)
-    if not parsed and prompt_text.strip():
-        parsed = _parse_discount_prompt(prompt_text)
+    combined_text = ". ".join([row.strip() for row in sentence_rows if row.strip()])
+    parsed = _parse_discount_prompt(combined_text)
     if not parsed:
         context["error"] = labels["discount_error_parse"]
         return render(request, "core/discount_optimizer.html", context)
