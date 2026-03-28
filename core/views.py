@@ -92,6 +92,7 @@ TEXTS = {
         "discount_case_current": "Mevcut fiyat senaryosu",
         "discount_case_discount": "Indirimli fiyat senaryosu",
         "discount_case_optimal": "Modelin optimum fiyat senaryosu",
+        "discount_optimal_discount": "Mevcut fiyata gore onerilen optimum indirim",
         "discount_error_parse": "Prompttan gerekli verileri okuyamadim. Ornek: 100 adet urunu 1 TL'den sattim. 0,05 TL indirim yapinca 110 adet sattim.",
     },
     "en": {
@@ -158,6 +159,7 @@ TEXTS = {
         "discount_case_current": "Current price scenario",
         "discount_case_discount": "Discounted price scenario",
         "discount_case_optimal": "Model optimal scenario",
+        "discount_optimal_discount": "Recommended optimal discount from current price",
         "discount_error_parse": "Could not parse the required inputs from your prompt. Example: I sold 100 units at 1 TL. After a 0.05 TL discount, I sold 110 units.",
     },
     "de": {
@@ -804,6 +806,7 @@ def discount_optimizer(request):
         "model_optimal_price": round2(model_optimal_price),
         "model_optimal_qty": round2(model_optimal_qty),
         "model_optimal_revenue": round2(model_optimal_revenue),
+        "optimal_discount_from_current": round2(max(price - model_optimal_price, Decimal("0"))),
         "scenarios": [
             {
                 "name": scenario["name"],

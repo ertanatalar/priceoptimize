@@ -272,6 +272,7 @@
             {% if result.demand_formula %}
               <p>{{ labels.discount_model_formula|default:'Talep modeli' }}: {{ result.demand_formula }}</p>
               <p>{{ labels.discount_best_price|default:'Modelin onerilen en iyi fiyati' }}: {{ selected_symbol }}{{ result.model_optimal_price }}</p>
+              <p>{{ labels.discount_optimal_discount|default:'Mevcut fiyata gore onerilen optimum indirim' }}: {{ selected_symbol }}{{ result.optimal_discount_from_current }}</p>
               <p>{{ labels.discount_best_demand|default:'Modelde beklenen satis adedi' }}: {{ result.model_optimal_qty }}</p>
               <p>{{ labels.discount_best_revenue|default:'Modelde en yuksek gelir' }}: {{ selected_symbol }}{{ result.model_optimal_revenue }}</p>
             {% endif %}
