@@ -182,35 +182,6 @@
     }
     .add-row-btn { background: #0f766e; margin-top: .6rem; }
     .remove-row-btn { background: #475569; }
-    .speech-bar {
-      margin-top: .7rem;
-      display: flex;
-      align-items: center;
-      gap: .6rem;
-      flex-wrap: wrap;
-      background: #f2faf8;
-      border: 1px solid #cfe8e0;
-      border-radius: 10px;
-      padding: .6rem .7rem;
-    }
-    .speech-btn {
-      width: auto;
-      border: none;
-      border-radius: 999px;
-      background: #0f766e;
-      color: #fff;
-      font-weight: 700;
-      cursor: pointer;
-      padding: .5rem .85rem;
-      display: inline-flex;
-      align-items: center;
-      gap: .4rem;
-    }
-    .speech-btn.listening { background: #b91c1c; }
-    .speech-status {
-      color: #334155;
-      font-size: .94rem;
-    }
     .row {
       display: grid;
       grid-template-columns: 130px 1fr;
@@ -297,11 +268,6 @@
             {% endfor %}
           </div>
           <button type="button" class="add-row-btn" id="addRowBtn">{{ labels.discount_add_row|default:'+ Cumle Ekle' }}</button>
-          <div class="speech-bar">
-            <span style="font-weight:700;color:#0f766e;">{{ labels.discount_speech_input|default:'Sesle Veri Girisi' }}</span>
-            <button type="button" class="speech-btn" id="speechBtn">🎤 {{ labels.discount_speech_start|default:'Mikrofonu Baslat' }}</button>
-            <span class="speech-status" id="speechStatus">{{ labels.discount_speech_ready|default:'Mikrofona tiklayip konusabilirsiniz.' }}</span>
-          </div>
 
           <label for="goal_text">{{ labels.discount_prompt_label }}</label>
           <input id="goal_text" name="goal_text" placeholder="{{ labels.discount_prompt_placeholder }}" value="{{ prompt_text|default:'' }}">
@@ -381,16 +347,9 @@
       const overlay = document.getElementById("drawerOverlay");
       const fieldGrid = document.getElementById("fieldGrid");
       const addRowBtn = document.getElementById("addRowBtn");
-      const speechBtn = document.getElementById("speechBtn");
-      const speechStatus = document.getElementById("speechStatus");
       const closeMenu = () => body.classList.remove("drawer-open");
       const openMenu = () => body.classList.add("drawer-open");
       const sentencePlaceholder = "{{ labels.discount_field_name|default:'Cumle'|escapejs }} (or: 0,05 TL indirim yapinca 110 adet sattim)";
-      const speechStartText = "{{ labels.discount_speech_start|default:'Mikrofonu Baslat'|escapejs }}";
-      const speechStopText = "{{ labels.discount_speech_stop|default:'Durdur'|escapejs }}";
-      const speechReadyText = "{{ labels.discount_speech_ready|default:'Mikrofona tiklayip konusabilirsiniz.'|escapejs }}";
-      const speechListeningText = "{{ labels.discount_speech_listening|default:'Dinleniyor... Konusmaya devam edin.'|escapejs }}";
-      const speechUnsupportedText = "{{ labels.discount_speech_not_supported|default:'Bu tarayici sesle veri girisini desteklemiyor.'|escapejs }}";
       menuToggle.addEventListener("click", () => {
         if (body.classList.contains("drawer-open")) closeMenu();
         else openMenu();
@@ -421,98 +380,10 @@
         bindRemoveButtons();
         return input;
       };
-      const findFirstEmptySentenceInput = () => {
-        const inputs = fieldGrid.querySelectorAll('input[name="sentence_line[]"]');
-        for (const input of inputs) {
-          if (!input.value.trim()) return input;
-        }
-        return null;
-      };
-      const applyVoiceText = (text) => {
-        const cleaned = (text || "").trim();
-        if (!cleaned) return;
-        const parts = cleaned
-          .split(/[.!?]+/)
-          .map((p) => p.trim())
-          .filter(Boolean);
-        if (parts.length === 0) return;
-        parts.forEach((part) => {
-          const target = findFirstEmptySentenceInput() || addSentenceRow();
-          target.value = part;
-        });
-      };
-
       bindRemoveButtons();
       addRowBtn.addEventListener("click", () => {
         addSentenceRow();
       });
-
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        speechBtn.disabled = true;
-        speechStatus.textContent = speechUnsupportedText;
-      } else {
-        const recognition = new SpeechRecognition();
-        const langMap = {
-          tr: "tr-TR",
-          en: "en-US",
-          de: "de-DE",
-          es: "es-ES",
-          it: "it-IT",
-          ru: "ru-RU",
-          fr: "fr-FR",
-        };
-        recognition.lang = langMap["{{ current_language|escapejs }}"] || "tr-TR";
-        recognition.continuous = true;
-        recognition.interimResults = true;
-
-        let listening = false;
-        let interimBuffer = "";
-
-        recognition.onresult = (event) => {
-          let finalText = "";
-          interimBuffer = "";
-          for (let i = event.resultIndex; i < event.results.length; i += 1) {
-            const transcript = event.results[i][0].transcript;
-            if (event.results[i].isFinal) finalText += ` ${transcript}`;
-            else interimBuffer += ` ${transcript}`;
-          }
-          if (finalText.trim()) {
-            applyVoiceText(finalText);
-          }
-          speechStatus.textContent = interimBuffer.trim()
-            ? `${speechListeningText} ${interimBuffer.trim()}`
-            : speechListeningText;
-        };
-
-        recognition.onerror = () => {
-          listening = false;
-          speechBtn.classList.remove("listening");
-          speechBtn.innerHTML = `🎤 ${speechStartText}`;
-          speechStatus.textContent = speechReadyText;
-        };
-
-        recognition.onend = () => {
-          listening = false;
-          speechBtn.classList.remove("listening");
-          speechBtn.innerHTML = `🎤 ${speechStartText}`;
-          if (!interimBuffer.trim()) {
-            speechStatus.textContent = speechReadyText;
-          }
-        };
-
-        speechBtn.addEventListener("click", () => {
-          if (!listening) {
-            listening = true;
-            speechBtn.classList.add("listening");
-            speechBtn.innerHTML = `⏹ ${speechStopText}`;
-            speechStatus.textContent = speechListeningText;
-            recognition.start();
-          } else {
-            recognition.stop();
-          }
-        });
-      }
     })();
   </script>
 </body>
