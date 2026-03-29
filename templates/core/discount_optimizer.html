@@ -322,11 +322,20 @@
             {% if result.step_model %}
               <h3 style="margin: .75rem 0 .35rem;">{{ labels.discount_step_model_title|default:'Kalkulus Modeli (Video Algoritmasi)' }}</h3>
               <p>{{ labels.discount_step_rule|default:'Kural' }}: Her {{ selected_symbol }}{{ result.step_model.step }} indirimde satis {{ result.step_model.extra }} adet artiyor.</p>
-              <p>{{ labels.discount_profit_function|default:'Kar fonksiyonu' }}: {{ result.step_model.formula }}</p>
+              <p>{{ result.step_model.p_func }}</p>
+              <p>{{ result.step_model.q_func }}</p>
+              <p>{{ result.step_model.r_func }}</p>
+              <p>{{ result.step_model.c_func }}</p>
+              <p>{{ labels.discount_profit_function|default:'Kar fonksiyonu' }}: {{ result.step_model.p_func_expanded }}</p>
+              <p>{{ result.step_model.d1_func }}</p>
+              <p>{{ result.step_model.d2_func }}</p>
               <p>{{ labels.discount_optimal_reductions|default:'Optimum indirim adimi sayisi' }}: {{ result.step_model.x_best }} (surekli cozum: {{ result.step_model.x_cont }})</p>
               <p>{{ labels.discount_optimal_price_step|default:'Optimum satis fiyati' }}: {{ selected_symbol }}{{ result.step_model.price }}</p>
               <p>{{ labels.discount_optimal_qty_step|default:'Optimum satis adedi' }}: {{ result.step_model.qty }}</p>
               <p class="ok">{{ labels.discount_optimal_profit_step|default:'Maksimum kar (kalkulus modeli)' }}: {{ selected_symbol }}{{ result.step_model.profit }}</p>
+              {% if result.step_model.is_maximum %}
+                <p class="ok">P''(x) negatif oldugu icin bu nokta maksimumdur.</p>
+              {% endif %}
             {% endif %}
             <h3 style="margin: .75rem 0 .35rem;">{{ labels.discount_all_scenarios|default:'Tum senaryo karsilastirmasi' }}</h3>
             {% for scenario in result.scenarios %}

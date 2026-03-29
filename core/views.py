@@ -1261,24 +1261,45 @@ def discount_optimizer(request):
     step_model = None
     reduction_step = parsed.get("reduction_step")
     extra_per_reduction = parsed.get("extra_per_reduction")
+    if reduction_step is None and discount > 0:
+        reduction_step = discount
+    if extra_per_reduction is None and extra > 0:
+        extra_per_reduction = extra
     if (
         reduction_step is not None
         and extra_per_reduction is not None
         and reduction_step > 0
         and extra_per_reduction > 0
     ):
-        # Video modeli: Kar(x) = (P0 - d*x - C) * (Q0 + k*x)
+        # Video modeli:
+        # p(x) = P0 - d*x
+        # q(x) = Q0 + k*x
+        # R(x) = p(x)*q(x)
+        # C(x) = c*q(x)
+        # P(x) = R(x)-C(x)
         p0 = price
         q0 = qty
         d = reduction_step
         k = extra_per_reduction
         c = unit_cost
-        a2 = -(d * k)
-        b2 = ((p0 - c) * k) - (d * q0)
-        c2 = (p0 - c) * q0
+        r_a = -(d * k)
+        r_b = (p0 * k) - (d * q0)
+        r_c = p0 * q0
 
-        if a2 != 0:
-            x_cont = -(b2 / (2 * a2))
+        c_a = Decimal("0")
+        c_b = c * k
+        c_c = c * q0
+
+        p_a = r_a - c_a
+        p_b = r_b - c_b
+        p_c = r_c - c_c
+
+        d1_a = p_a * Decimal("2")
+        d1_b = p_b
+        d2_const = d1_a
+
+        if p_a != 0:
+            x_cont = -(p_b / (Decimal("2") * p_a))
         else:
             x_cont = Decimal("0")
         max_steps_by_price = p0 / d
@@ -1302,6 +1323,18 @@ def discount_optimizer(request):
         step_price = p0 - (d * best_x)
         step_qty = q0 + (k * best_x)
         step_profit = (step_price - c) * step_qty
+
+        def fmt(v: Decimal) -> str:
+            return str(round2(v))
+
+        p_func = f"p(x) = {fmt(p0)} - {fmt(d)}x"
+        q_func = f"q(x) = {fmt(q0)} + {fmt(k)}x"
+        r_func = f"R(x) = ({fmt(p0)} - {fmt(d)}x)({fmt(q0)} + {fmt(k)}x) = {fmt(r_a)}x^2 + {fmt(r_b)}x + {fmt(r_c)}"
+        c_func = f"C(x) = {fmt(c)}({fmt(q0)} + {fmt(k)}x) = {fmt(c_b)}x + {fmt(c_c)}"
+        p_func_expanded = f"P(x) = {fmt(p_a)}x^2 + {fmt(p_b)}x + {fmt(p_c)}"
+        d1_func = f"P'(x) = {fmt(d1_a)}x + {fmt(d1_b)}"
+        d2_func = f"P''(x) = {fmt(d2_const)}"
+
         step_model = {
             "step": round2(d),
             "extra": round2(k),
@@ -1310,7 +1343,14 @@ def discount_optimizer(request):
             "price": round2(step_price),
             "qty": round2(step_qty),
             "profit": round2(step_profit),
-            "formula": f"Pi(x) = ({round2(p0)} - {round2(d)}x - {round2(c)}) * ({round2(q0)} + {round2(k)}x)",
+            "p_func": p_func,
+            "q_func": q_func,
+            "r_func": r_func,
+            "c_func": c_func,
+            "p_func_expanded": p_func_expanded,
+            "d1_func": d1_func,
+            "d2_func": d2_func,
+            "is_maximum": d2_const < 0,
         }
 
     delta_price = discounted_price - price
