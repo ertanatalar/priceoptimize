@@ -50,7 +50,7 @@ TEXTS = {
         "engine_price_demand_title": "Fiyat-Talep Motoru",
         "engine_price_demand_desc": "Iki veri noktasindan talep modeli ve kar optimizasyonu.",
         "engine_discount_title": "Indirim Etki Motoru",
-        "engine_discount_desc": "Tek prompt ile indirim sonrasi satis adedi etkisini hesaplar ve en iyi senaryoyu onerir.",
+        "engine_discount_desc": "Kalkulus tabanli fiyat indirimi modeli: her indirim adiminda satis artisini kullanarak maksimum kari bulur.",
         "go_to_engine": "Motora Git",
         "results": "Sonuçlar",
         "demand_formula": "Talep denklemi",
@@ -77,7 +77,21 @@ TEXTS = {
         "discount_field_name": "Cumle",
         "discount_add_row": "+ Cumle Ekle",
         "discount_remove_row": "Sil",
+        "discount_speech_input": "Sesle Veri Girisi",
+        "discount_speech_start": "Mikrofonu Baslat",
+        "discount_speech_stop": "Durdur",
+        "discount_speech_ready": "Mikrofona tiklayip konusabilirsiniz.",
+        "discount_speech_listening": "Dinleniyor... Konusmaya devam edin.",
+        "discount_speech_not_supported": "Bu tarayici sesle veri girisini desteklemiyor.",
         "discount_result_title": "Motor Sonucu",
+        "discount_step_model_title": "Kalkulus Modeli (Video Algoritmasi)",
+        "discount_step_rule": "Kural",
+        "discount_step_rule_value": "Her {step} indirimde satis {extra} adet artiyor",
+        "discount_profit_function": "Kar fonksiyonu",
+        "discount_optimal_reductions": "Optimum indirim adimi sayisi",
+        "discount_optimal_price_step": "Optimum satis fiyati",
+        "discount_optimal_qty_step": "Optimum satis adedi",
+        "discount_optimal_profit_step": "Maksimum kar (kalkulus modeli)",
         "discount_input_summary": "Girilen degerler",
         "discount_base_revenue": "Indirim oncesi gelir",
         "discount_new_revenue": "Indirim sonrasi gelir",
@@ -127,7 +141,7 @@ TEXTS = {
         "engine_price_demand_title": "Price-Demand Engine",
         "engine_price_demand_desc": "Builds demand model and profit optimization from two data points.",
         "engine_discount_title": "Discount Impact Engine",
-        "engine_discount_desc": "Uses a single prompt to analyze post-discount sales impact and recommends the better scenario.",
+        "engine_discount_desc": "Calculus-based price reduction model: finds maximum profit using step discount and demand increase.",
         "go_to_engine": "Open Engine",
         "results": "Results",
         "demand_formula": "Demand formula",
@@ -154,7 +168,21 @@ TEXTS = {
         "discount_field_name": "Sentence",
         "discount_add_row": "+ Add Sentence",
         "discount_remove_row": "Remove",
+        "discount_speech_input": "Voice Input",
+        "discount_speech_start": "Start Microphone",
+        "discount_speech_stop": "Stop",
+        "discount_speech_ready": "Click the microphone and speak your inputs.",
+        "discount_speech_listening": "Listening... Keep speaking.",
+        "discount_speech_not_supported": "This browser does not support voice input.",
         "discount_result_title": "Engine Result",
+        "discount_step_model_title": "Calculus Model (Video Algorithm)",
+        "discount_step_rule": "Rule",
+        "discount_step_rule_value": "For every {step} discount, sales increase by {extra} units",
+        "discount_profit_function": "Profit function",
+        "discount_optimal_reductions": "Optimal number of discount steps",
+        "discount_optimal_price_step": "Optimal selling price",
+        "discount_optimal_qty_step": "Optimal sold quantity",
+        "discount_optimal_profit_step": "Maximum profit (calculus model)",
         "discount_input_summary": "Input summary",
         "discount_base_revenue": "Revenue before discount",
         "discount_new_revenue": "Revenue after discount",
@@ -215,6 +243,63 @@ TEXTS = {
         "error_same_price": "Die beiden Preise dürfen nicht gleich sein.",
         "error_no_optimum": "Mit diesen Daten kann kein optimaler Preis berechnet werden.",
         "portal_title": "Optimieren Sie die Preise Ihrer Produkte",
+        "method": "Optimierungsmethode",
+        "method_closed_form": "Geschlossene Form",
+        "method_grg": "Nichtlineares GRG (iterativ)",
+        "method_used": "Verwendete Methode",
+        "no_profit_note": "Mit diesen Eingaben ist kein positiver Gewinn möglich. Das beste Ergebnis ist, nicht zu verkaufen (Gewinn = 0).",
+        "engine_discount_title": "Rabattwirkungs-Modul",
+        "engine_discount_desc": "Kalkülbasiertes Rabattmodell: findet den maximalen Gewinn mit Rabattschritt und Absatzanstieg.",
+        "discount_page_title": "Absatzwirkung nach Rabatt",
+        "discount_prompt_label": "Was soll berechnet werden? (Optional)",
+        "discount_prompt_placeholder": "Beispiel: Gewinn maximieren oder besten Preis finden.",
+        "discount_hint": "Schreiben Sie pro Zeile einen Satz. Mit + können Sie eine neue Zeile hinzufügen.",
+        "discount_example": "Beispielzeilen: Ich habe 100 Stück zu 1 TL verkauft. / Nach 0,05 TL Rabatt habe ich 110 Stück verkauft.",
+        "discount_fields_title": "Datensätze",
+        "discount_field_name": "Satz",
+        "discount_add_row": "+ Satz hinzufügen",
+        "discount_remove_row": "Entfernen",
+        "discount_speech_input": "Spracheingabe",
+        "discount_speech_start": "Mikrofon starten",
+        "discount_speech_stop": "Stoppen",
+        "discount_speech_ready": "Klicken Sie auf das Mikrofon und sprechen Sie.",
+        "discount_speech_listening": "Wird gehört... Bitte sprechen Sie weiter.",
+        "discount_speech_not_supported": "Dieser Browser unterstützt keine Spracheingabe.",
+        "discount_result_title": "Modulergebnis",
+        "discount_step_model_title": "Kalkülmodell (Video-Algorithmus)",
+        "discount_step_rule": "Regel",
+        "discount_step_rule_value": "Bei jedem Rabatt von {step} steigt der Absatz um {extra} Stück",
+        "discount_profit_function": "Gewinnfunktion",
+        "discount_optimal_reductions": "Optimale Anzahl der Rabattschritte",
+        "discount_optimal_price_step": "Optimaler Verkaufspreis",
+        "discount_optimal_qty_step": "Optimale Verkaufsmenge",
+        "discount_optimal_profit_step": "Maximaler Gewinn (Kalkülmodell)",
+        "discount_input_summary": "Eingabewerte",
+        "discount_base_revenue": "Umsatz vor Rabatt",
+        "discount_new_revenue": "Umsatz nach Rabatt",
+        "discount_base_profit": "Gewinn vor Rabatt",
+        "discount_new_profit": "Gewinn nach Rabatt",
+        "discount_model_profit": "Höchster Modellgewinn",
+        "discount_recommendation": "Empfohlenes Szenario",
+        "discount_scenario_keep": "Normalpreis beibehalten",
+        "discount_scenario_discount": "Mit Rabattpreis verkaufen",
+        "discount_objective": "Ziel",
+        "discount_objective_profit": "Gewinnmaximierung",
+        "discount_objective_revenue": "Umsatzmaximierung",
+        "discount_delta": "Umsatzdifferenz",
+        "discount_extra_units": "Zusätzliche Stückzahl",
+        "discount_after_units": "Gesamtmenge nach Rabatt",
+        "discount_after_price": "Rabattierter Preis",
+        "discount_model_formula": "Nachfragemodell",
+        "discount_best_price": "Empfohlener Bestpreis",
+        "discount_best_demand": "Erwartete Menge beim Bestpreis",
+        "discount_best_revenue": "Höchster Modellumsatz",
+        "discount_all_scenarios": "Vergleich aller Szenarien",
+        "discount_case_current": "Aktuelles Preisszenario",
+        "discount_case_discount": "Rabattpreisszenario",
+        "discount_case_optimal": "Optimales Modellszenario",
+        "discount_optimal_discount": "Empfohlener optimaler Rabatt vom aktuellen Preis",
+        "discount_error_parse": "Erforderliche Werte konnten nicht gelesen werden. Geben Sie mindestens Menge, Preis, Rabatt und Menge nach Rabatt ein.",
     },
     "es": {
         "page_title": "Calculadora de Precio Óptimo",
@@ -249,6 +334,63 @@ TEXTS = {
         "error_same_price": "Los dos precios no pueden ser iguales.",
         "error_no_optimum": "Estos datos no producen un precio óptimo.",
         "portal_title": "Optimiza los precios de tus productos",
+        "method": "Método de optimización",
+        "method_closed_form": "Forma cerrada",
+        "method_grg": "GRG no lineal (iterativo)",
+        "method_used": "Método usado",
+        "no_profit_note": "Con estos datos no es posible un beneficio positivo. La mejor opción es no vender (beneficio = 0).",
+        "engine_discount_title": "Motor de Impacto del Descuento",
+        "engine_discount_desc": "Modelo de cálculo con reducción de precio: encuentra la ganancia máxima usando paso de descuento y aumento de ventas.",
+        "discount_page_title": "Impacto de Ventas Tras Descuento",
+        "discount_prompt_label": "¿Qué se calculará? (Opcional)",
+        "discount_prompt_placeholder": "Ejemplo: Maximizar ganancia o encontrar el mejor precio.",
+        "discount_hint": "Escribe una frase por línea. Usa + para agregar una nueva línea.",
+        "discount_example": "Ejemplos: Vendí 100 unidades a 1 TL. / Con un descuento de 0,05 TL vendí 110 unidades.",
+        "discount_fields_title": "Frases de datos",
+        "discount_field_name": "Frase",
+        "discount_add_row": "+ Agregar frase",
+        "discount_remove_row": "Eliminar",
+        "discount_speech_input": "Entrada por voz",
+        "discount_speech_start": "Iniciar micrófono",
+        "discount_speech_stop": "Detener",
+        "discount_speech_ready": "Haz clic en el micrófono y habla.",
+        "discount_speech_listening": "Escuchando... Sigue hablando.",
+        "discount_speech_not_supported": "Este navegador no admite entrada por voz.",
+        "discount_result_title": "Resultado del motor",
+        "discount_step_model_title": "Modelo de Cálculo (Algoritmo del video)",
+        "discount_step_rule": "Regla",
+        "discount_step_rule_value": "Por cada descuento de {step}, las ventas suben {extra} unidades",
+        "discount_profit_function": "Función de ganancia",
+        "discount_optimal_reductions": "Número óptimo de pasos de descuento",
+        "discount_optimal_price_step": "Precio de venta óptimo",
+        "discount_optimal_qty_step": "Cantidad óptima vendida",
+        "discount_optimal_profit_step": "Ganancia máxima (modelo de cálculo)",
+        "discount_input_summary": "Resumen de entrada",
+        "discount_base_revenue": "Ingresos antes del descuento",
+        "discount_new_revenue": "Ingresos después del descuento",
+        "discount_base_profit": "Ganancia antes del descuento",
+        "discount_new_profit": "Ganancia después del descuento",
+        "discount_model_profit": "Máxima ganancia del modelo",
+        "discount_recommendation": "Escenario recomendado",
+        "discount_scenario_keep": "Mantener precio normal",
+        "discount_scenario_discount": "Vender con precio descontado",
+        "discount_objective": "Objetivo",
+        "discount_objective_profit": "Maximización de ganancia",
+        "discount_objective_revenue": "Maximización de ingresos",
+        "discount_delta": "Diferencia de ingresos",
+        "discount_extra_units": "Unidades extra vendidas",
+        "discount_after_units": "Total de unidades tras descuento",
+        "discount_after_price": "Precio con descuento",
+        "discount_model_formula": "Modelo de demanda",
+        "discount_best_price": "Mejor precio recomendado por el modelo",
+        "discount_best_demand": "Cantidad esperada al mejor precio",
+        "discount_best_revenue": "Ingreso máximo del modelo",
+        "discount_all_scenarios": "Comparación de todos los escenarios",
+        "discount_case_current": "Escenario de precio actual",
+        "discount_case_discount": "Escenario de precio con descuento",
+        "discount_case_optimal": "Escenario óptimo del modelo",
+        "discount_optimal_discount": "Descuento óptimo recomendado desde el precio actual",
+        "discount_error_parse": "No se pudieron leer los valores requeridos. Ingresa al menos cantidad, precio, descuento y cantidad tras descuento.",
     },
     "it": {
         "page_title": "Calcolatore Prezzo Ottimale",
@@ -283,6 +425,63 @@ TEXTS = {
         "error_same_price": "I due prezzi non possono essere uguali.",
         "error_no_optimum": "Questi dati non producono un prezzo ottimale.",
         "portal_title": "Ottimizza i prezzi dei tuoi prodotti",
+        "method": "Metodo di ottimizzazione",
+        "method_closed_form": "Forma chiusa",
+        "method_grg": "GRG non lineare (iterativo)",
+        "method_used": "Metodo usato",
+        "no_profit_note": "Con questi dati non è possibile un profitto positivo. Il risultato migliore è non vendere (profitto = 0).",
+        "engine_discount_title": "Motore Impatto Sconto",
+        "engine_discount_desc": "Modello di calcolo con riduzione prezzo: trova il profitto massimo usando passo di sconto e aumento vendite.",
+        "discount_page_title": "Impatto Vendite Dopo Sconto",
+        "discount_prompt_label": "Cosa calcolare? (Opzionale)",
+        "discount_prompt_placeholder": "Esempio: Massimizza il profitto o trova il prezzo migliore.",
+        "discount_hint": "Scrivi una frase per riga. Usa + per aggiungere una nuova riga.",
+        "discount_example": "Esempi: Ho venduto 100 unità a 1 TL. / Con uno sconto di 0,05 TL ho venduto 110 unità.",
+        "discount_fields_title": "Frasi dati",
+        "discount_field_name": "Frase",
+        "discount_add_row": "+ Aggiungi frase",
+        "discount_remove_row": "Rimuovi",
+        "discount_speech_input": "Input vocale",
+        "discount_speech_start": "Avvia microfono",
+        "discount_speech_stop": "Ferma",
+        "discount_speech_ready": "Clicca sul microfono e parla.",
+        "discount_speech_listening": "In ascolto... Continua a parlare.",
+        "discount_speech_not_supported": "Questo browser non supporta l'input vocale.",
+        "discount_result_title": "Risultato motore",
+        "discount_step_model_title": "Modello di Calcolo (Algoritmo video)",
+        "discount_step_rule": "Regola",
+        "discount_step_rule_value": "Per ogni sconto di {step}, le vendite aumentano di {extra} unità",
+        "discount_profit_function": "Funzione di profitto",
+        "discount_optimal_reductions": "Numero ottimale di passi di sconto",
+        "discount_optimal_price_step": "Prezzo di vendita ottimale",
+        "discount_optimal_qty_step": "Quantità venduta ottimale",
+        "discount_optimal_profit_step": "Profitto massimo (modello di calcolo)",
+        "discount_input_summary": "Riepilogo input",
+        "discount_base_revenue": "Ricavo prima dello sconto",
+        "discount_new_revenue": "Ricavo dopo lo sconto",
+        "discount_base_profit": "Profitto prima dello sconto",
+        "discount_new_profit": "Profitto dopo lo sconto",
+        "discount_model_profit": "Massimo profitto del modello",
+        "discount_recommendation": "Scenario consigliato",
+        "discount_scenario_keep": "Mantieni prezzo normale",
+        "discount_scenario_discount": "Vendi con prezzo scontato",
+        "discount_objective": "Obiettivo",
+        "discount_objective_profit": "Massimizzazione del profitto",
+        "discount_objective_revenue": "Massimizzazione del ricavo",
+        "discount_delta": "Differenza ricavo",
+        "discount_extra_units": "Unità extra vendute",
+        "discount_after_units": "Unità totali dopo sconto",
+        "discount_after_price": "Prezzo scontato",
+        "discount_model_formula": "Modello di domanda",
+        "discount_best_price": "Miglior prezzo consigliato dal modello",
+        "discount_best_demand": "Quantità prevista al prezzo migliore",
+        "discount_best_revenue": "Ricavo massimo del modello",
+        "discount_all_scenarios": "Confronto di tutti gli scenari",
+        "discount_case_current": "Scenario prezzo attuale",
+        "discount_case_discount": "Scenario prezzo scontato",
+        "discount_case_optimal": "Scenario ottimale del modello",
+        "discount_optimal_discount": "Sconto ottimale consigliato dal prezzo attuale",
+        "discount_error_parse": "Impossibile leggere i valori richiesti. Inserisci almeno quantità, prezzo, sconto e quantità dopo sconto.",
     },
     "ru": {
         "page_title": "Калькулятор Оптимальной Цены",
@@ -317,6 +516,63 @@ TEXTS = {
         "error_same_price": "Две цены не могут быть одинаковыми.",
         "error_no_optimum": "Эти данные не дают оптимальную цену.",
         "portal_title": "Оптимизируйте цены ваших товаров",
+        "method": "Метод оптимизации",
+        "method_closed_form": "Закрытая форма",
+        "method_grg": "Нелинейный GRG (итеративно)",
+        "method_used": "Использованный метод",
+        "no_profit_note": "С этими данными положительная прибыль невозможна. Лучший вариант — не продавать (прибыль = 0).",
+        "engine_discount_title": "Модуль влияния скидки",
+        "engine_discount_desc": "Калькуляционный модельный подход: находит максимум прибыли по шагу скидки и росту продаж.",
+        "discount_page_title": "Эффект продаж после скидки",
+        "discount_prompt_label": "Что рассчитать? (Необязательно)",
+        "discount_prompt_placeholder": "Пример: Максимизировать прибыль или найти лучшую цену.",
+        "discount_hint": "Пишите по одному предложению в строке. Используйте + для добавления новой строки.",
+        "discount_example": "Примеры: Я продал 100 единиц по 1 TL. / После скидки 0,05 TL я продал 110 единиц.",
+        "discount_fields_title": "Строки данных",
+        "discount_field_name": "Предложение",
+        "discount_add_row": "+ Добавить строку",
+        "discount_remove_row": "Удалить",
+        "discount_speech_input": "Голосовой ввод",
+        "discount_speech_start": "Включить микрофон",
+        "discount_speech_stop": "Остановить",
+        "discount_speech_ready": "Нажмите на микрофон и говорите.",
+        "discount_speech_listening": "Слушаю... Продолжайте говорить.",
+        "discount_speech_not_supported": "Этот браузер не поддерживает голосовой ввод.",
+        "discount_result_title": "Результат модуля",
+        "discount_step_model_title": "Математическая модель (алгоритм из видео)",
+        "discount_step_rule": "Правило",
+        "discount_step_rule_value": "На каждый шаг скидки {step} продажи растут на {extra} единиц",
+        "discount_profit_function": "Функция прибыли",
+        "discount_optimal_reductions": "Оптимальное число шагов скидки",
+        "discount_optimal_price_step": "Оптимальная цена продажи",
+        "discount_optimal_qty_step": "Оптимальный объём продаж",
+        "discount_optimal_profit_step": "Максимальная прибыль (модель)",
+        "discount_input_summary": "Сводка входных данных",
+        "discount_base_revenue": "Выручка до скидки",
+        "discount_new_revenue": "Выручка после скидки",
+        "discount_base_profit": "Прибыль до скидки",
+        "discount_new_profit": "Прибыль после скидки",
+        "discount_model_profit": "Максимальная прибыль модели",
+        "discount_recommendation": "Рекомендуемый сценарий",
+        "discount_scenario_keep": "Оставить обычную цену",
+        "discount_scenario_discount": "Продавать со скидкой",
+        "discount_objective": "Цель",
+        "discount_objective_profit": "Максимизация прибыли",
+        "discount_objective_revenue": "Максимизация выручки",
+        "discount_delta": "Разница выручки",
+        "discount_extra_units": "Дополнительные проданные единицы",
+        "discount_after_units": "Общее количество после скидки",
+        "discount_after_price": "Цена со скидкой",
+        "discount_model_formula": "Модель спроса",
+        "discount_best_price": "Лучшая цена по модели",
+        "discount_best_demand": "Ожидаемый объём по лучшей цене",
+        "discount_best_revenue": "Максимальная выручка модели",
+        "discount_all_scenarios": "Сравнение всех сценариев",
+        "discount_case_current": "Сценарий текущей цены",
+        "discount_case_discount": "Сценарий цены со скидкой",
+        "discount_case_optimal": "Оптимальный сценарий модели",
+        "discount_optimal_discount": "Рекомендуемая оптимальная скидка от текущей цены",
+        "discount_error_parse": "Не удалось прочитать обязательные значения. Укажите минимум: количество, цену, скидку и количество после скидки.",
     },
     "fr": {
         "page_title": "Calculateur de Prix Optimal",
@@ -351,6 +607,63 @@ TEXTS = {
         "error_same_price": "Les deux prix ne peuvent pas être identiques.",
         "error_no_optimum": "Ces données ne produisent pas de prix optimal.",
         "portal_title": "Optimisez les prix de vos produits",
+        "method": "Méthode d'optimisation",
+        "method_closed_form": "Forme fermée",
+        "method_grg": "GRG non linéaire (itératif)",
+        "method_used": "Méthode utilisée",
+        "no_profit_note": "Avec ces données, un profit positif n'est pas possible. Le meilleur résultat est de ne pas vendre (profit = 0).",
+        "engine_discount_title": "Moteur d'impact de réduction",
+        "engine_discount_desc": "Modèle de calcul basé sur la réduction de prix : trouve le profit maximal avec pas de réduction et hausse des ventes.",
+        "discount_page_title": "Impact des ventes après réduction",
+        "discount_prompt_label": "Que faut-il calculer ? (Optionnel)",
+        "discount_prompt_placeholder": "Exemple : Maximiser le profit ou trouver le meilleur prix.",
+        "discount_hint": "Écrivez une phrase par ligne. Utilisez + pour ajouter une nouvelle ligne.",
+        "discount_example": "Exemples : J'ai vendu 100 unités à 1 TL. / Après une réduction de 0,05 TL, j'ai vendu 110 unités.",
+        "discount_fields_title": "Phrases de données",
+        "discount_field_name": "Phrase",
+        "discount_add_row": "+ Ajouter une phrase",
+        "discount_remove_row": "Supprimer",
+        "discount_speech_input": "Saisie vocale",
+        "discount_speech_start": "Démarrer le micro",
+        "discount_speech_stop": "Arrêter",
+        "discount_speech_ready": "Cliquez sur le micro et parlez.",
+        "discount_speech_listening": "Écoute... Continuez à parler.",
+        "discount_speech_not_supported": "Ce navigateur ne prend pas en charge la saisie vocale.",
+        "discount_result_title": "Résultat du moteur",
+        "discount_step_model_title": "Modèle de calcul (algorithme vidéo)",
+        "discount_step_rule": "Règle",
+        "discount_step_rule_value": "Pour chaque réduction de {step}, les ventes augmentent de {extra} unités",
+        "discount_profit_function": "Fonction de profit",
+        "discount_optimal_reductions": "Nombre optimal de pas de réduction",
+        "discount_optimal_price_step": "Prix de vente optimal",
+        "discount_optimal_qty_step": "Quantité vendue optimale",
+        "discount_optimal_profit_step": "Profit maximal (modèle de calcul)",
+        "discount_input_summary": "Résumé des entrées",
+        "discount_base_revenue": "Revenu avant réduction",
+        "discount_new_revenue": "Revenu après réduction",
+        "discount_base_profit": "Profit avant réduction",
+        "discount_new_profit": "Profit après réduction",
+        "discount_model_profit": "Profit maximal du modèle",
+        "discount_recommendation": "Scénario recommandé",
+        "discount_scenario_keep": "Conserver le prix normal",
+        "discount_scenario_discount": "Vendre avec prix réduit",
+        "discount_objective": "Objectif",
+        "discount_objective_profit": "Maximisation du profit",
+        "discount_objective_revenue": "Maximisation du revenu",
+        "discount_delta": "Écart de revenu",
+        "discount_extra_units": "Unités supplémentaires vendues",
+        "discount_after_units": "Total unités après réduction",
+        "discount_after_price": "Prix réduit",
+        "discount_model_formula": "Modèle de demande",
+        "discount_best_price": "Meilleur prix recommandé par le modèle",
+        "discount_best_demand": "Quantité attendue au meilleur prix",
+        "discount_best_revenue": "Revenu maximal du modèle",
+        "discount_all_scenarios": "Comparaison de tous les scénarios",
+        "discount_case_current": "Scénario prix actuel",
+        "discount_case_discount": "Scénario prix réduit",
+        "discount_case_optimal": "Scénario optimal du modèle",
+        "discount_optimal_discount": "Réduction optimale recommandée depuis le prix actuel",
+        "discount_error_parse": "Impossible de lire les valeurs requises. Saisissez au minimum quantité, prix, réduction et quantité après réduction.",
     },
 }
 
@@ -420,14 +733,15 @@ def _parse_discount_prompt(prompt: str) -> dict[str, Decimal] | None:
         ],
     )
 
-    after_qty = _extract_decimal_by_patterns(
+    explicit_after_qty = _extract_decimal_by_patterns(
         text,
         [
-            r"(?:indirim[^.\n]{0,80}|yapinca[^.\n]{0,80}|sonra[^.\n]{0,80})\b([-+]?\d+(?:[.,]\d+)?)\s*(?:adet|unit|units?)",
+            r"(?:indirim yapinca|indirimden sonra|after discount)[^.\n]{0,50}\b([-+]?\d+(?:[.,]\d+)?)\s*(?:adet|unit|units?)",
             r"(?:sattim|sold)\D{0,18}([-+]?\d+(?:[.,]\d+)?)\s*(?:adet|unit|units?)",
         ],
     )
-    if after_qty is None and len(qty_matches) >= 2:
+    after_qty = explicit_after_qty
+    if after_qty is None and len(qty_matches) >= 2 and "her" not in text:
         after_qty = _to_decimal(qty_matches[1])
 
     if None in (qty, price, discount) or (extra is None and after_qty is None):
@@ -460,6 +774,39 @@ def _parse_discount_prompt(prompt: str) -> dict[str, Decimal] | None:
         ],
     )
 
+    reduction_step = None
+    extra_per_reduction = None
+    step_patterns = [
+        r"her\D{0,8}([-+]?\d+(?:[.,]\d+)?)\s*(?:tl|try|usd|eur|₺|\$|€)?\D{0,12}(?:indirim|dus|düş|price reduction|decrease)[^.\n]{0,50}?([-+]?\d+(?:[.,]\d+)?)\s*(?:adet|unit|units?)",
+        r"([-+]?\d+(?:[.,]\d+)?)\s*(?:adet|unit|units?)\D{0,24}(?:fazla|art|increase|more)[^.\n]{0,50}?her\D{0,8}([-+]?\d+(?:[.,]\d+)?)\s*(?:tl|try|usd|eur|₺|\$|€)?\D{0,12}(?:indirim|dus|düş|price reduction|decrease)",
+    ]
+    for idx, pattern in enumerate(step_patterns):
+        match = re.search(pattern, text, flags=re.IGNORECASE)
+        if not match:
+            continue
+        try:
+            if idx == 0:
+                reduction_step = _to_decimal(match.group(1))
+                extra_per_reduction = _to_decimal(match.group(2))
+            else:
+                extra_per_reduction = _to_decimal(match.group(1))
+                reduction_step = _to_decimal(match.group(2))
+            break
+        except InvalidOperation:
+            reduction_step = None
+            extra_per_reduction = None
+
+    if (
+        reduction_step is not None
+        and extra_per_reduction is not None
+        and reduction_step > 0
+        and extra_per_reduction > 0
+        and explicit_after_qty is None
+    ):
+        discount = reduction_step
+        extra = extra_per_reduction
+        after_qty = qty + extra
+
     return {
         "qty": qty,
         "price": price,
@@ -467,6 +814,8 @@ def _parse_discount_prompt(prompt: str) -> dict[str, Decimal] | None:
         "extra": extra,
         "after_qty": after_qty,
         "unit_cost": unit_cost if unit_cost is not None else Decimal("0"),
+        "reduction_step": reduction_step,
+        "extra_per_reduction": extra_per_reduction,
     }
 
 
@@ -894,6 +1243,9 @@ def discount_optimizer(request):
         context["error"] = labels["discount_error_parse"]
         return render(request, "core/discount_optimizer.html", context)
 
+    def round2(value: Decimal) -> Decimal:
+        return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
     objective = _detect_objective(prompt_text)
     before_revenue = price * qty
     after_revenue = discounted_price * after_qty
@@ -905,6 +1257,61 @@ def discount_optimizer(request):
         use_discount = after_profit > before_profit
     else:
         use_discount = after_revenue > before_revenue
+
+    step_model = None
+    reduction_step = parsed.get("reduction_step")
+    extra_per_reduction = parsed.get("extra_per_reduction")
+    if (
+        reduction_step is not None
+        and extra_per_reduction is not None
+        and reduction_step > 0
+        and extra_per_reduction > 0
+    ):
+        # Video modeli: Kar(x) = (P0 - d*x - C) * (Q0 + k*x)
+        p0 = price
+        q0 = qty
+        d = reduction_step
+        k = extra_per_reduction
+        c = unit_cost
+        a2 = -(d * k)
+        b2 = ((p0 - c) * k) - (d * q0)
+        c2 = (p0 - c) * q0
+
+        if a2 != 0:
+            x_cont = -(b2 / (2 * a2))
+        else:
+            x_cont = Decimal("0")
+        max_steps_by_price = p0 / d
+        if max_steps_by_price < 0:
+            max_steps_by_price = Decimal("0")
+        x_cont = max(Decimal("0"), min(x_cont, max_steps_by_price))
+
+        floor_x = Decimal(int(x_cont))
+        ceil_x = floor_x if floor_x == x_cont else floor_x + Decimal("1")
+        candidates_x = [Decimal("0"), floor_x, ceil_x, max_steps_by_price]
+        best_x = Decimal("0")
+        best_profit_step = None
+        for x in candidates_x:
+            x = max(Decimal("0"), min(x, max_steps_by_price))
+            p = p0 - (d * x)
+            q = q0 + (k * x)
+            pi = (p - c) * q
+            if best_profit_step is None or pi > best_profit_step:
+                best_profit_step = pi
+                best_x = x
+        step_price = p0 - (d * best_x)
+        step_qty = q0 + (k * best_x)
+        step_profit = (step_price - c) * step_qty
+        step_model = {
+            "step": round2(d),
+            "extra": round2(k),
+            "x_cont": round2(x_cont),
+            "x_best": round2(best_x),
+            "price": round2(step_price),
+            "qty": round2(step_qty),
+            "profit": round2(step_profit),
+            "formula": f"Pi(x) = ({round2(p0)} - {round2(d)}x - {round2(c)}) * ({round2(q0)} + {round2(k)}x)",
+        }
 
     delta_price = discounted_price - price
     b = Decimal("0")
@@ -957,9 +1364,6 @@ def discount_optimizer(request):
     metric_key = "profit" if objective == "profit" else "revenue"
     best_scenario = max(scenarios, key=lambda item: item[metric_key])
 
-    def round2(value: Decimal) -> Decimal:
-        return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-
     context["result"] = {
         "qty": round2(qty),
         "price": round2(price),
@@ -993,5 +1397,6 @@ def discount_optimizer(request):
         ],
         "best_scenario_name": best_scenario["name"],
         "best_metric": metric_key,
+        "step_model": step_model,
     }
     return render(request, "core/discount_optimizer.html", context)
