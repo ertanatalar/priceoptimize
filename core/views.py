@@ -1,7 +1,9 @@
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from math import isfinite
+import os
 import re
 
+from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils.translation import get_language
 
@@ -118,6 +120,15 @@ TEXTS = {
         "discount_case_optimal": "Modelin optimum fiyat senaryosu",
         "discount_optimal_discount": "Mevcut fiyata gore onerilen optimum indirim",
         "discount_error_parse": "Gerekli veriler okunamadi. Kutucuklarda en az urun adedi, urun fiyati, indirim tutari ve indirim sonrasi toplam adedi girin.",
+        "privacy_link": "Gizlilik Politikasi",
+        "privacy_title": "Gizlilik Politikasi",
+        "privacy_intro": "PriceOptimize.ai kullanicilarinin gizliligine onem verir.",
+        "privacy_section_data": "Toplanan Veriler",
+        "privacy_data_text": "Hesaplama formlarina girdiginiz veriler servis calismasi icin islenir. Hassas odeme karti bilgileri bu uygulama tarafinda toplanmaz.",
+        "privacy_section_ads": "Reklam ve Cerezler",
+        "privacy_ads_text": "Site gelecekte reklam servisleri kullanabilir. Bu durumda cerez kullanimi ve reklam tercihleri ilgili politika araclariyla yonetilir.",
+        "privacy_section_contact": "Iletisim",
+        "privacy_contact_text": "Gizlilikle ilgili talepleriniz icin: admin@priceoptimize.ai",
     },
     "en": {
         "page_title": "Optimal Price Calculator",
@@ -209,6 +220,15 @@ TEXTS = {
         "discount_case_optimal": "Model optimal scenario",
         "discount_optimal_discount": "Recommended optimal discount from current price",
         "discount_error_parse": "Could not read required values. Please enter at least quantity, price, discount amount, and post-discount total quantity.",
+        "privacy_link": "Privacy Policy",
+        "privacy_title": "Privacy Policy",
+        "privacy_intro": "PriceOptimize.ai values user privacy.",
+        "privacy_section_data": "Data We Process",
+        "privacy_data_text": "Data you enter in calculator forms is processed to provide calculations. Sensitive payment card details are not collected by this app.",
+        "privacy_section_ads": "Ads and Cookies",
+        "privacy_ads_text": "The site may use advertising services in the future. In that case, cookie and ad preference controls will be provided via related policy tools.",
+        "privacy_section_contact": "Contact",
+        "privacy_contact_text": "For privacy requests: admin@priceoptimize.ai",
     },
     "de": {
         "page_title": "Optimaler Preisrechner",
@@ -1198,6 +1218,24 @@ def portal(request):
             "language_options": LANGUAGE_OPTIONS,
         },
     )
+
+
+def privacy_policy(request):
+    current_language = (get_language() or "tr").split("-")[0]
+    labels = {**TEXTS["en"], **TEXTS.get(current_language, TEXTS["en"])}
+    return render(
+        request,
+        "core/privacy.html",
+        {
+            "labels": labels,
+            "current_language": current_language,
+        },
+    )
+
+
+def ads_txt(request):
+    line = os.getenv("ADS_TXT_LINE", "google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0")
+    return HttpResponse(f"{line}\n", content_type="text/plain; charset=utf-8")
 
 
 def discount_optimizer(request):
