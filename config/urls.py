@@ -14,6 +14,7 @@ urlpatterns = [
     path(admin_path, admin.site.urls),
     path('i18n/setlang/', set_language, name='set_language'),
     path("ads.txt", ads_txt, name="ads_txt"),
+    path("ads.txt/", ads_txt),
     path("privacy/", privacy_policy, name="privacy_policy"),
     path('', portal, name='portal'),
     path('price-demand/', include('core.urls')),
