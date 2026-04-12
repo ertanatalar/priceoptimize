@@ -5,7 +5,9 @@ import re
 
 from django.http import HttpResponse
 from django.shortcuts import render
+from django.urls import reverse
 from django.utils.translation import get_language
+from django.utils import timezone
 
 
 CURRENCIES = {
@@ -1236,6 +1238,42 @@ def privacy_policy(request):
 def ads_txt(request):
     line = os.getenv("ADS_TXT_LINE", "google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0")
     return HttpResponse(f"{line}\n", content_type="text/plain; charset=utf-8")
+
+
+def sitemap_xml(request):
+    base = "https://www.priceoptimize.ai"
+    urls = [
+        base + reverse("portal"),
+        base + reverse("home"),
+        base + reverse("discount_optimizer"),
+        base + reverse("privacy_policy"),
+    ]
+    lastmod = timezone.now().date().isoformat()
+    body = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ]
+    for url in urls:
+        body.append("<url>")
+        body.append(f"<loc>{url}</loc>")
+        body.append(f"<lastmod>{lastmod}</lastmod>")
+        body.append("<changefreq>weekly</changefreq>")
+        body.append("<priority>0.8</priority>")
+        body.append("</url>")
+    body.append("</urlset>")
+    return HttpResponse("\n".join(body), content_type="application/xml; charset=utf-8")
+
+
+def robots_txt(request):
+    content = "\n".join(
+        [
+            "User-agent: *",
+            "Allow: /",
+            "Sitemap: https://www.priceoptimize.ai/sitemap.xml",
+            "",
+        ]
+    )
+    return HttpResponse(content, content_type="text/plain; charset=utf-8")
 
 
 def discount_optimizer(request):
