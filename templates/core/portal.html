@@ -201,9 +201,46 @@
       border-radius: 9px;
       font-weight: 700;
     }
+    .info-grid {
+      margin-top: 1rem;
+      display: grid;
+      gap: 0.8rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .info-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #f8fcfe;
+      padding: 0.9rem;
+    }
+    .info-card h2 {
+      margin: 0 0 0.5rem;
+      font-size: 1.08rem;
+      color: #0b7a42;
+    }
+    .info-card p, .info-card li {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .info-card ul {
+      margin: 0;
+      padding-left: 1.1rem;
+      display: grid;
+      gap: 0.35rem;
+    }
+    .faq-item + .faq-item { margin-top: 0.6rem; }
+    .faq-item strong {
+      display: block;
+      color: #0f172a;
+      margin-bottom: 0.2rem;
+    }
 
     @media (max-width: 640px) {
       .language-form {
+        grid-template-columns: 1fr;
+      }
+      .info-grid {
         grid-template-columns: 1fr;
       }
     }
@@ -250,6 +287,43 @@
           <a class="btn" href="{{ engine.path }}">{{ labels.go_to_engine }}</a>
         </article>
       {% endfor %}
+    </section>
+
+    <section class="info-grid">
+      <article class="info-card">
+        <h2>{{ labels.about_title }}</h2>
+        <p>{{ labels.about_text }}</p>
+      </article>
+
+      <article class="info-card">
+        <h2>{{ labels.howto_title }}</h2>
+        <ul>
+          <li>{{ labels.howto_step_1 }}</li>
+          <li>{{ labels.howto_step_2 }}</li>
+          <li>{{ labels.howto_step_3 }}</li>
+        </ul>
+      </article>
+
+      <article class="info-card">
+        <h2>{{ labels.faq_title }}</h2>
+        <div class="faq-item">
+          <strong>{{ labels.faq_q1 }}</strong>
+          <p>{{ labels.faq_a1 }}</p>
+        </div>
+        <div class="faq-item">
+          <strong>{{ labels.faq_q2 }}</strong>
+          <p>{{ labels.faq_a2 }}</p>
+        </div>
+        <div class="faq-item">
+          <strong>{{ labels.faq_q3 }}</strong>
+          <p>{{ labels.faq_a3 }}</p>
+        </div>
+      </article>
+
+      <article class="info-card">
+        <h2>{{ labels.contact_title }}</h2>
+        <p>{{ labels.contact_text }}</p>
+      </article>
     </section>
     <p style="margin:.9rem 0 0;text-align:right;"><a href="/privacy/" style="color:#0f766e;font-weight:700;text-decoration:none;">{{ labels.privacy_link|default:"Privacy Policy" }}</a></p>
   </main>
