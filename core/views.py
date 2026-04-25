@@ -34,12 +34,13 @@ LANGUAGE_OPTIONS = [
 TEXTS = {
     "tr": {
         "page_title": "Optimal Fiyat Hesaplayıcı",
+        "page_intro": "Gecmisteki talep sayisi ve fiyat bilgilerinden yola cikarak optimum fiyat degerini bulur.",
         "language": "Dil",
         "change_language": "Değiştir",
         "point_1": "Veri Noktası 1",
         "point_2": "Veri Noktası 2",
-        "price_1": "Fiyat 1",
-        "demand_1": "Talep 1",
+        "price_1": "1. Satis Fiyati",
+        "demand_1": "1. Talep Sayisi",
         "price_2": "Fiyat 2",
         "demand_2": "Talep 2",
         "currency": "Para Birimi",
@@ -134,6 +135,7 @@ TEXTS = {
     },
     "en": {
         "page_title": "Optimal Price Calculator",
+        "page_intro": "Finds the optimal price based on historical demand counts and price data.",
         "language": "Language",
         "change_language": "Change",
         "point_1": "Data Point 1",
