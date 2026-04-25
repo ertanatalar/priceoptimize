@@ -1,4 +1,5 @@
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+from itertools import zip_longest
 from math import isfinite
 import os
 import re
@@ -74,13 +75,17 @@ TEXTS = {
         "error_no_optimum": "Bu veriyle optimum fiyat hesaplanamıyor.",
         "portal_title": "Urunlerinizin fiyatini optimize edin",
         "discount_page_title": "Indirim Sonrasi Satis Etkisi",
-        "discount_prompt_label": "Ne Hesaplanacak? (Opsiyonel)",
-        "discount_prompt_placeholder": "Ornek: Kari maksimize et veya en iyi fiyati bul.",
-        "discount_hint": "Her satira bir cumle yazin. + ile yeni cumle satiri ekleyebilirsiniz.",
-        "discount_example": "Ornek satirlar: 100 adet urunu 1 TL'den sattim. / 0,05 TL indirim yapinca 110 adet sattim.",
-        "discount_fields_title": "Veri Cumleleri",
-        "discount_field_name": "Cumle",
-        "discount_add_row": "+ Cumle Ekle",
+        "discount_prompt_label": "Ne Hesaplanacak?",
+        "discount_prompt_placeholder": "",
+        "discount_hint": "",
+        "discount_example": "",
+        "discount_fields_title": "Satis Verileri",
+        "discount_field_name": "Urun Sayisi",
+        "discount_price_field": "Fiyat",
+        "discount_discount_title": "Indirim Bedelleri",
+        "discount_discount_field": "Indirim Bedeli",
+        "discount_calc_target_value": "Maksimum kazanc icin gereken indirim",
+        "discount_add_row": "Ekle",
         "discount_remove_row": "Sil",
         "discount_speech_input": "Sesle Veri Girisi",
         "discount_speech_start": "Mikrofonu Baslat",
@@ -175,13 +180,17 @@ TEXTS = {
         "error_no_optimum": "This data does not produce an optimal price.",
         "portal_title": "Optimize your product prices",
         "discount_page_title": "Post-Discount Sales Impact",
-        "discount_prompt_label": "What Should Be Calculated? (Optional)",
-        "discount_prompt_placeholder": "Example: Maximize profit or find best price.",
-        "discount_hint": "Write one sentence per line. Use + to add a new sentence line.",
-        "discount_example": "Example lines: I sold 100 units at 1 TL. / After a 0.05 TL discount, I sold 110 units.",
-        "discount_fields_title": "Data Sentences",
-        "discount_field_name": "Sentence",
-        "discount_add_row": "+ Add Sentence",
+        "discount_prompt_label": "What Should Be Calculated?",
+        "discount_prompt_placeholder": "",
+        "discount_hint": "",
+        "discount_example": "",
+        "discount_fields_title": "Sales Data",
+        "discount_field_name": "Product Quantity",
+        "discount_price_field": "Price",
+        "discount_discount_title": "Discount Amounts",
+        "discount_discount_field": "Discount Amount",
+        "discount_calc_target_value": "Discount required for maximum profit",
+        "discount_add_row": "Add",
         "discount_remove_row": "Remove",
         "discount_speech_input": "Voice Input",
         "discount_speech_start": "Start Microphone",
@@ -1288,10 +1297,18 @@ def discount_optimizer(request):
     labels = {**TEXTS["en"], **TEXTS.get(current_language, TEXTS["en"])}
     engines = _localized_engines(labels)
     selected_currency = request.POST.get("currency", "TRY")
-    prompt_text = request.POST.get("goal_text", "")
-    sentence_rows = request.POST.getlist("sentence_line[]")
-    if not sentence_rows:
-        sentence_rows = [""]
+    prompt_text = request.POST.get("goal_text", labels.get("discount_calc_target_value", ""))
+    sale_qty_values = request.POST.getlist("sale_qty[]")
+    sale_price_values = request.POST.getlist("sale_price[]")
+    discount_values = request.POST.getlist("discount_value[]")
+
+    sales_rows = []
+    for qty_value, price_value in zip_longest(sale_qty_values, sale_price_values, fillvalue=""):
+        sales_rows.append({"qty": qty_value or "", "price": price_value or ""})
+    if not sales_rows:
+        sales_rows = [{"qty": "", "price": ""}]
+
+    discount_rows = [value for value in discount_values] if discount_values else [""]
 
     context = {
         "labels": labels,
@@ -1302,25 +1319,57 @@ def discount_optimizer(request):
         "selected_currency": selected_currency,
         "selected_symbol": CURRENCIES.get(selected_currency, "₺"),
         "prompt_text": prompt_text,
-        "sentence_rows": sentence_rows,
+        "sales_rows": sales_rows,
+        "discount_rows": discount_rows,
     }
 
     if request.method != "POST":
         return render(request, "core/discount_optimizer.html", context)
 
-    combined_text = ". ".join([row.strip() for row in sentence_rows if row.strip()])
-    parsed = _parse_discount_prompt(combined_text)
-    if not parsed:
+    parsed_points: list[tuple[Decimal, Decimal]] = []
+    for row in sales_rows:
+        qty_text = row["qty"].strip()
+        price_text = row["price"].strip()
+        if not qty_text and not price_text:
+            continue
+        if not qty_text or not price_text:
+            context["error"] = labels["discount_error_parse"]
+            return render(request, "core/discount_optimizer.html", context)
+        try:
+            qty_value = _to_decimal(qty_text)
+            price_value = _to_decimal(price_text)
+        except InvalidOperation:
+            context["error"] = labels["discount_error_parse"]
+            return render(request, "core/discount_optimizer.html", context)
+        parsed_points.append((qty_value, price_value))
+
+    explicit_discount = None
+    for value in discount_rows:
+        value = (value or "").strip()
+        if not value:
+            continue
+        try:
+            explicit_discount = _to_decimal(value)
+            break
+        except InvalidOperation:
+            continue
+
+    if len(parsed_points) < 2:
         context["error"] = labels["discount_error_parse"]
         return render(request, "core/discount_optimizer.html", context)
 
-    qty = parsed["qty"]
-    price = parsed["price"]
-    discount = parsed["discount"]
-    extra = parsed["extra"]
-    after_qty = parsed["after_qty"]
-    unit_cost = max(parsed.get("unit_cost", Decimal("0")), Decimal("0"))
-    discounted_price = price - discount
+    qty, price = parsed_points[0]
+    after_qty, discounted_price = parsed_points[1]
+    unit_cost = Decimal("0")
+    discount = price - discounted_price
+
+    if discount <= 0 and explicit_discount is not None and explicit_discount > 0:
+        discount = explicit_discount
+        discounted_price = price - discount
+
+    extra = after_qty - qty
+    reduction_step = explicit_discount if explicit_discount is not None and explicit_discount > 0 else discount
+    extra_per_reduction = extra
 
     if qty <= 0 or price <= 0 or discounted_price <= 0 or after_qty <= 0 or discount < 0:
         context["error"] = labels["discount_error_parse"]
@@ -1329,7 +1378,7 @@ def discount_optimizer(request):
     def round2(value: Decimal) -> Decimal:
         return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
-    objective = _detect_objective(prompt_text)
+    objective = "profit"
     before_revenue = price * qty
     after_revenue = discounted_price * after_qty
     before_profit = (price - unit_cost) * qty
@@ -1342,12 +1391,6 @@ def discount_optimizer(request):
         use_discount = after_revenue > before_revenue
 
     step_model = None
-    reduction_step = parsed.get("reduction_step")
-    extra_per_reduction = parsed.get("extra_per_reduction")
-    if reduction_step is None and discount > 0:
-        reduction_step = discount
-    if extra_per_reduction is None and extra > 0:
-        extra_per_reduction = extra
     if (
         reduction_step is not None
         and extra_per_reduction is not None

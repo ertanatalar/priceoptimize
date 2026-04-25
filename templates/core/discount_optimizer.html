@@ -183,6 +183,9 @@
       gap: .55rem;
       align-items: center;
     }
+    .field-row.sales-row {
+      grid-template-columns: 1fr 1fr auto;
+    }
     .add-row-btn, .remove-row-btn {
       width: auto;
       border: none;
@@ -226,7 +229,7 @@
     .warn { color: #b45309; font-weight: 700; }
     @media (max-width: 640px) {
       .language-form, .row { grid-template-columns: 1fr; }
-      .field-row { grid-template-columns: 1fr; }
+      .field-row, .field-row.sales-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -270,21 +273,31 @@
       <form method="post">
         {% csrf_token %}
         <section class="input-section">
-          <label>{{ labels.discount_fields_title|default:'Veri Cumleleri' }}</label>
-          <div class="field-grid" id="fieldGrid">
-            {% for row in sentence_rows %}
-              <div class="field-row">
-                <input type="text" name="sentence_line[]" placeholder="{{ labels.discount_field_name|default:'Cumle' }} (or: 100 adet urunu 1 TL den sattim)" value="{{ row }}">
+          <label>{{ labels.discount_fields_title|default:'Satis Verileri' }}</label>
+          <div class="field-grid" id="salesGrid">
+            {% for row in sales_rows %}
+              <div class="field-row sales-row">
+                <input type="text" name="sale_qty[]" placeholder="{{ labels.discount_field_name|default:'Urun Sayisi' }}" value="{{ row.qty }}">
+                <input type="text" name="sale_price[]" placeholder="{{ labels.discount_price_field|default:'Fiyat' }}" value="{{ row.price }}">
                 <button type="button" class="remove-row-btn">{{ labels.discount_remove_row|default:'Sil' }}</button>
               </div>
             {% endfor %}
           </div>
-          <button type="button" class="add-row-btn" id="addRowBtn">{{ labels.discount_add_row|default:'+ Cumle Ekle' }}</button>
+          <button type="button" class="add-row-btn" id="addSalesRowBtn">{{ labels.discount_add_row|default:'Ekle' }}</button>
+
+          <label>{{ labels.discount_discount_title|default:'Indirim Bedelleri' }}</label>
+          <div class="field-grid" id="discountGrid">
+            {% for row in discount_rows %}
+              <div class="field-row">
+                <input type="text" name="discount_value[]" placeholder="{{ labels.discount_discount_field|default:'Indirim Bedeli' }}" value="{{ row }}">
+                <button type="button" class="remove-row-btn">{{ labels.discount_remove_row|default:'Sil' }}</button>
+              </div>
+            {% endfor %}
+          </div>
+          <button type="button" class="add-row-btn" id="addDiscountRowBtn">{{ labels.discount_add_row|default:'Ekle' }}</button>
 
           <label for="goal_text">{{ labels.discount_prompt_label }}</label>
-          <input id="goal_text" name="goal_text" placeholder="{{ labels.discount_prompt_placeholder }}" value="{{ prompt_text|default:'' }}">
-          <p class="hint">{{ labels.discount_hint }}</p>
-          <p class="hint">{{ labels.discount_example }}</p>
+          <input id="goal_text" name="goal_text" value="{{ labels.discount_calc_target_value|default:'Maksimum kazanc icin gereken indirim' }}" readonly>
           <div class="row">
             <label for="currency">{{ labels.currency }}</label>
             <select id="currency" name="currency">
@@ -367,11 +380,15 @@
       const body = document.body;
       const menuToggle = document.getElementById("menuToggle");
       const overlay = document.getElementById("drawerOverlay");
-      const fieldGrid = document.getElementById("fieldGrid");
-      const addRowBtn = document.getElementById("addRowBtn");
+      const salesGrid = document.getElementById("salesGrid");
+      const discountGrid = document.getElementById("discountGrid");
+      const addSalesRowBtn = document.getElementById("addSalesRowBtn");
+      const addDiscountRowBtn = document.getElementById("addDiscountRowBtn");
       const closeMenu = () => body.classList.remove("drawer-open");
       const openMenu = () => body.classList.add("drawer-open");
-      const sentencePlaceholder = "{{ labels.discount_field_name|default:'Cumle'|escapejs }} (or: 0,05 TL indirim yapinca 110 adet sattim)";
+      const qtyPlaceholder = "{{ labels.discount_field_name|default:'Urun Sayisi'|escapejs }}";
+      const pricePlaceholder = "{{ labels.discount_price_field|default:'Fiyat'|escapejs }}";
+      const discountPlaceholder = "{{ labels.discount_discount_field|default:'Indirim Bedeli'|escapejs }}";
       menuToggle.addEventListener("click", () => {
         if (body.classList.contains("drawer-open")) closeMenu();
         else openMenu();
@@ -384,28 +401,36 @@
       const bindRemoveButtons = () => {
         document.querySelectorAll(".remove-row-btn").forEach((btn) => {
           btn.onclick = () => {
-            const rows = fieldGrid.querySelectorAll(".field-row");
+            const parentGrid = btn.closest(".field-grid");
+            const rows = parentGrid.querySelectorAll(".field-row");
             if (rows.length > 1) btn.closest(".field-row").remove();
           };
         });
       };
-      const addSentenceRow = (initialValue = "") => {
+      const addSalesRow = () => {
+        const row = document.createElement("div");
+        row.className = "field-row sales-row";
+        row.innerHTML = `
+          <input type="text" name="sale_qty[]" placeholder="${qtyPlaceholder}">
+          <input type="text" name="sale_price[]" placeholder="${pricePlaceholder}">
+          <button type="button" class="remove-row-btn">{{ labels.discount_remove_row|default:'Sil' }}</button>
+        `;
+        salesGrid.appendChild(row);
+        bindRemoveButtons();
+      };
+      const addDiscountRow = () => {
         const row = document.createElement("div");
         row.className = "field-row";
         row.innerHTML = `
-          <input type="text" name="sentence_line[]" placeholder="${sentencePlaceholder}">
+          <input type="text" name="discount_value[]" placeholder="${discountPlaceholder}">
           <button type="button" class="remove-row-btn">{{ labels.discount_remove_row|default:'Sil' }}</button>
         `;
-        const input = row.querySelector('input[name="sentence_line[]"]');
-        input.value = initialValue;
-        fieldGrid.appendChild(row);
+        discountGrid.appendChild(row);
         bindRemoveButtons();
-        return input;
       };
       bindRemoveButtons();
-      addRowBtn.addEventListener("click", () => {
-        addSentenceRow();
-      });
+      addSalesRowBtn.addEventListener("click", addSalesRow);
+      addDiscountRowBtn.addEventListener("click", addDiscountRow);
     })();
   </script>
 </body>
