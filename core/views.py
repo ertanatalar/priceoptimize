@@ -153,6 +153,24 @@ TEXTS = {
         "privacy_ads_text": "Site gelecekte reklam servisleri kullanabilir. Bu durumda cerez kullanimi ve reklam tercihleri ilgili politika araclariyla yonetilir.",
         "privacy_section_contact": "Iletisim",
         "privacy_contact_text": "Gizlilikle ilgili talepleriniz icin: admin@priceoptimize.ai",
+        "terms_link": "Kullanim Sartlari",
+        "terms_title": "Kullanim Sartlari",
+        "terms_intro": "Bu sartlar PriceOptimize.ai hizmetlerinin kullanim kurallarini aciklar.",
+        "terms_section_use": "Hizmetin Kullanimi",
+        "terms_use_text": "Hesaplama motorlari bilgilendirme amaclidir. Nihai ticari kararlarinizdan kullanici sorumludur.",
+        "terms_section_content": "Icerik ve Sorumluluk",
+        "terms_content_text": "Sahte, zararli veya hukuka aykiri icerik girilmesi yasaktir. Hizmetin suistimali durumunda erisim kisitlanabilir.",
+        "terms_section_changes": "Degisiklikler",
+        "terms_changes_text": "Kullanim sartlari zamanla guncellenebilir. Guncel metin bu sayfada yayimlanir.",
+        "cookies_link": "Cerez Politikasi",
+        "cookies_title": "Cerez Politikasi",
+        "cookies_intro": "Bu sayfa PriceOptimize.ai uzerinde cerez kullanimini aciklar.",
+        "cookies_section_what": "Cerez Nedir?",
+        "cookies_what_text": "Cerezler, tarayicinizda saklanan kucuk metin dosyalaridir ve tercihlerinizi hatirlamaya yardimci olur.",
+        "cookies_section_why": "Neden Kullanilir?",
+        "cookies_why_text": "Dil secimi gibi temel deneyimi iyilestirmek, guvenligi artirmak ve performansi olcmek icin kullanilir.",
+        "cookies_section_manage": "Cerez Yonetimi",
+        "cookies_manage_text": "Tarayici ayarlarinizdan cerezleri silebilir veya engelleyebilirsiniz. Bazi ozellikler bu durumda beklendigi gibi calismayabilir.",
     },
     "en": {
         "page_title": "Optimal Price Calculator",
@@ -274,6 +292,24 @@ TEXTS = {
         "privacy_ads_text": "The site may use advertising services in the future. In that case, cookie and ad preference controls will be provided via related policy tools.",
         "privacy_section_contact": "Contact",
         "privacy_contact_text": "For privacy requests: admin@priceoptimize.ai",
+        "terms_link": "Terms of Use",
+        "terms_title": "Terms of Use",
+        "terms_intro": "These terms describe the rules for using PriceOptimize.ai services.",
+        "terms_section_use": "Service Use",
+        "terms_use_text": "Calculator engines are provided for informational support. Final business decisions remain the user’s responsibility.",
+        "terms_section_content": "Content and Responsibility",
+        "terms_content_text": "Entering illegal, harmful, or abusive content is prohibited. Access may be restricted in case of misuse.",
+        "terms_section_changes": "Changes",
+        "terms_changes_text": "Terms may be updated over time. The current version is published on this page.",
+        "cookies_link": "Cookie Policy",
+        "cookies_title": "Cookie Policy",
+        "cookies_intro": "This page explains how cookies are used on PriceOptimize.ai.",
+        "cookies_section_what": "What Is a Cookie?",
+        "cookies_what_text": "Cookies are small text files stored in your browser to help remember preferences.",
+        "cookies_section_why": "Why We Use Cookies",
+        "cookies_why_text": "They are used to improve core experience (like language preference), enhance security, and measure performance.",
+        "cookies_section_manage": "Managing Cookies",
+        "cookies_manage_text": "You can delete or block cookies in browser settings. Some features may not work as expected afterward.",
     },
     "de": {
         "page_title": "Optimaler Preisrechner",
@@ -1283,6 +1319,32 @@ def privacy_policy(request):
     )
 
 
+def terms_of_use(request):
+    current_language = (get_language() or "tr").split("-")[0]
+    labels = {**TEXTS["en"], **TEXTS.get(current_language, TEXTS["en"])}
+    return render(
+        request,
+        "core/terms.html",
+        {
+            "labels": labels,
+            "current_language": current_language,
+        },
+    )
+
+
+def cookies_policy(request):
+    current_language = (get_language() or "tr").split("-")[0]
+    labels = {**TEXTS["en"], **TEXTS.get(current_language, TEXTS["en"])}
+    return render(
+        request,
+        "core/cookies.html",
+        {
+            "labels": labels,
+            "current_language": current_language,
+        },
+    )
+
+
 def ads_txt(request):
     line = os.getenv("ADS_TXT_LINE", "google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0")
     return HttpResponse(f"{line}\n", content_type="text/plain; charset=utf-8")
@@ -1295,6 +1357,8 @@ def sitemap_xml(request):
         base + reverse("home"),
         base + reverse("discount_optimizer"),
         base + reverse("privacy_policy"),
+        base + reverse("terms_of_use"),
+        base + reverse("cookies_policy"),
     ]
     lastmod = timezone.now().date().isoformat()
     body = [

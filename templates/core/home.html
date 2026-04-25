@@ -334,7 +334,11 @@
           </div>
         </section>
       {% endif %}
-      <p style="margin:.9rem 0 0;text-align:right;"><a href="/privacy/" style="color:#0f766e;font-weight:700;text-decoration:none;">{{ labels.privacy_link|default:"Privacy Policy" }}</a></p>
+      <p style="margin:.9rem 0 0;text-align:right;display:flex;gap:.75rem;justify-content:flex-end;flex-wrap:wrap;">
+        <a href="/privacy/" style="color:#0f766e;font-weight:700;text-decoration:none;">{{ labels.privacy_link|default:"Privacy Policy" }}</a>
+        <a href="/terms/" style="color:#0f766e;font-weight:700;text-decoration:none;">{{ labels.terms_link|default:"Terms of Use" }}</a>
+        <a href="/cookies/" style="color:#0f766e;font-weight:700;text-decoration:none;">{{ labels.cookies_link|default:"Cookie Policy" }}</a>
+      </p>
     </section>
   </main>
   <script>
