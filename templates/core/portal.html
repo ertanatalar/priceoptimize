@@ -126,6 +126,14 @@
       border-color: #14b8a6;
       background: rgba(20, 184, 166, 0.18);
     }
+    .drawer-subtitle {
+      margin: 1rem 0 0.5rem;
+      color: #cbd5e1;
+      font-size: 0.92rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      text-transform: uppercase;
+    }
 
     .wrap {
       width: 100%;
@@ -262,6 +270,19 @@
         </a>
       {% endfor %}
     </nav>
+    <p class="drawer-subtitle">Bilgi</p>
+    <nav class="menu-list">
+      <a class="menu-item" href="/#about">{{ labels.about_title|default:"Hakkimizda" }}</a>
+      <a class="menu-item" href="/#howto">{{ labels.howto_title|default:"Nasil kullanilir" }}</a>
+      <a class="menu-item" href="/#faq">{{ labels.faq_title|default:"Sik sorulan sorular" }}</a>
+      <a class="menu-item" href="/#contact">{{ labels.contact_title|default:"Iletisim" }}</a>
+    </nav>
+    <p class="drawer-subtitle">Politikalar</p>
+    <nav class="menu-list">
+      <a class="menu-item" href="/privacy/">{{ labels.privacy_link|default:"Privacy Policy" }}</a>
+      <a class="menu-item" href="/terms/">{{ labels.terms_link|default:"Terms of Use" }}</a>
+      <a class="menu-item" href="/cookies/">{{ labels.cookies_link|default:"Cookie Policy" }}</a>
+    </nav>
   </aside>
 
   <main class="wrap">
@@ -290,12 +311,12 @@
     </section>
 
     <section class="info-grid">
-      <article class="info-card">
+      <article class="info-card" id="about">
         <h2>{{ labels.about_title }}</h2>
         <p>{{ labels.about_text }}</p>
       </article>
 
-      <article class="info-card">
+      <article class="info-card" id="howto">
         <h2>{{ labels.howto_title }}</h2>
         <ul>
           <li>{{ labels.howto_step_1 }}</li>
@@ -304,7 +325,7 @@
         </ul>
       </article>
 
-      <article class="info-card">
+      <article class="info-card" id="faq">
         <h2>{{ labels.faq_title }}</h2>
         <div class="faq-item">
           <strong>{{ labels.faq_q1 }}</strong>
@@ -320,7 +341,7 @@
         </div>
       </article>
 
-      <article class="info-card">
+      <article class="info-card" id="contact">
         <h2>{{ labels.contact_title }}</h2>
         <p>{{ labels.contact_text }}</p>
       </article>

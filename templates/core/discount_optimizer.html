@@ -110,6 +110,14 @@
     }
     .menu-item small { display: block; margin-top: .2rem; color: #93c5fd; }
     .menu-item.active { border-color: #14b8a6; background: rgba(20, 184, 166, 0.18); }
+    .drawer-subtitle {
+      margin: 1rem 0 0.5rem;
+      color: #cbd5e1;
+      font-size: 0.92rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      text-transform: uppercase;
+    }
 
     .page { width: 100%; max-width: 920px; display: flex; justify-content: center; }
     .card {
@@ -256,6 +264,19 @@
           <small>{{ engine.description }}</small>
         </a>
       {% endfor %}
+    </nav>
+    <p class="drawer-subtitle">Bilgi</p>
+    <nav class="menu-list">
+      <a class="menu-item" href="/#about">{{ labels.about_title|default:"Hakkimizda" }}</a>
+      <a class="menu-item" href="/#howto">{{ labels.howto_title|default:"Nasil kullanilir" }}</a>
+      <a class="menu-item" href="/#faq">{{ labels.faq_title|default:"Sik sorulan sorular" }}</a>
+      <a class="menu-item" href="/#contact">{{ labels.contact_title|default:"Iletisim" }}</a>
+    </nav>
+    <p class="drawer-subtitle">Politikalar</p>
+    <nav class="menu-list">
+      <a class="menu-item" href="/privacy/">{{ labels.privacy_link|default:"Privacy Policy" }}</a>
+      <a class="menu-item" href="/terms/">{{ labels.terms_link|default:"Terms of Use" }}</a>
+      <a class="menu-item" href="/cookies/">{{ labels.cookies_link|default:"Cookie Policy" }}</a>
     </nav>
   </aside>
 
