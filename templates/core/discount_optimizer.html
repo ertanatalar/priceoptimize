@@ -13,7 +13,7 @@
     gtag('config', '{{ ga_measurement_id }}');
   </script>
   {% endif %}
-  {% if adsense_script_enabled %}
+  {% if adsense_script_enabled and show_adsense %}
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ adsense_client_id }}" crossorigin="anonymous"></script>
   {% endif %}
   <style>
@@ -173,6 +173,48 @@
       line-height: 1.5;
       font-weight: 600;
     }
+    .info-block {
+      max-width: 860px;
+      margin: 0 auto 1rem;
+      border: 1px solid var(--line);
+      background: #f8fcff;
+      border-radius: 12px;
+      padding: .95rem;
+    }
+    .info-block h2 {
+      margin: 0 0 .55rem;
+      font-size: 1.05rem;
+      color: #0f766e;
+    }
+    .info-grid {
+      display: grid;
+      gap: .7rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .info-item {
+      border: 1px solid #d8e4eb;
+      border-radius: 10px;
+      padding: .7rem;
+      background: #ffffff;
+    }
+    .info-item h3 {
+      margin: 0 0 .35rem;
+      font-size: .98rem;
+      color: #0f172a;
+    }
+    .info-item p {
+      margin: 0;
+      color: #475569;
+      line-height: 1.45;
+    }
+    .info-item ul {
+      margin: 0;
+      padding-left: 1rem;
+      color: #475569;
+      line-height: 1.45;
+      display: grid;
+      gap: .2rem;
+    }
     .input-section {
       border: 1px solid var(--line);
       border-radius: 12px;
@@ -246,6 +288,7 @@
     @media (max-width: 640px) {
       .language-form, .row { grid-template-columns: 1fr; }
       .field-row, .field-row.sales-row { grid-template-columns: 1fr; }
+      .info-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -299,6 +342,32 @@
         <button type="submit">{{ labels.change_language }}</button>
       </form>
       <p class="intro-note">{{ labels.discount_intro }}</p>
+      <section class="info-block">
+        <h2>{{ labels.discount_detail_title }}</h2>
+        <div class="info-grid">
+          <article class="info-item">
+            <h3>{{ labels.discount_purpose_title }}</h3>
+            <p>{{ labels.discount_purpose_text }}</p>
+          </article>
+          <article class="info-item">
+            <h3>{{ labels.discount_usage_title }}</h3>
+            <ul>
+              <li>{{ labels.discount_usage_step_1 }}</li>
+              <li>{{ labels.discount_usage_step_2 }}</li>
+              <li>{{ labels.discount_usage_step_3 }}</li>
+            </ul>
+          </article>
+          <article class="info-item">
+            <h3>{{ labels.discount_example_title }}</h3>
+            <p>{{ labels.discount_example_data }}</p>
+            <p><strong>{{ labels.discount_example_output_title }}</strong> {{ labels.discount_example_output }}</p>
+          </article>
+          <article class="info-item">
+            <h3>{{ labels.discount_interpret_title }}</h3>
+            <p>{{ labels.discount_interpret_text }}</p>
+          </article>
+        </div>
+      </section>
 
       <form method="post">
         {% csrf_token %}

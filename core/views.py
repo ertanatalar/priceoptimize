@@ -36,6 +36,19 @@ TEXTS = {
     "tr": {
         "page_title": "Optimal Fiyat Hesaplayıcı",
         "page_intro": "Gecmisteki talep sayisi ve fiyat bilgilerinden yola cikarak optimum fiyat degerini bulur.",
+        "home_detail_title": "Bu motor ne yapar?",
+        "home_purpose_title": "Amac",
+        "home_purpose_text": "Iki farkli satis noktasindan fiyat-talep iliskisini cikarir ve kari en yuksek yapan satis fiyatini bulur.",
+        "home_usage_title": "Kullanim",
+        "home_usage_step_1": "1) Iki farkli fiyat ve bu fiyatlardaki talep adetini girin.",
+        "home_usage_step_2": "2) Para birimi, optimizasyon yontemi ve birim maliyeti secin.",
+        "home_usage_step_3": "3) Hesapla'ya basin; model optimum fiyati ve maksimum kari uretsin.",
+        "home_example_title": "Ornek Veri ve Beklenen Cikti",
+        "home_example_data": "Ornek: 100 TL fiyatta 100 adet, 75 TL fiyatta 110 adet, birim maliyet 40 TL.",
+        "home_example_output_title": "Beklenen cikti:",
+        "home_example_output": "Model, optimum fiyat, beklenen satis adedi ve maksimum kar degerini listeler.",
+        "home_interpret_title": "Sonucu nasil yorumlamali?",
+        "home_interpret_text": "Optimum fiyat mevcut fiyatinizdan yuksekse artisa, dusukse indirim senaryosuna oncelik verin. Beklenen talep ve maksimum kar metriklerini birlikte degerlendirin.",
         "language": "Dil",
         "change_language": "Değiştir",
         "point_1": "Veri Noktası 1",
@@ -75,7 +88,7 @@ TEXTS = {
         "error_no_optimum": "Bu veriyle optimum fiyat hesaplanamıyor.",
         "portal_title": "Urunlerinizin fiyatini optimize edin",
         "about_title": "Hakkimizda",
-        "about_text": "PriceOptimize.ai, satis verilerinizi kullanarak urunleriniz icin daha dogru fiyat kararlarina yardimci olan pratik bir optimizasyon platformudur.",
+        "about_text": "PriceOptimize.ai, gecmis satis verilerinizden ogrenerek fiyat kararlarinizi sayisal olarak guclendirmenize yardimci olur. Hedefimiz, teknik bilgisi olmayan ekiplerin bile dakikalar icinde daha dogru fiyat denemeleri yapabilmesidir.",
         "howto_title": "Nasil kullanilir",
         "howto_step_1": "1) Motor secin.",
         "howto_step_2": "2) Satis verilerinizi girin.",
@@ -91,6 +104,19 @@ TEXTS = {
         "contact_text": "Sorulariniz ve geri bildirimleriniz icin bize yazin: admin@priceoptimize.ai",
         "discount_page_title": "Indirim Sonrasi Satis Etkisi",
         "discount_intro": "Urun sayisi ve satis fiyatini girin, ardindan yapmak istediginiz indirim bedelini girin ve yapabileceginiz maksimum indirim ve maksimum kari hesaplayin. Satis verilerini ne kadar cok girerseniz, hesaplama o kadar isabetli olacaktir.",
+        "discount_detail_title": "Bu motor ne yapar?",
+        "discount_purpose_title": "Amac",
+        "discount_purpose_text": "Fiyat indirimi adimlarinin satis adedine etkisini modelleyerek, en yuksek kari getiren indirim seviyesini bulur.",
+        "discount_usage_title": "Kullanim",
+        "discount_usage_step_1": "1) Satis verileri bolumune en az iki satir girin (urun sayisi + fiyat).",
+        "discount_usage_step_2": "2) Indirim bedelleri bolumune planladiginiz indirim adimlarini ekleyin.",
+        "discount_usage_step_3": "3) Hesapla'ya basin; motor en iyi indirim, beklenen satis ve maksimum kar sonucunu cikarsin.",
+        "discount_example_title": "Ornek Veri ve Beklenen Cikti",
+        "discount_example_data": "Ornek: 100 adet / 100 TL ve 110 adet / 95 TL; indirim bedeli 5 TL.",
+        "discount_example_output_title": "Beklenen cikti:",
+        "discount_example_output": "Model, indirimli senaryoyu mevcut fiyatla karsilastirir ve hangi indirim adiminda en yuksek kara ulasilacagini gosterir.",
+        "discount_interpret_title": "Sonucu nasil yorumlamali?",
+        "discount_interpret_text": "Maksimum kar veren senaryoyu secin. Ek satis adedi artsa bile kar dusuyorsa indirimi sinirlandirin ve yeni veri geldikce modeli tekrar calistirin.",
         "discount_prompt_label": "Ne Hesaplanacak?",
         "discount_prompt_placeholder": "",
         "discount_hint": "",
@@ -175,6 +201,19 @@ TEXTS = {
     "en": {
         "page_title": "Optimal Price Calculator",
         "page_intro": "Finds the optimal price based on historical demand counts and price data.",
+        "home_detail_title": "What does this engine do?",
+        "home_purpose_title": "Purpose",
+        "home_purpose_text": "It derives the price-demand relationship from two sales points and finds the selling price that maximizes profit.",
+        "home_usage_title": "How to use",
+        "home_usage_step_1": "1) Enter two different prices and demand quantities at those prices.",
+        "home_usage_step_2": "2) Select currency, optimization method, and unit cost.",
+        "home_usage_step_3": "3) Click Calculate to get optimal price, expected demand, and maximum profit.",
+        "home_example_title": "Example Input and Expected Output",
+        "home_example_data": "Example: 100 units at 100 TRY, 110 units at 75 TRY, unit cost 40 TRY.",
+        "home_example_output_title": "Expected output:",
+        "home_example_output": "The model returns optimal price, expected quantity, and maximum profit metrics.",
+        "home_interpret_title": "How to interpret the result",
+        "home_interpret_text": "If the optimal price is above your current level, test price increases; if lower, test discount scenarios. Evaluate expected demand and maximum profit together.",
         "language": "Language",
         "change_language": "Change",
         "point_1": "Data Point 1",
@@ -214,7 +253,7 @@ TEXTS = {
         "error_no_optimum": "This data does not produce an optimal price.",
         "portal_title": "Optimize your product prices",
         "about_title": "About Us",
-        "about_text": "PriceOptimize.ai is a practical optimization platform that helps you make better pricing decisions using your sales data.",
+        "about_text": "PriceOptimize.ai helps teams make stronger pricing decisions by learning from historical sales data. Our goal is to make pricing optimization practical even for non-technical users.",
         "howto_title": "How to Use",
         "howto_step_1": "1) Choose an engine.",
         "howto_step_2": "2) Enter your sales data.",
@@ -230,6 +269,19 @@ TEXTS = {
         "contact_text": "For questions and feedback, contact us: admin@priceoptimize.ai",
         "discount_page_title": "Post-Discount Sales Impact",
         "discount_intro": "Enter product quantity and sale price, then enter your planned discount amount to calculate the maximum discount and maximum profit. The more sales data you provide, the more accurate the calculation becomes.",
+        "discount_detail_title": "What does this engine do?",
+        "discount_purpose_title": "Purpose",
+        "discount_purpose_text": "It models how discount steps affect unit sales and finds the discount level that produces the highest profit.",
+        "discount_usage_title": "How to use",
+        "discount_usage_step_1": "1) Add at least two sales rows (quantity + price).",
+        "discount_usage_step_2": "2) Add your planned discount amounts.",
+        "discount_usage_step_3": "3) Click Calculate to compare scenarios and see the best discount and profit point.",
+        "discount_example_title": "Example Input and Expected Output",
+        "discount_example_data": "Example: 100 units / 100 TRY and 110 units / 95 TRY, discount step 5 TRY.",
+        "discount_example_output_title": "Expected output:",
+        "discount_example_output": "The engine compares current vs discounted scenarios and reports the discount step with maximum profit.",
+        "discount_interpret_title": "How to interpret the result",
+        "discount_interpret_text": "Choose the scenario with highest profit. Even when units sold increase, keep discount limited if profit decreases.",
         "discount_prompt_label": "What Should Be Calculated?",
         "discount_prompt_placeholder": "",
         "discount_hint": "",
@@ -1222,6 +1274,7 @@ def home(request):
         "engines": engines,
         "current_language": current_language,
         "language_options": LANGUAGE_OPTIONS,
+        "show_adsense": True,
         "method_options": method_options,
         "selected_method": selected_method,
         "currencies": CURRENCIES,
@@ -1302,6 +1355,7 @@ def portal(request):
             "labels": labels,
             "current_language": current_language,
             "language_options": LANGUAGE_OPTIONS,
+            "show_adsense": False,
         },
     )
 
@@ -1315,6 +1369,7 @@ def privacy_policy(request):
         {
             "labels": labels,
             "current_language": current_language,
+            "show_adsense": False,
         },
     )
 
@@ -1328,6 +1383,7 @@ def terms_of_use(request):
         {
             "labels": labels,
             "current_language": current_language,
+            "show_adsense": False,
         },
     )
 
@@ -1341,12 +1397,20 @@ def cookies_policy(request):
         {
             "labels": labels,
             "current_language": current_language,
+            "show_adsense": False,
         },
     )
 
 
 def ads_txt(request):
-    line = os.getenv("ADS_TXT_LINE", "google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0")
+    line = os.getenv("ADS_TXT_LINE", "").strip()
+    if not line:
+        client_id = os.getenv("ADSENSE_CLIENT_ID", "").strip()
+        if client_id.startswith("ca-pub-"):
+            publisher_id = client_id.replace("ca-pub-", "pub-", 1)
+            line = f"google.com, {publisher_id}, DIRECT, f08c47fec0942fa0"
+        else:
+            line = "google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0"
     return HttpResponse(f"{line}\n", content_type="text/plain; charset=utf-8")
 
 
@@ -1411,6 +1475,7 @@ def discount_optimizer(request):
         "engines": engines,
         "current_language": current_language,
         "language_options": LANGUAGE_OPTIONS,
+        "show_adsense": True,
         "currencies": CURRENCIES,
         "selected_currency": selected_currency,
         "selected_symbol": CURRENCIES.get(selected_currency, "₺"),
