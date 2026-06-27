@@ -22,7 +22,7 @@
     <div class="header-inner">
       <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 18V9m5 9v-5m5 5V6m5 12V4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M4 15l5-4 5 2 5-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>PriceOptimize AI</a>
       <nav class="top-nav"><a href="/">Ana Sayfa</a><a class="active" href="/price-demand/">Dashboard</a><a href="/guides/price-demand/">Analiz</a><a href="/guides/discount-optimizer/">Raporlar</a><a href="/how-to/">Fiyatlandırma</a></nav>
-      <div class="header-actions"><a href="/faq/">? Yardım</a><span class="user-chip"><span class="avatar">EA</span><span>Ecem A.</span></span></div>
+      <div class="header-actions"><a href="/faq/">? Yardım</a>{% include "core/_auth_links.html" %}</div>
       <button class="mobile-menu-button" id="menuToggle" aria-label="Menüyü aç">☰</button>
     </div>
   </header>
@@ -33,6 +33,8 @@
     <nav class="menu-list">
       {% for engine in engines %}<a class="menu-item {% if engine.path == request.path %}active{% endif %}" href="{{ engine.path }}">{{ engine.title }}<small>{{ engine.description }}</small></a>{% endfor %}
     </nav>
+    <p class="drawer-subtitle">Giriş</p>
+    <nav class="menu-list">{% include "core/_auth_menu_links.html" %}</nav>
     <p class="drawer-subtitle">Bilgi</p>
     <nav class="menu-list"><a class="menu-item" href="/about/">{{ labels.about_title }}</a><a class="menu-item" href="/how-to/">{{ labels.howto_title }}</a><a class="menu-item" href="/faq/">{{ labels.faq_title }}</a><a class="menu-item" href="/contact/">{{ labels.contact_title }}</a></nav>
     <p class="drawer-subtitle">Politikalar</p>

@@ -22,6 +22,7 @@
     <div class="header-inner">
       <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">↗</span>PriceOptimize AI</a>
       <nav class="top-nav"><a href="/">Ana Sayfa</a><a href="/price-demand/">Dashboard</a><a href="/guides/price-demand/">Analiz</a><a href="/faq/">Yardım</a></nav>
+      <div class="header-actions">{% include "core/_auth_links.html" %}</div>
       <button class="mobile-menu-button" id="menuToggle" aria-label="Menüyü aç">☰</button>
     </div>
   </header>
@@ -29,6 +30,9 @@
   <div class="drawer-overlay" id="drawerOverlay"></div>
   <aside class="drawer" id="drawer">
     <h2>PriceOptimize AI</h2>
+    <p class="drawer-subtitle">Giriş</p>
+    <nav class="menu-list">{% include "core/_auth_menu_links.html" %}</nav>
+    <p class="drawer-subtitle">Menü</p>
     <nav class="menu-list">
       {% for item in navigation %}<a class="menu-item" href="{{ item.path }}">{{ item.title }}</a>{% endfor %}
       <a class="menu-item" href="/privacy/">{{ labels.privacy_link }}</a>

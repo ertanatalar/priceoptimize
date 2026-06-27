@@ -4,11 +4,17 @@ from math import isfinite
 import os
 import re
 
-from django.http import HttpResponse
-from django.shortcuts import render
+from django.contrib.auth import login, logout
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.conf import settings
+from django.http import Http404, HttpResponse
+from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import get_language
 from django.utils import timezone
+
+from .publisher_content import PUBLISHER_CONTENT
 
 
 CURRENCIES = {
@@ -71,6 +77,9 @@ TEXTS = {
         "engine_discount_title": "Indirim Etki Motoru",
         "engine_discount_desc": "Kalkulus tabanli fiyat indirimi modeli: her indirim adiminda satis artisini kullanarak maksimum kari bulur.",
         "go_to_engine": "Hesapla",
+        "guides_menu": "Ayrintili Rehberler",
+        "home_guide_link": "Fiyat ve talep rehberini oku",
+        "discount_guide_link": "Indirim ve maksimum kar rehberini oku",
         "results": "Sonuçlar",
         "demand_formula": "Talep denklemi",
         "profit_formula": "Kar denklemi",
@@ -236,6 +245,9 @@ TEXTS = {
         "engine_discount_title": "Discount Impact Engine",
         "engine_discount_desc": "Calculus-based price reduction model: finds maximum profit using step discount and demand increase.",
         "go_to_engine": "Open Engine",
+        "guides_menu": "Detailed Guides",
+        "home_guide_link": "Read the price and demand guide",
+        "discount_guide_link": "Read the discount and maximum profit guide",
         "results": "Results",
         "demand_formula": "Demand formula",
         "profit_formula": "Profit formula",
@@ -843,6 +855,100 @@ def _localized_engines(labels: dict) -> list[dict]:
     ]
 
 
+def _safe_next_url(request):
+    next_url = request.POST.get("next") or request.GET.get("next")
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return next_url
+    return reverse("portal")
+
+
+def _style_auth_form(form):
+    for field in form.fields.values():
+        field.widget.attrs.update({"class": "auth-input"})
+    return form
+
+
+def sign_in(request):
+    if request.user.is_authenticated:
+        return redirect("portal")
+
+    current_language = (get_language() or "tr").split("-")[0]
+    labels = {**TEXTS["en"], **TEXTS.get(current_language, TEXTS["en"])}
+    next_url = _safe_next_url(request)
+
+    if request.method == "POST":
+        form = _style_auth_form(AuthenticationForm(request, data=request.POST))
+        if form.is_valid():
+            login(request, form.get_user())
+            return redirect(next_url)
+    else:
+        form = _style_auth_form(AuthenticationForm(request))
+
+    return render(
+        request,
+        "core/auth.html",
+        {
+            "form": form,
+            "labels": labels,
+            "current_language": current_language,
+            "next_url": next_url,
+            "title": "Sign in",
+            "subtitle": "PriceOptimize AI hesabınıza giriş yapın.",
+            "button_label": "Sign in",
+            "alternate_text": "Hesabınız yok mu?",
+            "alternate_label": "Sign up",
+            "alternate_url": reverse("sign_up"),
+            "show_adsense": False,
+        },
+    )
+
+
+def sign_up(request):
+    if request.user.is_authenticated:
+        return redirect("portal")
+
+    current_language = (get_language() or "tr").split("-")[0]
+    labels = {**TEXTS["en"], **TEXTS.get(current_language, TEXTS["en"])}
+    next_url = _safe_next_url(request)
+
+    if request.method == "POST":
+        form = _style_auth_form(UserCreationForm(request.POST))
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect(next_url)
+    else:
+        form = _style_auth_form(UserCreationForm())
+
+    return render(
+        request,
+        "core/auth.html",
+        {
+            "form": form,
+            "labels": labels,
+            "current_language": current_language,
+            "next_url": next_url,
+            "title": "Sign up",
+            "subtitle": "PriceOptimize AI için ücretsiz hesabınızı oluşturun.",
+            "button_label": "Sign up",
+            "alternate_text": "Zaten hesabınız var mı?",
+            "alternate_label": "Sign in",
+            "alternate_url": reverse("sign_in"),
+            "show_adsense": False,
+        },
+    )
+
+
+def sign_out(request):
+    if request.method == "POST":
+        logout(request)
+    return redirect("portal")
+
+
 def _extract_decimal_by_patterns(text: str, patterns: list[str]) -> Decimal | None:
     for pattern in patterns:
         match = re.search(pattern, text, flags=re.IGNORECASE)
@@ -1360,6 +1466,44 @@ def portal(request):
     )
 
 
+def publisher_page(request, slug):
+    page_translations = PUBLISHER_CONTENT.get(slug)
+    if page_translations is None:
+        raise Http404("Content page not found")
+
+    current_language = (get_language() or "tr").split("-")[0]
+    labels = {**TEXTS["en"], **TEXTS.get(current_language, TEXTS["en"])}
+    content_language = current_language if current_language in page_translations else "en"
+    page = page_translations[content_language]
+
+    page_paths = [
+        ("about", "/about/"),
+        ("how-to", "/how-to/"),
+        ("faq", "/faq/"),
+        ("contact", "/contact/"),
+        ("price-demand-guide", "/guides/price-demand/"),
+        ("discount-guide", "/guides/discount-optimizer/"),
+    ]
+    navigation = []
+    for nav_slug, path in page_paths:
+        translations = PUBLISHER_CONTENT[nav_slug]
+        language = content_language if content_language in translations else "en"
+        navigation.append({"path": path, "title": translations[language]["title"]})
+
+    return render(
+        request,
+        "core/content_page.html",
+        {
+            "page": page,
+            "labels": labels,
+            "navigation": navigation,
+            "current_language": current_language,
+            "content_language": content_language,
+            "language_options": LANGUAGE_OPTIONS,
+        },
+    )
+
+
 def privacy_policy(request):
     current_language = (get_language() or "tr").split("-")[0]
     labels = {**TEXTS["en"], **TEXTS.get(current_language, TEXTS["en"])}
@@ -1409,8 +1553,14 @@ def ads_txt(request):
         if client_id.startswith("ca-pub-"):
             publisher_id = client_id.replace("ca-pub-", "pub-", 1)
             line = f"google.com, {publisher_id}, DIRECT, f08c47fec0942fa0"
+        elif settings.DEBUG:
+            line = "# ads.txt is not configured in local development."
         else:
-            line = "google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0"
+            return HttpResponse(
+                "ads.txt is not configured. Set ADS_TXT_LINE or ADSENSE_CLIENT_ID.\n",
+                content_type="text/plain; charset=utf-8",
+                status=503,
+            )
     return HttpResponse(f"{line}\n", content_type="text/plain; charset=utf-8")
 
 
@@ -1420,6 +1570,12 @@ def sitemap_xml(request):
         base + reverse("portal"),
         base + reverse("home"),
         base + reverse("discount_optimizer"),
+        base + reverse("about"),
+        base + reverse("how_to"),
+        base + reverse("faq"),
+        base + reverse("contact"),
+        base + reverse("price_demand_guide"),
+        base + reverse("discount_guide"),
         base + reverse("privacy_policy"),
         base + reverse("terms_of_use"),
         base + reverse("cookies_policy"),

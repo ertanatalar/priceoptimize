@@ -1,0 +1,63 @@
+{% load static %}
+<!doctype html>
+<html lang="{{ current_language }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,follow">
+  <title>{{ title }} | PriceOptimize AI</title>
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">↗</span>PriceOptimize AI</a>
+      <nav class="top-nav"><a href="/">Ana Sayfa</a><a href="/price-demand/">Dashboard</a><a href="/about/">Hakkımızda</a><a href="/contact/">İletişim</a></nav>
+      <div class="header-actions">{% include "core/_auth_links.html" %}</div>
+      <button class="mobile-menu-button" id="menuToggle" aria-label="Menüyü aç">☰</button>
+    </div>
+  </header>
+
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <aside class="drawer" id="drawer">
+    <h2>PriceOptimize AI</h2>
+    <p class="drawer-subtitle">Giriş</p>
+    <nav class="menu-list">{% include "core/_auth_menu_links.html" %}</nav>
+    <p class="drawer-subtitle">Menü</p>
+    <nav class="menu-list">
+      <a class="menu-item" href="/">Ana Sayfa</a>
+      <a class="menu-item" href="/price-demand/">Dashboard</a>
+      <a class="menu-item" href="/price-demand/discount-optimizer/">İndirim Etki Motoru</a>
+      <a class="menu-item" href="/about/">Hakkımızda</a>
+      <a class="menu-item" href="/contact/">İletişim</a>
+    </nav>
+  </aside>
+
+  <main class="policy-main auth-main">
+    <section class="auth-card">
+      <p class="eyebrow"><a href="/">← PriceOptimize AI</a></p>
+      <h1>{{ title }}</h1>
+      <p>{{ subtitle }}</p>
+      <form method="post" class="auth-form" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next_url }}">
+        {% if form.non_field_errors %}
+          <div class="form-errors">{{ form.non_field_errors }}</div>
+        {% endif %}
+        {% for field in form %}
+          <div class="auth-field">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+            {% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
+          </div>
+        {% endfor %}
+        <button class="wide" type="submit">{{ button_label }}</button>
+      </form>
+      <p class="auth-switch">{{ alternate_text }} <a href="{{ alternate_url }}">{{ alternate_label }}</a></p>
+    </section>
+  </main>
+
+  <script>(function(){const b=document.body,t=document.getElementById('menuToggle'),o=document.getElementById('drawerOverlay');const c=()=>b.classList.remove('drawer-open');if(t)t.addEventListener('click',()=>b.classList.toggle('drawer-open'));if(o)o.addEventListener('click',c);document.addEventListener('keydown',e=>{if(e.key==='Escape')c();});})();</script>
+</body>
+</html>

@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
 </head>
 <body>
-  <header class="app-header"><div class="header-inner"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true">↗</span>PriceOptimize AI</a><nav class="top-nav"><a href="/">Ana Sayfa</a><a href="/price-demand/">Dashboard</a><a href="/about/">Hakkımızda</a><a href="/contact/">İletişim</a></nav></div></header>
+  <header class="app-header"><div class="header-inner"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true">↗</span>PriceOptimize AI</a><nav class="top-nav"><a href="/">Ana Sayfa</a><a href="/price-demand/">Dashboard</a><a href="/about/">Hakkımızda</a><a href="/contact/">İletişim</a></nav><div class="header-actions">{% include "core/_auth_links.html" %}</div></div></header>
   <main class="policy-main">
     <section class="hero-row"><div><p class="eyebrow"><a href="/">← PriceOptimize AI</a></p><h1 class="hero-title">{{ labels.privacy_title }}</h1><p class="hero-subtitle">{{ labels.privacy_intro }}</p></div></section>
     <article class="content-card"><h2>{{ labels.privacy_section_data }}</h2><p>{{ labels.privacy_data_text }}</p><h2>{{ labels.privacy_section_ads }}</h2><p>{{ labels.privacy_ads_text }}</p><h2>{{ labels.privacy_section_contact }}</h2><p>{{ labels.privacy_contact_text }}</p></article>

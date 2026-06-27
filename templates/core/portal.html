@@ -35,7 +35,7 @@
       </nav>
       <div class="header-actions">
         <a href="/faq/">? Yardım</a>
-        <span class="user-chip"><span class="avatar">EA</span><span>Ecem A.</span></span>
+        {% include "core/_auth_links.html" %}
       </div>
       <button class="mobile-menu-button" id="menuToggle" aria-label="Menüyü aç">☰</button>
     </div>
@@ -48,6 +48,10 @@
       {% for engine in engines %}
         <a class="menu-item" href="{{ engine.path }}">{{ engine.title }}<small>{{ engine.description }}</small></a>
       {% endfor %}
+    </nav>
+    <p class="drawer-subtitle">Giriş</p>
+    <nav class="menu-list">
+      {% include "core/_auth_menu_links.html" %}
     </nav>
     <p class="drawer-subtitle">Bilgi</p>
     <nav class="menu-list">

@@ -1,0 +1,9 @@
+{% if request.user.is_authenticated %}
+  <form class="auth-inline-form" action="{% url 'sign_out' %}" method="post">
+    {% csrf_token %}
+    <button class="auth-link" type="submit">Sign out</button>
+  </form>
+{% else %}
+  <a class="auth-link" href="{% url 'sign_in' %}">Sign in</a>
+  <a class="auth-link primary" href="{% url 'sign_up' %}">Sign up</a>
+{% endif %}
