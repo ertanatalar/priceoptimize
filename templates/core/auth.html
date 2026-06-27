@@ -34,10 +34,12 @@
   </aside>
 
   <main class="policy-main auth-main">
-    <section class="auth-card">
+    <section class="auth-card {% if auth_mode == 'signin' %}login-card{% endif %}">
       <p class="eyebrow"><a href="/">← PriceOptimize AI</a></p>
-      <h1>{{ title }}</h1>
-      <p>{{ subtitle }}</p>
+      {% if auth_mode != "signin" %}
+        <h1>{{ title }}</h1>
+        <p>{{ subtitle }}</p>
+      {% endif %}
       <form method="post" class="auth-form" novalidate>
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ next_url }}">
@@ -52,8 +54,20 @@
             {% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}
           </div>
         {% endfor %}
+        {% if auth_mode == "signin" %}
+          <div class="login-options">
+            <label class="remember-me"><input type="checkbox" name="remember_me"> Remember me</label>
+            <a href="/contact/">Forgot Password?</a>
+          </div>
+        {% endif %}
         <button class="wide" type="submit">{{ button_label }}</button>
       </form>
+      {% if auth_mode == "signin" %}
+        <div class="social-login-stack" aria-label="Social login options">
+          <button type="button" class="social-login google-login" disabled><span>G</span> Sign in with Google</button>
+          <button type="button" class="social-login linkedin-login" disabled><span>in</span> Sign in with LinkedIn</button>
+        </div>
+      {% endif %}
       <p class="auth-switch">{{ alternate_text }} <a href="{{ alternate_url }}">{{ alternate_label }}</a></p>
     </section>
   </main>

@@ -872,6 +872,53 @@ def _style_auth_form(form):
     return form
 
 
+def _style_login_form(form):
+    form = _style_auth_form(form)
+    if "username" in form.fields:
+        form.fields["username"].label = "Email"
+        form.fields["username"].widget.attrs.update(
+            {
+                "placeholder": "Enter Your Email",
+                "autocomplete": "email",
+            }
+        )
+    if "password" in form.fields:
+        form.fields["password"].widget.attrs.update(
+            {
+                "placeholder": "Enter your password",
+                "autocomplete": "current-password",
+            }
+        )
+    return form
+
+
+def _style_signup_form(form):
+    form = _style_auth_form(form)
+    if "username" in form.fields:
+        form.fields["username"].label = "Email"
+        form.fields["username"].widget.attrs.update(
+            {
+                "placeholder": "Enter Your Email",
+                "autocomplete": "email",
+            }
+        )
+    if "password1" in form.fields:
+        form.fields["password1"].widget.attrs.update(
+            {
+                "placeholder": "Create your password",
+                "autocomplete": "new-password",
+            }
+        )
+    if "password2" in form.fields:
+        form.fields["password2"].widget.attrs.update(
+            {
+                "placeholder": "Confirm your password",
+                "autocomplete": "new-password",
+            }
+        )
+    return form
+
+
 def sign_in(request):
     if request.user.is_authenticated:
         return redirect("portal")
@@ -881,12 +928,16 @@ def sign_in(request):
     next_url = _safe_next_url(request)
 
     if request.method == "POST":
-        form = _style_auth_form(AuthenticationForm(request, data=request.POST))
+        form = _style_login_form(AuthenticationForm(request, data=request.POST))
         if form.is_valid():
             login(request, form.get_user())
+            if request.POST.get("remember_me"):
+                request.session.set_expiry(60 * 60 * 24 * 30)
+            else:
+                request.session.set_expiry(0)
             return redirect(next_url)
     else:
-        form = _style_auth_form(AuthenticationForm(request))
+        form = _style_login_form(AuthenticationForm(request))
 
     return render(
         request,
@@ -896,7 +947,8 @@ def sign_in(request):
             "labels": labels,
             "current_language": current_language,
             "next_url": next_url,
-            "title": "Sign in",
+            "auth_mode": "signin",
+            "title": "Login",
             "subtitle": "PriceOptimize AI hesabınıza giriş yapın.",
             "button_label": "Sign in",
             "alternate_text": "Hesabınız yok mu?",
@@ -916,13 +968,13 @@ def sign_up(request):
     next_url = _safe_next_url(request)
 
     if request.method == "POST":
-        form = _style_auth_form(UserCreationForm(request.POST))
+        form = _style_signup_form(UserCreationForm(request.POST))
         if form.is_valid():
             user = form.save()
             login(request, user)
             return redirect(next_url)
     else:
-        form = _style_auth_form(UserCreationForm())
+        form = _style_signup_form(UserCreationForm())
 
     return render(
         request,
@@ -932,6 +984,7 @@ def sign_up(request):
             "labels": labels,
             "current_language": current_language,
             "next_url": next_url,
+            "auth_mode": "signup",
             "title": "Sign up",
             "subtitle": "PriceOptimize AI için ücretsiz hesabınızı oluşturun.",
             "button_label": "Sign up",
