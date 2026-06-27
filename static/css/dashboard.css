@@ -210,7 +210,6 @@ body.drawer-open .drawer-overlay { opacity: 1; pointer-events: auto; }
   color: var(--blue);
   font-weight: 720;
   letter-spacing: .04em;
-  text-transform: uppercase;
   font-size: .78rem;
 }
 .hero-title {
