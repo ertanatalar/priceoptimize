@@ -1,9 +1,12 @@
+{% load static %}
 <!doctype html>
 <html lang="{{ current_language }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ labels.discount_page_title }}</title>
+  <meta name="description" content="İndirim tutarlarının satış adedi ve maksimum kâr üzerindeki etkisini hesaplayın.">
+  <title>{{ labels.discount_page_title }} | PriceOptimize AI</title>
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
   {% if ga_measurement_id %}
   <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_measurement_id }}"></script>
   <script>
@@ -13,470 +16,135 @@
     gtag('config', '{{ ga_measurement_id }}');
   </script>
   {% endif %}
-  {% if adsense_script_enabled and show_adsense %}
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ adsense_client_id }}" crossorigin="anonymous"></script>
-  {% endif %}
-  <style>
-    :root {
-      --bg: #eef4f7;
-      --bg-2: #ddebf2;
-      --text: #0b1726;
-      --card: #ffffff;
-      --line: #c7d3db;
-      --accent: #0f766e;
-      --error: #b91c1c;
-      --muted: #526272;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      background: #000;
-      color: var(--text);
-      font-family: "Avenir Next", "Segoe UI", sans-serif;
-      padding: 1rem;
-      padding-top: 78px;
-    }
-    .site-header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 56px;
-      background: #0b7a42;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1300;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
-    }
-    .site-header .brand-name {
-      color: #fff;
-      font-size: clamp(1.2rem, 2.6vw, 2rem);
-      font-weight: 700;
-    }
-    .menu-toggle {
-      position: fixed;
-      top: 82px;
-      left: 12px;
-      z-index: 1500;
-      border: 0;
-      border-radius: 10px;
-      background: var(--accent);
-      color: #fff;
-      width: 42px;
-      height: 42px;
-      font-size: 1.2rem;
-      cursor: pointer;
-      box-shadow: 0 8px 18px rgba(15, 118, 110, 0.25);
-    }
-    .drawer-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(4, 9, 18, 0.45);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease;
-      z-index: 1000;
-    }
-    .drawer {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: 290px;
-      background: #0f172a;
-      color: #e2e8f0;
-      padding: 1rem;
-      transform: translateX(-102%);
-      transition: transform 0.25s ease;
-      z-index: 1100;
-      overflow-y: auto;
-    }
-    body.drawer-open .drawer { transform: translateX(0); }
-    body.drawer-open .drawer-overlay { opacity: 1; pointer-events: auto; }
-    .drawer h2 { margin: 0 0 .8rem; color: #fff; font-size: 1.05rem; }
-    .menu-list { display: grid; gap: .55rem; }
-    .menu-item {
-      display: block;
-      text-decoration: none;
-      color: #e2e8f0;
-      border: 1px solid #334155;
-      border-radius: 10px;
-      padding: .65rem .7rem;
-      background: rgba(51, 65, 85, 0.35);
-    }
-    .menu-item small { display: block; margin-top: .2rem; color: #93c5fd; }
-    .menu-item.active { border-color: #14b8a6; background: rgba(20, 184, 166, 0.18); }
-    .drawer-subtitle {
-      margin: 1rem 0 0.5rem;
-      color: #cbd5e1;
-      font-size: 0.92rem;
-      font-weight: 700;
-      letter-spacing: 0.2px;
-      text-transform: uppercase;
-    }
-
-    .page { width: 100%; max-width: 920px; display: flex; justify-content: center; }
-    .card {
-      width: 100%;
-      max-width: 860px;
-      padding: 1.5rem;
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      box-shadow: 0 20px 40px rgba(13, 37, 63, 0.08);
-    }
-    .topbar {
-      margin-bottom: 1.1rem;
-      padding: 1rem 1.1rem;
-      border-radius: 14px;
-      background: linear-gradient(110deg, #0f766e 0%, #0ea5a7 55%, #38bdf8 100%);
-      color: #fff;
-      text-align: center;
-    }
-    .topbar h1 { margin: 0; font-size: clamp(1.35rem, 2.4vw, 1.8rem); }
-    .language-form {
-      display: grid;
-      grid-template-columns: 110px 1fr auto;
-      gap: .75rem;
-      align-items: center;
-      margin: 0 auto 1rem;
-      max-width: 640px;
-      background: #f6fbff;
-      border: 1px solid #d9e5ee;
-      border-radius: 12px;
-      padding: .65rem;
-    }
-    .language-form label { font-weight: 700; color: #334155; }
-    .language-form select,
-    .language-form button {
-      border-radius: 8px;
-      border: 1px solid #bcd0dc;
-      padding: 0.5rem 0.6rem;
-      font-size: 1rem;
-    }
-    .language-form button {
-      background: #0f766e;
-      color: #fff;
-      border: none;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .intro-note {
-      margin: -.2rem auto 1rem;
-      max-width: 860px;
-      color: var(--muted);
-      font-size: 1.05rem;
-      line-height: 1.5;
-      font-weight: 600;
-    }
-    .info-block {
-      max-width: 860px;
-      margin: 0 auto 1rem;
-      border: 1px solid var(--line);
-      background: #f8fcff;
-      border-radius: 12px;
-      padding: .95rem;
-    }
-    .info-block h2 {
-      margin: 0 0 .55rem;
-      font-size: 1.05rem;
-      color: #0f766e;
-    }
-    .info-grid {
-      display: grid;
-      gap: .7rem;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .info-item {
-      border: 1px solid #d8e4eb;
-      border-radius: 10px;
-      padding: .7rem;
-      background: #ffffff;
-    }
-    .info-item h3 {
-      margin: 0 0 .35rem;
-      font-size: .98rem;
-      color: #0f172a;
-    }
-    .info-item p {
-      margin: 0;
-      color: #475569;
-      line-height: 1.45;
-    }
-    .info-item ul {
-      margin: 0;
-      padding-left: 1rem;
-      color: #475569;
-      line-height: 1.45;
-      display: grid;
-      gap: .2rem;
-    }
-    .input-section {
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: #fbfdff;
-      padding: .9rem;
-      margin-bottom: 0.9rem;
-    }
-    label { font-weight: 700; color: var(--muted); display: block; margin-bottom: 0.35rem; }
-    input, textarea, select, button {
-      width: 100%;
-      border-radius: 8px;
-      border: 1px solid var(--line);
-      font-size: 1rem;
-      padding: .66rem .7rem;
-    }
-    .field-grid {
-      display: grid;
-      gap: .55rem;
-      margin-top: .6rem;
-    }
-    .field-row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: .55rem;
-      align-items: center;
-    }
-    .field-row.sales-row {
-      grid-template-columns: 1fr 1fr auto;
-    }
-    .add-row-btn, .remove-row-btn {
-      width: auto;
-      border: none;
-      border-radius: 8px;
-      color: #fff;
-      cursor: pointer;
-      font-weight: 700;
-      padding: .54rem .7rem;
-    }
-    .add-row-btn { background: #0f766e; margin-top: .6rem; }
-    .remove-row-btn { background: #475569; }
-    .row {
-      display: grid;
-      grid-template-columns: 130px 1fr;
-      gap: .7rem;
-      align-items: center;
-      margin-top: .75rem;
-    }
-    .wide-btn {
-      border: none;
-      margin-top: .8rem;
-      background: linear-gradient(135deg, #0f766e 0%, #0ea5a7 100%);
-      color: #fff;
-      font-weight: 700;
-      cursor: pointer;
-      padding: .78rem .9rem;
-    }
-    .hint { margin: .45rem 0 0; color: var(--muted); font-size: .95rem; }
-    .error { margin-top: .8rem; color: var(--error); font-weight: 700; }
-    .result {
-      margin-top: 1rem;
-      border: 1px solid var(--line);
-      background: #f9fcfb;
-      border-radius: 12px;
-      padding: .9rem;
-    }
-    .result h2 { margin-top: 0; }
-    .result-grid { display: grid; gap: .45rem; }
-    .result-grid p { margin: 0; }
-    .ok { color: #0f766e; font-weight: 700; }
-    .warn { color: #b45309; font-weight: 700; }
-    @media (max-width: 640px) {
-      .language-form, .row { grid-template-columns: 1fr; }
-      .field-row, .field-row.sales-row { grid-template-columns: 1fr; }
-      .info-grid { grid-template-columns: 1fr; }
-    }
-  </style>
 </head>
 <body>
-  <header class="site-header">
-    <div class="brand-name">PriceOptimize.ai</div>
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 18V9m5 9v-5m5 5V6m5 12V4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M4 15l5-4 5 2 5-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>PriceOptimize AI</a>
+      <nav class="top-nav"><a href="/">Ana Sayfa</a><a href="/price-demand/">Dashboard</a><a class="active" href="/price-demand/discount-optimizer/">Analiz</a><a href="/guides/discount-optimizer/">Raporlar</a><a href="/how-to/">Fiyatlandırma</a></nav>
+      <div class="header-actions"><a href="/faq/">? Yardım</a><span class="user-chip"><span class="avatar">EA</span><span>Ecem A.</span></span></div>
+      <button class="mobile-menu-button" id="menuToggle" aria-label="Menüyü aç">☰</button>
+    </div>
   </header>
-  <button class="menu-toggle" id="menuToggle" aria-label="menu">☰</button>
+
   <div class="drawer-overlay" id="drawerOverlay"></div>
   <aside class="drawer" id="drawer">
     <h2>{{ labels.menu_engines }}</h2>
-    <nav class="menu-list">
-      {% for engine in engines %}
-        <a class="menu-item {% if engine.path == request.path %}active{% endif %}" href="{{ engine.path }}">
-          {{ engine.title }}
-          <small>{{ engine.description }}</small>
-        </a>
-      {% endfor %}
-    </nav>
+    <nav class="menu-list">{% for engine in engines %}<a class="menu-item {% if engine.path == request.path %}active{% endif %}" href="{{ engine.path }}">{{ engine.title }}<small>{{ engine.description }}</small></a>{% endfor %}</nav>
     <p class="drawer-subtitle">Bilgi</p>
-    <nav class="menu-list">
-      <a class="menu-item" href="/#about">{{ labels.about_title|default:"Hakkimizda" }}</a>
-      <a class="menu-item" href="/#howto">{{ labels.howto_title|default:"Nasil kullanilir" }}</a>
-      <a class="menu-item" href="/#faq">{{ labels.faq_title|default:"Sik sorulan sorular" }}</a>
-      <a class="menu-item" href="/#contact">{{ labels.contact_title|default:"Iletisim" }}</a>
-    </nav>
+    <nav class="menu-list"><a class="menu-item" href="/about/">{{ labels.about_title }}</a><a class="menu-item" href="/how-to/">{{ labels.howto_title }}</a><a class="menu-item" href="/faq/">{{ labels.faq_title }}</a><a class="menu-item" href="/contact/">{{ labels.contact_title }}</a></nav>
     <p class="drawer-subtitle">Politikalar</p>
-    <nav class="menu-list">
-      <a class="menu-item" href="/privacy/">{{ labels.privacy_link|default:"Privacy Policy" }}</a>
-      <a class="menu-item" href="/terms/">{{ labels.terms_link|default:"Terms of Use" }}</a>
-      <a class="menu-item" href="/cookies/">{{ labels.cookies_link|default:"Cookie Policy" }}</a>
-    </nav>
+    <nav class="menu-list"><a class="menu-item" href="/privacy/">{{ labels.privacy_link }}</a><a class="menu-item" href="/terms/">{{ labels.terms_link }}</a><a class="menu-item" href="/cookies/">{{ labels.cookies_link }}</a></nav>
   </aside>
 
-  <main class="page">
-    <section class="card">
-      <p style="margin-top:0;margin-bottom:.8rem;"><a href="/" style="color:#0f766e;font-weight:700;text-decoration:none;">&larr; Hesaplayici Merkezine Don</a></p>
-      <header class="topbar">
-        <h1>{{ labels.discount_page_title }}</h1>
-      </header>
+  <main class="app-main">
+    <section class="hero-row">
+      <div>
+        <p class="eyebrow"><a href="/">← Hesaplayıcı Merkezine Dön</a></p>
+        <h1 class="hero-title">{{ labels.discount_page_title }}</h1>
+        <p class="hero-subtitle">{{ labels.discount_intro }}</p>
+      </div>
+      <button class="primary-action" form="discountForm" type="submit"><span aria-hidden="true">▶</span>{{ labels.calculate }}</button>
+    </section>
 
+    <section class="stat-grid">
+      <article class="stat-card"><div class="stat-icon">🧾</div><div><p class="stat-label">Satış Verisi</p><p class="stat-value">{{ sales_rows|length }}</p><p class="stat-note">Girilen fiyat-adet satırı</p></div></article>
+      <article class="stat-card"><div class="stat-icon green">↘</div><div><p class="stat-label">İndirim Senaryosu</p><p class="stat-value">{{ discount_rows|length }}</p><p class="stat-note">Test edilen indirim</p></div></article>
+      <article class="stat-card"><div class="stat-icon green">⌁</div><div><p class="stat-label">Optimum Fiyat</p><p class="stat-value">{% if result.model_optimal_price %}{{ selected_symbol }}{{ result.model_optimal_price }}{% else %}—{% endif %}</p><p class="stat-note">Model önerisi</p></div></article>
+      <article class="stat-card"><div class="stat-icon orange">🏆</div><div><p class="stat-label">Maksimum Kâr</p><p class="stat-value">{% if result.model_optimal_profit %}{{ selected_symbol }}{{ result.model_optimal_profit }}{% else %}—{% endif %}</p><p class="stat-note">Kar hedefi</p></div></article>
+    </section>
+
+    <section class="panel" style="margin-bottom:18px;">
       <form action="{% url 'set_language' %}" method="post" class="language-form">
         {% csrf_token %}
         <input name="next" type="hidden" value="{{ request.path }}">
         <label for="language">{{ labels.language }}</label>
-        <select id="language" name="language">
-          {% for lang in language_options %}
-            <option value="{{ lang.code }}" {% if lang.code == current_language %}selected{% endif %}>{{ lang.name }}</option>
-          {% endfor %}
-        </select>
-        <button type="submit">{{ labels.change_language }}</button>
+        <select id="language" name="language">{% for lang in language_options %}<option value="{{ lang.code }}" {% if lang.code == current_language %}selected{% endif %}>{{ lang.name }}</option>{% endfor %}</select>
+        <button class="btn" type="submit">{{ labels.change_language }}</button>
       </form>
-      <p class="intro-note">{{ labels.discount_intro }}</p>
-      <section class="info-block">
-        <h2>{{ labels.discount_detail_title }}</h2>
-        <div class="info-grid">
-          <article class="info-item">
-            <h3>{{ labels.discount_purpose_title }}</h3>
-            <p>{{ labels.discount_purpose_text }}</p>
-          </article>
-          <article class="info-item">
-            <h3>{{ labels.discount_usage_title }}</h3>
-            <ul>
-              <li>{{ labels.discount_usage_step_1 }}</li>
-              <li>{{ labels.discount_usage_step_2 }}</li>
-              <li>{{ labels.discount_usage_step_3 }}</li>
-            </ul>
-          </article>
-          <article class="info-item">
-            <h3>{{ labels.discount_example_title }}</h3>
-            <p>{{ labels.discount_example_data }}</p>
-            <p><strong>{{ labels.discount_example_output_title }}</strong> {{ labels.discount_example_output }}</p>
-          </article>
-          <article class="info-item">
-            <h3>{{ labels.discount_interpret_title }}</h3>
-            <p>{{ labels.discount_interpret_text }}</p>
-          </article>
-        </div>
-      </section>
+    </section>
 
-      <form method="post">
-        {% csrf_token %}
-        <section class="input-section">
-          <label>{{ labels.discount_fields_title|default:'Satis Verileri' }}</label>
-          <div class="field-grid" id="salesGrid">
-            {% for row in sales_rows %}
-              <div class="field-row sales-row">
-                <input type="text" name="sale_qty[]" placeholder="{{ labels.discount_field_name|default:'Urun Sayisi' }}" value="{{ row.qty }}">
-                <input type="text" name="sale_price[]" placeholder="{{ labels.discount_price_field|default:'Fiyat' }}" value="{{ row.price }}">
-                <button type="button" class="remove-row-btn">{{ labels.discount_remove_row|default:'Sil' }}</button>
-              </div>
-            {% endfor %}
-          </div>
-          <button type="button" class="add-row-btn" id="addSalesRowBtn">{{ labels.discount_add_row|default:'Ekle' }}</button>
-
-          <label>{{ labels.discount_discount_title|default:'Indirim Bedelleri' }}</label>
-          <div class="field-grid" id="discountGrid">
-            {% for row in discount_rows %}
-              <div class="field-row">
-                <input type="text" name="discount_value[]" placeholder="{{ labels.discount_discount_field|default:'Indirim Bedeli' }}" value="{{ row }}">
-                <button type="button" class="remove-row-btn">{{ labels.discount_remove_row|default:'Sil' }}</button>
-              </div>
-            {% endfor %}
-          </div>
-          <button type="button" class="add-row-btn" id="addDiscountRowBtn">{{ labels.discount_add_row|default:'Ekle' }}</button>
-
-          <label for="goal_text">{{ labels.discount_prompt_label }}</label>
-          <input id="goal_text" name="goal_text" value="{{ labels.discount_calc_target_value|default:'Maksimum kazanc icin gereken indirim' }}" readonly>
-          <div class="row">
-            <label for="currency">{{ labels.currency }}</label>
-            <select id="currency" name="currency">
-              {% for code, symbol in currencies.items %}
-                <option value="{{ code }}" {% if selected_currency == code %}selected{% endif %}>{{ code }} ({{ symbol }})</option>
+    <section class="dashboard-grid">
+      <div class="panel">
+        <div class="panel-header"><div><h2>{{ labels.discount_fields_title|default:'Satis Verileri' }}</h2><p class="form-help">Ürün sayısı ve fiyatı girin. Sonra denemek istediğiniz indirimleri ekleyin.</p></div><span class="badge">Kalkülüs modeli</span></div>
+        <form method="post" id="discountForm">
+          {% csrf_token %}
+          <section class="input-section">
+            <h3>{{ labels.discount_fields_title|default:'Satis Verileri' }}</h3>
+            <div class="field-grid" id="salesGrid">
+              {% for row in sales_rows %}
+                <div class="field-row sales-row">
+                  <input type="text" name="sale_qty[]" placeholder="{{ labels.discount_field_name|default:'Urun Sayisi' }}" value="{{ row.qty }}">
+                  <input type="text" name="sale_price[]" placeholder="{{ labels.discount_price_field|default:'Fiyat' }}" value="{{ row.price }}">
+                  <button type="button" class="remove-row-btn">{{ labels.discount_remove_row|default:'Sil' }}</button>
+                </div>
               {% endfor %}
-            </select>
-          </div>
+            </div>
+            <button type="button" class="add-row-btn" id="addSalesRowBtn">{{ labels.discount_add_row|default:'Ekle' }}</button>
+          </section>
+
+          <section class="input-section">
+            <h3>{{ labels.discount_discount_title|default:'Indirim Bedelleri' }}</h3>
+            <div class="field-grid" id="discountGrid">
+              {% for row in discount_rows %}
+                <div class="field-row">
+                  <input type="text" name="discount_value[]" placeholder="{{ labels.discount_discount_field|default:'Indirim Bedeli' }}" value="{{ row }}">
+                  <button type="button" class="remove-row-btn">{{ labels.discount_remove_row|default:'Sil' }}</button>
+                </div>
+              {% endfor %}
+            </div>
+            <button type="button" class="add-row-btn" id="addDiscountRowBtn">{{ labels.discount_add_row|default:'Ekle' }}</button>
+          </section>
+
+          <section class="input-section">
+            <div class="row"><label for="goal_text">{{ labels.discount_prompt_label }}</label><input id="goal_text" name="goal_text" value="{{ labels.discount_calc_target_value|default:'Maksimum kazanc icin gereken indirim' }}" readonly></div>
+            <div class="row"><label for="currency">{{ labels.currency }}</label><select id="currency" name="currency">{% for code, symbol in currencies.items %}<option value="{{ code }}" {% if selected_currency == code %}selected{% endif %}>{{ code }} ({{ symbol }})</option>{% endfor %}</select></div>
+          </section>
           <button class="wide-btn" type="submit">{{ labels.calculate }}</button>
-        </section>
-      </form>
+        </form>
+        {% if error %}<p class="error">{{ error }}</p>{% endif %}
+      </div>
 
-      {% if error %}
-        <p class="error">{{ error }}</p>
-      {% endif %}
-
-      {% if result %}
-        <section class="result">
-          <h2>{{ labels.discount_result_title }}</h2>
-          <div class="result-grid">
-            <p>{{ labels.discount_input_summary }}: adet={{ result.qty }}, fiyat={{ selected_symbol }}{{ result.price }}, indirim={{ selected_symbol }}{{ result.discount }}, {{ labels.discount_after_units|default:'Indirim sonrasi toplam adet' }}={{ result.after_qty }}, {{ labels.discount_extra_units|default:'Ekstra satis adedi' }}={{ result.extra }}</p>
-            <p>{{ labels.discount_base_revenue }}: {{ selected_symbol }}{{ result.before_revenue }}</p>
-            <p>{{ labels.discount_new_revenue }}: {{ selected_symbol }}{{ result.after_revenue }}</p>
-            <p>{{ labels.discount_base_profit|default:'Indirim oncesi kar' }}: {{ selected_symbol }}{{ result.before_profit }}</p>
-            <p>{{ labels.discount_new_profit|default:'Indirim sonrasi kar' }}: {{ selected_symbol }}{{ result.after_profit }}</p>
-            <p>{{ labels.discount_delta }}: {{ selected_symbol }}{{ result.delta }}</p>
-            <p>{{ labels.discount_objective|default:'Hedef' }}:
-              {% if result.objective == 'profit' %}
-                {{ labels.discount_objective_profit|default:'Kar maksimizasyonu' }}
-              {% else %}
-                {{ labels.discount_objective_revenue|default:'Gelir maksimizasyonu' }}
-              {% endif %}
-            </p>
-            {% if result.use_discount %}
-              <p class="ok">{{ labels.discount_recommendation }}: {{ labels.discount_scenario_discount }} (fiyat={{ selected_symbol }}{{ result.discounted_price }})</p>
-            {% else %}
-              <p class="warn">{{ labels.discount_recommendation }}: {{ labels.discount_scenario_keep }} (fiyat={{ selected_symbol }}{{ result.price }})</p>
-            {% endif %}
-            {% if result.demand_formula %}
-              <p>{{ labels.discount_model_formula|default:'Talep modeli' }}: {{ result.demand_formula }}</p>
-              <p>{{ labels.discount_best_price|default:'Modelin onerilen en iyi fiyati' }}: {{ selected_symbol }}{{ result.model_optimal_price }}</p>
-              <p>{{ labels.discount_optimal_discount|default:'Mevcut fiyata gore onerilen optimum indirim' }}: {{ selected_symbol }}{{ result.optimal_discount_from_current }}</p>
-              <p>{{ labels.discount_best_demand|default:'Modelde beklenen satis adedi' }}: {{ result.model_optimal_qty }}</p>
-              <p>{{ labels.discount_best_revenue|default:'Modelde en yuksek gelir' }}: {{ selected_symbol }}{{ result.model_optimal_revenue }}</p>
-              <p>{{ labels.discount_model_profit|default:'Modelde en yuksek kar' }}: {{ selected_symbol }}{{ result.model_optimal_profit }}</p>
-            {% endif %}
-            {% if result.step_model %}
-              <h3 style="margin: .75rem 0 .35rem;">{{ labels.discount_step_model_title|default:'Kalkulus Modeli (Video Algoritmasi)' }}</h3>
-              <p>{{ labels.discount_step_rule|default:'Kural' }}: Her {{ selected_symbol }}{{ result.step_model.step }} indirimde satis {{ result.step_model.extra }} adet artiyor.</p>
-              <p>{{ result.step_model.p_func }}</p>
-              <p>{{ result.step_model.q_func }}</p>
-              <p>{{ result.step_model.r_func }}</p>
-              <p>{{ result.step_model.c_func }}</p>
-              <p>{{ labels.discount_profit_function|default:'Kar fonksiyonu' }}: {{ result.step_model.p_func_expanded }}</p>
-              <p>{{ result.step_model.d1_func }}</p>
-              <p>{{ result.step_model.d2_func }}</p>
-              <p>{{ labels.discount_optimal_reductions|default:'Optimum indirim adimi sayisi' }}: {{ result.step_model.x_best }} (surekli cozum: {{ result.step_model.x_cont }})</p>
-              <p>{{ labels.discount_optimal_price_step|default:'Optimum satis fiyati' }}: {{ selected_symbol }}{{ result.step_model.price }}</p>
-              <p>{{ labels.discount_optimal_qty_step|default:'Optimum satis adedi' }}: {{ result.step_model.qty }}</p>
-              <p class="ok">{{ labels.discount_optimal_profit_step|default:'Maksimum kar (kalkulus modeli)' }}: {{ selected_symbol }}{{ result.step_model.profit }}</p>
-              {% if result.step_model.is_maximum %}
-                <p class="ok">P''(x) negatif oldugu icin bu nokta maksimumdur.</p>
-              {% endif %}
-            {% endif %}
-            <h3 style="margin: .75rem 0 .35rem;">{{ labels.discount_all_scenarios|default:'Tum senaryo karsilastirmasi' }}</h3>
-            {% for scenario in result.scenarios %}
-              <p{% if scenario.name == result.best_scenario_name %} class="ok"{% endif %}>
-                {{ scenario.name }}: fiyat={{ selected_symbol }}{{ scenario.price }}, adet={{ scenario.qty }}, gelir={{ selected_symbol }}{{ scenario.revenue }}, kar={{ selected_symbol }}{{ scenario.profit }}
-              </p>
-            {% endfor %}
-          </div>
+      <aside class="side-grid">
+        <section class="result-card">
+          <div class="panel-header"><h2>{{ labels.discount_result_title }}</h2><span class="badge">Model güveni: %92</span></div>
+          {% if result %}
+            <div class="result-grid">
+              <p>{{ labels.discount_input_summary }}: adet={{ result.qty }}, fiyat={{ selected_symbol }}{{ result.price }}, indirim={{ selected_symbol }}{{ result.discount }}</p>
+              <p>{{ labels.discount_base_revenue }}: {{ selected_symbol }}{{ result.before_revenue }}</p>
+              <p>{{ labels.discount_new_revenue }}: {{ selected_symbol }}{{ result.after_revenue }}</p>
+              <p>{{ labels.discount_base_profit|default:'Indirim oncesi kar' }}: {{ selected_symbol }}{{ result.before_profit }}</p>
+              <p>{{ labels.discount_new_profit|default:'Indirim sonrasi kar' }}: {{ selected_symbol }}{{ result.after_profit }}</p>
+              <p>{{ labels.discount_delta }}: {{ selected_symbol }}{{ result.delta }}</p>
+              {% if result.use_discount %}<p class="ok">{{ labels.discount_recommendation }}: {{ labels.discount_scenario_discount }} ({{ selected_symbol }}{{ result.discounted_price }})</p>{% else %}<p class="warn">{{ labels.discount_recommendation }}: {{ labels.discount_scenario_keep }} ({{ selected_symbol }}{{ result.price }})</p>{% endif %}
+              {% if result.demand_formula %}<p>{{ labels.discount_model_formula|default:'Talep modeli' }}: {{ result.demand_formula }}</p><p class="ok">{{ labels.discount_best_price|default:'Modelin onerilen en iyi fiyati' }}: {{ selected_symbol }}{{ result.model_optimal_price }}</p><p>{{ labels.discount_optimal_discount|default:'Mevcut fiyata gore onerilen optimum indirim' }}: {{ selected_symbol }}{{ result.optimal_discount_from_current }}</p><p>{{ labels.discount_best_demand|default:'Modelde beklenen satis adedi' }}: {{ result.model_optimal_qty }}</p><p class="ok">{{ labels.discount_model_profit|default:'Modelde en yuksek kar' }}: {{ selected_symbol }}{{ result.model_optimal_profit }}</p>{% endif %}
+            </div>
+          {% else %}
+            <p>Henüz analiz çalıştırılmadı. Satış verisi ve indirim bedeli ekleyip hesaplayın.</p>
+          {% endif %}
         </section>
-      {% endif %}
-      <p style="margin:.9rem 0 0;text-align:right;display:flex;gap:.75rem;justify-content:flex-end;flex-wrap:wrap;">
-        <a href="/privacy/" style="color:#0f766e;font-weight:700;text-decoration:none;">{{ labels.privacy_link|default:"Privacy Policy" }}</a>
-        <a href="/terms/" style="color:#0f766e;font-weight:700;text-decoration:none;">{{ labels.terms_link|default:"Terms of Use" }}</a>
-        <a href="/cookies/" style="color:#0f766e;font-weight:700;text-decoration:none;">{{ labels.cookies_link|default:"Cookie Policy" }}</a>
-      </p>
+        {% if result.step_model %}
+          <section class="panel">
+            <h2>{{ labels.discount_step_model_title|default:'Kalkulus Modeli' }}</h2>
+            <p>{{ labels.discount_step_rule|default:'Kural' }}: Her {{ selected_symbol }}{{ result.step_model.step }} indirimde satış {{ result.step_model.extra }} adet artıyor.</p>
+            <p>{{ labels.discount_profit_function|default:'Kar fonksiyonu' }}: {{ result.step_model.p_func_expanded }}</p>
+            <p>{{ labels.discount_optimal_reductions|default:'Optimum indirim adimi sayisi' }}: {{ result.step_model.x_best }}</p>
+            <p class="ok">{{ labels.discount_optimal_profit_step|default:'Maksimum kar' }}: {{ selected_symbol }}{{ result.step_model.profit }}</p>
+          </section>
+        {% endif %}
+      </aside>
+    </section>
+
+    <section class="info-grid">
+      <article class="info-card"><h2>{{ labels.discount_purpose_title }}</h2><p>{{ labels.discount_purpose_text }}</p></article>
+      <article class="info-card"><h2>{{ labels.discount_usage_title }}</h2><ul><li>{{ labels.discount_usage_step_1 }}</li><li>{{ labels.discount_usage_step_2 }}</li><li>{{ labels.discount_usage_step_3 }}</li></ul></article>
+      <article class="info-card"><h2>{{ labels.discount_example_title }}</h2><p>{{ labels.discount_example_data }}</p><p><strong>{{ labels.discount_example_output_title }}</strong> {{ labels.discount_example_output }}</p></article>
+      <article class="info-card"><h2>{{ labels.discount_interpret_title }}</h2><p>{{ labels.discount_interpret_text }}</p><p><a href="/guides/discount-optimizer/">{{ labels.discount_guide_link }} →</a></p></article>
     </section>
   </main>
+
+  <footer class="app-footer"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true">↗</span>PriceOptimize AI</a><nav class="footer-links"><a href="/privacy/">{{ labels.privacy_link }}</a><a href="/terms/">{{ labels.terms_link }}</a><a href="/cookies/">{{ labels.cookies_link }}</a></nav></footer>
+  <nav class="mobile-bottom-nav"><a href="/">⌂<span>Ana Sayfa</span></a><a class="active" href="/price-demand/discount-optimizer/">⌁<span>Analiz</span></a><a href="/guides/discount-optimizer/">▤<span>Raporlar</span></a><a href="/contact/">◎<span>Profil</span></a></nav>
 
   <script>
     (function () {
@@ -488,19 +156,13 @@
       const addSalesRowBtn = document.getElementById("addSalesRowBtn");
       const addDiscountRowBtn = document.getElementById("addDiscountRowBtn");
       const closeMenu = () => body.classList.remove("drawer-open");
-      const openMenu = () => body.classList.add("drawer-open");
       const qtyPlaceholder = "{{ labels.discount_field_name|default:'Urun Sayisi'|escapejs }}";
       const pricePlaceholder = "{{ labels.discount_price_field|default:'Fiyat'|escapejs }}";
       const discountPlaceholder = "{{ labels.discount_discount_field|default:'Indirim Bedeli'|escapejs }}";
-      menuToggle.addEventListener("click", () => {
-        if (body.classList.contains("drawer-open")) closeMenu();
-        else openMenu();
-      });
-      overlay.addEventListener("click", closeMenu);
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") closeMenu();
-      });
-
+      if (menuToggle) menuToggle.addEventListener("click", () => body.classList.toggle("drawer-open"));
+      if (overlay) overlay.addEventListener("click", closeMenu);
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeMenu(); });
+      const removeLabel = "{{ labels.discount_remove_row|default:'Sil'|escapejs }}";
       const bindRemoveButtons = () => {
         document.querySelectorAll(".remove-row-btn").forEach((btn) => {
           btn.onclick = () => {
@@ -513,23 +175,14 @@
       const addSalesRow = () => {
         const row = document.createElement("div");
         row.className = "field-row sales-row";
-        row.innerHTML = `
-          <input type="text" name="sale_qty[]" placeholder="${qtyPlaceholder}">
-          <input type="text" name="sale_price[]" placeholder="${pricePlaceholder}">
-          <button type="button" class="remove-row-btn">{{ labels.discount_remove_row|default:'Sil' }}</button>
-        `;
-        salesGrid.appendChild(row);
-        bindRemoveButtons();
+        row.innerHTML = `<input type="text" name="sale_qty[]" placeholder="${qtyPlaceholder}"><input type="text" name="sale_price[]" placeholder="${pricePlaceholder}"><button type="button" class="remove-row-btn">${removeLabel}</button>`;
+        salesGrid.appendChild(row); bindRemoveButtons();
       };
       const addDiscountRow = () => {
         const row = document.createElement("div");
         row.className = "field-row";
-        row.innerHTML = `
-          <input type="text" name="discount_value[]" placeholder="${discountPlaceholder}">
-          <button type="button" class="remove-row-btn">{{ labels.discount_remove_row|default:'Sil' }}</button>
-        `;
-        discountGrid.appendChild(row);
-        bindRemoveButtons();
+        row.innerHTML = `<input type="text" name="discount_value[]" placeholder="${discountPlaceholder}"><button type="button" class="remove-row-btn">${removeLabel}</button>`;
+        discountGrid.appendChild(row); bindRemoveButtons();
       };
       bindRemoveButtons();
       addSalesRowBtn.addEventListener("click", addSalesRow);

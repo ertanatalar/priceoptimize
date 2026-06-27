@@ -1,0 +1,68 @@
+{% load static %}
+<!doctype html>
+<html lang="{{ content_language }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{{ page.description }}">
+  <title>{{ page.title }} | PriceOptimize AI</title>
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  {% if ga_measurement_id %}
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_measurement_id }}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '{{ ga_measurement_id }}');
+  </script>
+  {% endif %}
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">↗</span>PriceOptimize AI</a>
+      <nav class="top-nav"><a href="/">Ana Sayfa</a><a href="/price-demand/">Dashboard</a><a href="/guides/price-demand/">Analiz</a><a href="/faq/">Yardım</a></nav>
+      <button class="mobile-menu-button" id="menuToggle" aria-label="Menüyü aç">☰</button>
+    </div>
+  </header>
+
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <aside class="drawer" id="drawer">
+    <h2>PriceOptimize AI</h2>
+    <nav class="menu-list">
+      {% for item in navigation %}<a class="menu-item" href="{{ item.path }}">{{ item.title }}</a>{% endfor %}
+      <a class="menu-item" href="/privacy/">{{ labels.privacy_link }}</a>
+      <a class="menu-item" href="/terms/">{{ labels.terms_link }}</a>
+      <a class="menu-item" href="/cookies/">{{ labels.cookies_link }}</a>
+    </nav>
+  </aside>
+
+  <main class="policy-main">
+    <section class="hero-row">
+      <div>
+        <p class="eyebrow"><a href="/">← PriceOptimize AI</a></p>
+        <h1 class="hero-title">{{ page.title }}</h1>
+        <p class="hero-subtitle">{{ page.description }}</p>
+      </div>
+      <a class="primary-action" href="/price-demand/">Analizi Başlat</a>
+    </section>
+
+    <article class="content-card">
+      {% for section in page.sections %}
+        <section>
+          <h2>{{ section.heading }}</h2>
+          {% for paragraph in section.paragraphs %}<p>{{ paragraph }}</p>{% endfor %}
+          {% if section.bullets %}<ul>{% for item in section.bullets %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}
+        </section>
+      {% endfor %}
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:28px;">
+        <a class="btn" href="/price-demand/">{{ labels.engine_price_demand_title }}</a>
+        <a class="btn secondary" href="/price-demand/discount-optimizer/">{{ labels.engine_discount_title }}</a>
+      </div>
+    </article>
+  </main>
+
+  <footer class="app-footer"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true">↗</span>PriceOptimize AI</a><nav class="footer-links"><a href="/privacy/">{{ labels.privacy_link }}</a><a href="/terms/">{{ labels.terms_link }}</a><a href="/cookies/">{{ labels.cookies_link }}</a></nav></footer>
+  <script>(function(){const b=document.body,t=document.getElementById('menuToggle'),o=document.getElementById('drawerOverlay');const c=()=>b.classList.remove('drawer-open');if(t)t.addEventListener('click',()=>b.classList.toggle('drawer-open'));if(o)o.addEventListener('click',c);document.addEventListener('keydown',e=>{if(e.key==='Escape')c();});})();</script>
+</body>
+</html>

@@ -1,9 +1,12 @@
+{% load static %}
 <!doctype html>
 <html lang="{{ current_language }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PriceOptimize - Hesaplayici Merkezi</title>
+  <meta name="description" content="PriceOptimize AI fiyat ve satis verilerinden optimum fiyat, indirim etkisi ve kar senaryolari hesaplayan pratik analiz panelidir.">
+  <title>PriceOptimize AI - Dashboard</title>
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
   {% if ga_measurement_id %}
   <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_measurement_id }}"></script>
   <script>
@@ -13,264 +16,45 @@
     gtag('config', '{{ ga_measurement_id }}');
   </script>
   {% endif %}
-  <style>
-    :root {
-      --bg: #ecf5f7;
-      --card: #ffffff;
-      --line: #c8d6de;
-      --text: #0f172a;
-      --muted: #556274;
-      --accent: #0f766e;
-      --accent-soft: #e9f7f4;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      font-family: "Avenir Next", "Segoe UI", sans-serif;
-      color: var(--text);
-      background: #000;
-      padding: 1rem;
-      padding-top: 78px;
-    }
-    .site-header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 56px;
-      background: #0b7a42;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1300;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
-    }
-    .site-header .brand-name {
-      color: #fff;
-      font-size: clamp(1.2rem, 2.6vw, 2rem);
-      font-weight: 700;
-      letter-spacing: 0.3px;
-    }
-    .menu-toggle {
-      position: fixed;
-      top: 68px;
-      left: 12px;
-      z-index: 1500;
-      border: 0;
-      border-radius: 10px;
-      background: var(--accent);
-      color: #fff;
-      width: 42px;
-      height: 42px;
-      font-size: 1.2rem;
-      cursor: pointer;
-      box-shadow: 0 8px 18px rgba(15, 118, 110, 0.25);
-    }
-    .drawer-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(4, 9, 18, 0.45);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease;
-      z-index: 1000;
-    }
-    .drawer {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: 290px;
-      background: #0f172a;
-      color: #e2e8f0;
-      padding: 1rem;
-      transform: translateX(-102%);
-      transition: transform 0.25s ease;
-      z-index: 1100;
-      overflow-y: auto;
-    }
-    body.drawer-open .drawer { transform: translateX(0); }
-    body.drawer-open .drawer-overlay { opacity: 1; pointer-events: auto; }
-    .drawer h2 {
-      margin: 0 0 0.8rem;
-      font-size: 1.05rem;
-      color: #fff;
-    }
-    .menu-list {
-      display: grid;
-      gap: 0.55rem;
-    }
-    .menu-item {
-      display: block;
-      text-decoration: none;
-      color: #e2e8f0;
-      border: 1px solid #334155;
-      border-radius: 10px;
-      padding: 0.65rem 0.7rem;
-      background: rgba(51, 65, 85, 0.35);
-    }
-    .menu-item small {
-      display: block;
-      margin-top: 0.2rem;
-      color: #93c5fd;
-    }
-    .menu-item.active {
-      border-color: #14b8a6;
-      background: rgba(20, 184, 166, 0.18);
-    }
-    .drawer-subtitle {
-      margin: 1rem 0 0.5rem;
-      color: #cbd5e1;
-      font-size: 0.92rem;
-      font-weight: 700;
-      letter-spacing: 0.2px;
-      text-transform: uppercase;
-    }
-
-    .wrap {
-      width: 100%;
-      max-width: 940px;
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      box-shadow: 0 20px 48px rgba(10, 29, 54, 0.10);
-      padding: 1.4rem;
-    }
-    .portal-title {
-      text-align: center;
-      margin: 0 0 1rem;
-      font-size: clamp(1.3rem, 2.8vw, 2rem);
-      color: #0b7a42;
-      font-weight: 800;
-    }
-    .language-form {
-      display: grid;
-      grid-template-columns: 100px 1fr auto;
-      gap: 0.75rem;
-      align-items: center;
-      margin: 0 auto 1rem;
-      max-width: 640px;
-      background: #f6fbff;
-      border: 1px solid #d9e5ee;
-      border-radius: 12px;
-      padding: 0.65rem;
-    }
-    .language-form label {
-      font-weight: 700;
-      color: #334155;
-    }
-    .language-form select,
-    .language-form button {
-      border-radius: 8px;
-      border: 1px solid #bcd0dc;
-      padding: 0.5rem 0.6rem;
-      font-size: 1rem;
-    }
-    .language-form button {
-      background: #0f766e;
-      color: #fff;
-      border: none;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .list {
-      display: grid;
-      gap: 0.8rem;
-    }
-    .item {
-      border: 1px solid var(--line);
-      border-left: 5px solid var(--accent);
-      border-radius: 12px;
-      padding: 0.9rem;
-      background: #fbfdff;
-    }
-    .item h2 {
-      margin: 0 0 0.45rem;
-      font-size: 1.1rem;
-    }
-    .item p {
-      margin: 0 0 0.75rem;
-      color: var(--muted);
-    }
-    .btn {
-      display: inline-block;
-      text-decoration: none;
-      background: var(--accent);
-      color: #fff;
-      padding: 0.55rem 0.85rem;
-      border-radius: 9px;
-      font-weight: 700;
-    }
-    .info-grid {
-      margin-top: 1rem;
-      display: grid;
-      gap: 0.8rem;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .info-card {
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: #f8fcfe;
-      padding: 0.9rem;
-    }
-    .info-card h2 {
-      margin: 0 0 0.5rem;
-      font-size: 1.08rem;
-      color: #0b7a42;
-    }
-    .info-card p, .info-card li {
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-    .info-card ul {
-      margin: 0;
-      padding-left: 1.1rem;
-      display: grid;
-      gap: 0.35rem;
-    }
-    .faq-item + .faq-item { margin-top: 0.6rem; }
-    .faq-item strong {
-      display: block;
-      color: #0f172a;
-      margin-bottom: 0.2rem;
-    }
-
-    @media (max-width: 640px) {
-      .language-form {
-        grid-template-columns: 1fr;
-      }
-      .info-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
 </head>
 <body>
-  <header class="site-header">
-    <div class="brand-name">PriceOptimize.ai</div>
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="brand" href="/" aria-label="PriceOptimize AI ana sayfa">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 18V9m5 9v-5m5 5V6m5 12V4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M4 15l5-4 5 2 5-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        PriceOptimize AI
+      </a>
+      <nav class="top-nav" aria-label="Ana menü">
+        <a class="active" href="/">Ana Sayfa</a>
+        <a href="/price-demand/">Dashboard</a>
+        <a href="/guides/price-demand/">Analiz</a>
+        <a href="/guides/discount-optimizer/">Raporlar</a>
+        <a href="/how-to/">Fiyatlandırma</a>
+      </nav>
+      <div class="header-actions">
+        <a href="/faq/">? Yardım</a>
+        <span class="user-chip"><span class="avatar">EA</span><span>Ecem A.</span></span>
+      </div>
+      <button class="mobile-menu-button" id="menuToggle" aria-label="Menüyü aç">☰</button>
+    </div>
   </header>
-  <button class="menu-toggle" id="menuToggle" aria-label="menu">☰</button>
+
   <div class="drawer-overlay" id="drawerOverlay"></div>
   <aside class="drawer" id="drawer">
     <h2>{{ labels.menu_engines }}</h2>
     <nav class="menu-list">
       {% for engine in engines %}
-        <a class="menu-item {% if engine.path == request.path %}active{% endif %}" href="{{ engine.path }}">
-          {{ engine.title }}
-          <small>{{ engine.description }}</small>
-        </a>
+        <a class="menu-item" href="{{ engine.path }}">{{ engine.title }}<small>{{ engine.description }}</small></a>
       {% endfor %}
     </nav>
     <p class="drawer-subtitle">Bilgi</p>
     <nav class="menu-list">
-      <a class="menu-item" href="/#about">{{ labels.about_title|default:"Hakkimizda" }}</a>
-      <a class="menu-item" href="/#howto">{{ labels.howto_title|default:"Nasil kullanilir" }}</a>
-      <a class="menu-item" href="/#faq">{{ labels.faq_title|default:"Sik sorulan sorular" }}</a>
-      <a class="menu-item" href="/#contact">{{ labels.contact_title|default:"Iletisim" }}</a>
+      <a class="menu-item" href="/about/">{{ labels.about_title|default:"Hakkimizda" }}</a>
+      <a class="menu-item" href="/how-to/">{{ labels.howto_title|default:"Nasil kullanilir" }}</a>
+      <a class="menu-item" href="/faq/">{{ labels.faq_title|default:"Sik sorulan sorular" }}</a>
+      <a class="menu-item" href="/contact/">{{ labels.contact_title|default:"Iletisim" }}</a>
     </nav>
     <p class="drawer-subtitle">Politikalar</p>
     <nav class="menu-list">
@@ -280,73 +64,108 @@
     </nav>
   </aside>
 
-  <main class="wrap">
-    <h1 class="portal-title">{{ labels.portal_title }}</h1>
+  <main class="app-main">
+    <section class="hero-row">
+      <div>
+        <p class="eyebrow">Price Intelligence</p>
+        <h1 class="hero-title">Fiyat Optimizasyonu Dashboard</h1>
+        <p class="hero-subtitle">Ürün fiyatlarınızı analiz edin, talep eğrisini görün ve kârlılığınızı artıracak optimum fiyat kararlarını daha güvenli alın.</p>
+      </div>
+      <a class="primary-action" href="/price-demand/"><span aria-hidden="true">▶</span> Analizi Başlat</a>
+    </section>
 
-    <form action="{% url 'set_language' %}" method="post" class="language-form">
-      {% csrf_token %}
-      <input name="next" type="hidden" value="{{ request.path }}">
-      <label for="language">{{ labels.language }}</label>
-      <select id="language" name="language">
-        {% for lang in language_options %}
-          <option value="{{ lang.code }}" {% if lang.code == current_language %}selected{% endif %}>{{ lang.name }}</option>
-        {% endfor %}
-      </select>
-      <button type="submit">{{ labels.change_language }}</button>
-    </form>
+    <section class="stat-grid" aria-label="Özet metrikler">
+      <article class="stat-card">
+        <div class="stat-icon">🏷</div>
+        <div><p class="stat-label">Mevcut Fiyat</p><p class="stat-value">₺1.250,00</p><p class="stat-note">Ortalama ürün fiyatı</p></div>
+      </article>
+      <article class="stat-card">
+        <div class="stat-icon green">↗</div>
+        <div><p class="stat-label">Önerilen Fiyat</p><p class="stat-value">₺1.387,00</p><p class="stat-note up">%10,96 ort. artış</p></div>
+      </article>
+      <article class="stat-card">
+        <div class="stat-icon green">⌁</div>
+        <div><p class="stat-label">Tahmini Kâr Etkisi</p><p class="stat-value">₺125.430</p><p class="stat-note up">%18,7 kâr artışı</p></div>
+      </article>
+      <article class="stat-card">
+        <div class="stat-icon orange">🏆</div>
+        <div><p class="stat-label">Veri Hazırlığı</p><p class="stat-value">74 / 100</p><p class="stat-note">İyi seviyede</p></div>
+      </article>
+    </section>
 
-    <section class="list">
-      {% for engine in engines %}
-        <article class="item">
-          <h2>{{ forloop.counter }}. {{ engine.title }}</h2>
-          <p>{{ engine.description }}</p>
-          <a class="btn" href="{{ engine.path }}">{{ labels.go_to_engine }}</a>
+    <section class="dashboard-grid">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>{{ labels.portal_title }}</h2>
+            <p class="form-help">Hesaplama motorlarından birini seçin. Her motor kendi verisiyle çalışır ve sonuçları anlaşılır şekilde gösterir.</p>
+          </div>
+          <span class="badge">Model güveni: %92</span>
+        </div>
+
+        <form action="{% url 'set_language' %}" method="post" class="language-form" style="margin-bottom:18px;">
+          {% csrf_token %}
+          <input name="next" type="hidden" value="{{ request.path }}">
+          <label for="language">{{ labels.language }}</label>
+          <select id="language" name="language">
+            {% for lang in language_options %}
+              <option value="{{ lang.code }}" {% if lang.code == current_language %}selected{% endif %}>{{ lang.name }}</option>
+            {% endfor %}
+          </select>
+          <button class="btn" type="submit">{{ labels.change_language }}</button>
+        </form>
+
+        <div class="engine-list">
+          {% for engine in engines %}
+            <article class="item">
+              <h2>{{ forloop.counter }}. {{ engine.title }}</h2>
+              <p>{{ engine.description }}</p>
+              <a class="btn" href="{{ engine.path }}">{{ labels.go_to_engine }}</a>
+              {% if forloop.first %}
+                <a class="btn secondary" href="/guides/price-demand/">{{ labels.home_guide_link }}</a>
+              {% else %}
+                <a class="btn secondary" href="/guides/discount-optimizer/">{{ labels.discount_guide_link }}</a>
+              {% endif %}
+            </article>
+          {% endfor %}
+        </div>
+      </div>
+
+      <aside class="side-grid">
+        <div class="alert-stack">
+          <div class="alert success">✅ Analiz paneli hazır. Motorlar güncellendi.</div>
+          <div class="alert info">ℹ️ Daha doğru sonuç için satış verilerinizi güncel tutun.</div>
+          <div class="alert warn">⚠️ Az veriyle çıkan sonuçları karar öncesi tekrar kontrol edin.</div>
+        </div>
+        <article class="panel">
+          <h2>İlk Analizinizi Oluşturun</h2>
+          <p>Veri girişi yaparak ürününüz için önerilen fiyatı, beklenen satış adedini ve kâr etkisini görebilirsiniz.</p>
+          <a class="btn" href="/price-demand/">İlk Analizi Oluştur</a>
         </article>
-      {% endfor %}
+        <article class="panel">
+          <h2>Destek & SSS</h2>
+          <p><a href="/faq/">Fiyat optimizasyonu nasıl çalışır?</a></p>
+          <p><a href="/privacy/">Veri güvenliği nasıl korunuyor?</a></p>
+          <p><a href="/contact/">İletişime geç</a></p>
+        </article>
+      </aside>
     </section>
 
     <section class="info-grid">
-      <article class="info-card" id="about">
-        <h2>{{ labels.about_title }}</h2>
-        <p>{{ labels.about_text }}</p>
-      </article>
-
-      <article class="info-card" id="howto">
-        <h2>{{ labels.howto_title }}</h2>
-        <ul>
-          <li>{{ labels.howto_step_1 }}</li>
-          <li>{{ labels.howto_step_2 }}</li>
-          <li>{{ labels.howto_step_3 }}</li>
-        </ul>
-      </article>
-
-      <article class="info-card" id="faq">
-        <h2>{{ labels.faq_title }}</h2>
-        <div class="faq-item">
-          <strong>{{ labels.faq_q1 }}</strong>
-          <p>{{ labels.faq_a1 }}</p>
-        </div>
-        <div class="faq-item">
-          <strong>{{ labels.faq_q2 }}</strong>
-          <p>{{ labels.faq_a2 }}</p>
-        </div>
-        <div class="faq-item">
-          <strong>{{ labels.faq_q3 }}</strong>
-          <p>{{ labels.faq_a3 }}</p>
-        </div>
-      </article>
-
-      <article class="info-card" id="contact">
-        <h2>{{ labels.contact_title }}</h2>
-        <p>{{ labels.contact_text }}</p>
-      </article>
+      <article class="info-card" id="about"><h2>{{ labels.about_title }}</h2><p>{{ labels.about_text }}</p><p><a href="/about/">{{ labels.about_title }} →</a></p></article>
+      <article class="info-card" id="howto"><h2>{{ labels.howto_title }}</h2><ul><li>{{ labels.howto_step_1 }}</li><li>{{ labels.howto_step_2 }}</li><li>{{ labels.howto_step_3 }}</li></ul><p><a href="/how-to/">{{ labels.howto_title }} →</a></p></article>
+      <article class="info-card" id="faq"><h2>{{ labels.faq_title }}</h2><p><strong>{{ labels.faq_q1 }}</strong></p><p>{{ labels.faq_a1 }}</p><p><a href="/faq/">{{ labels.faq_title }} →</a></p></article>
+      <article class="info-card" id="contact"><h2>{{ labels.contact_title }}</h2><p>{{ labels.contact_text }}</p><p><a href="/contact/">{{ labels.contact_title }} →</a></p></article>
     </section>
-    <p style="margin:.9rem 0 0;text-align:right;display:flex;gap:.75rem;justify-content:flex-end;flex-wrap:wrap;">
-      <a href="/privacy/" style="color:#0f766e;font-weight:700;text-decoration:none;">{{ labels.privacy_link|default:"Privacy Policy" }}</a>
-      <a href="/terms/" style="color:#0f766e;font-weight:700;text-decoration:none;">{{ labels.terms_link|default:"Terms of Use" }}</a>
-      <a href="/cookies/" style="color:#0f766e;font-weight:700;text-decoration:none;">{{ labels.cookies_link|default:"Cookie Policy" }}</a>
-    </p>
   </main>
+
+  <footer class="app-footer">
+    <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">↗</span>PriceOptimize AI</a>
+    <span>© 2026 PriceOptimize AI. Tüm hakları saklıdır.</span>
+    <nav class="footer-links"><a href="/privacy/">{{ labels.privacy_link }}</a><a href="/terms/">{{ labels.terms_link }}</a><a href="/cookies/">{{ labels.cookies_link }}</a></nav>
+  </footer>
+
+  <nav class="mobile-bottom-nav" aria-label="Mobil menü"><a class="active" href="/">⌂<span>Ana Sayfa</span></a><a href="/price-demand/">⌁<span>Analiz</span></a><a href="/guides/price-demand/">▤<span>Raporlar</span></a><a href="/contact/">◎<span>Profil</span></a></nav>
 
   <script>
     (function () {
@@ -354,15 +173,9 @@
       const menuToggle = document.getElementById("menuToggle");
       const overlay = document.getElementById("drawerOverlay");
       const closeMenu = () => body.classList.remove("drawer-open");
-      const openMenu = () => body.classList.add("drawer-open");
-      menuToggle.addEventListener("click", () => {
-        if (body.classList.contains("drawer-open")) closeMenu();
-        else openMenu();
-      });
-      overlay.addEventListener("click", closeMenu);
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") closeMenu();
-      });
+      if (menuToggle) menuToggle.addEventListener("click", () => body.classList.toggle("drawer-open"));
+      if (overlay) overlay.addEventListener("click", closeMenu);
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeMenu(); });
     })();
   </script>
 </body>

@@ -1,9 +1,12 @@
+{% load static %}
 <!doctype html>
 <html lang="{{ current_language }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ labels.page_title }}</title>
+  <meta name="description" content="Geçmiş fiyat ve talep verilerinden optimum satış fiyatını, beklenen talebi ve maksimum kârı hesaplayın.">
+  <title>{{ labels.page_title }} | PriceOptimize AI</title>
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
   {% if ga_measurement_id %}
   <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_measurement_id }}"></script>
   <script>
@@ -13,440 +16,120 @@
     gtag('config', '{{ ga_measurement_id }}');
   </script>
   {% endif %}
-  {% if adsense_script_enabled and show_adsense %}
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ adsense_client_id }}" crossorigin="anonymous"></script>
-  {% endif %}
-  <style>
-    :root {
-      --bg: #eef4f7;
-      --bg-2: #ddebf2;
-      --text: #0b1726;
-      --card: #ffffff;
-      --line: #c7d3db;
-      --accent: #0f766e;
-      --accent-dark: #115e59;
-      --error: #b91c1c;
-      --muted: #526272;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      background: #000;
-      color: var(--text);
-      font-family: "Avenir Next", "Segoe UI", sans-serif;
-      padding: 1rem;
-      padding-top: 78px;
-    }
-    .site-header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 56px;
-      background: #0b7a42;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1300;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
-    }
-    .site-header .brand-name {
-      color: #fff;
-      font-size: clamp(1.2rem, 2.6vw, 2rem);
-      font-weight: 700;
-      letter-spacing: 0.3px;
-    }
-    .page { width: 100%; max-width: 920px; display: flex; justify-content: center; }
-    .card {
-      width: 100%;
-      max-width: 860px;
-      padding: 1.5rem;
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      box-shadow: 0 20px 40px rgba(13, 37, 63, 0.08);
-    }
-    .topbar {
-      margin-bottom: 1.1rem;
-      padding: 1rem 1.1rem;
-      border-radius: 14px;
-      background: linear-gradient(110deg, #0f766e 0%, #0ea5a7 55%, #38bdf8 100%);
-      color: #fff;
-      text-align: center;
-      box-shadow: 0 10px 24px rgba(14, 116, 144, 0.22);
-    }
-    h1 { margin: 0; font-size: clamp(1.35rem, 2.4vw, 1.8rem); letter-spacing: .2px; }
-    h2 { margin: 0 0 .75rem; font-size: 1.1rem; }
-    .language-form {
-      display: grid;
-      grid-template-columns: 110px 1fr auto;
-      gap: .75rem;
-      align-items: center;
-      margin: 0 auto 1rem;
-      max-width: 640px;
-      background: #f6fbff;
-      border: 1px solid #d9e5ee;
-      border-radius: 12px;
-      padding: .65rem;
-    }
-    .intro-note {
-      margin: -.2rem auto 1rem;
-      max-width: 640px;
-      color: var(--muted);
-      font-size: clamp(1.7rem, 2.9vw, 2rem);
-      line-height: 1.28;
-      font-weight: 700;
-    }
-    .info-block {
-      max-width: 760px;
-      margin: 0 auto 1rem;
-      border: 1px solid var(--line);
-      background: #f8fcff;
-      border-radius: 12px;
-      padding: .95rem;
-    }
-    .info-block h2 {
-      margin: 0 0 .55rem;
-      font-size: 1.05rem;
-      color: #0f766e;
-    }
-    .info-grid {
-      display: grid;
-      gap: .7rem;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .info-item {
-      border: 1px solid #d8e4eb;
-      border-radius: 10px;
-      padding: .7rem;
-      background: #ffffff;
-    }
-    .info-item h3 {
-      margin: 0 0 .35rem;
-      font-size: .98rem;
-      color: #0f172a;
-    }
-    .info-item p {
-      margin: 0;
-      color: #475569;
-      line-height: 1.45;
-    }
-    .info-item ul {
-      margin: 0;
-      padding-left: 1rem;
-      color: #475569;
-      line-height: 1.45;
-      display: grid;
-      gap: .2rem;
-    }
-    .row { display: grid; grid-template-columns: 1fr 2fr; gap: .7rem; margin-bottom: .7rem; }
-    .calc-form { margin: .9rem auto 0; display: grid; gap: .9rem; max-width: 760px; }
-    .input-section { border: 1px solid var(--line); border-radius: 12px; background: #fbfdff; padding: .9rem; border-left: 5px solid #14b8a6; }
-    label { font-weight: 600; color: var(--muted); }
-    input, select, button { padding: .66rem .7rem; border-radius: 8px; border: 1px solid var(--line); font-size: 1rem; width: 100%; }
-    input:focus, select:focus { outline: none; border-color: #2d8d86; box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15); }
-    button { background: linear-gradient(135deg, var(--accent) 0%, #0ea5a7 100%); color: #fff; border: none; cursor: pointer; width: auto; }
-    .wide { width: 100%; margin-top: .2rem; padding: .78rem .9rem; font-weight: 700; }
-    .result { margin: 1.1rem auto 0; border: 1px solid var(--line); background: #f9fcfb; border-radius: 12px; padding: .9rem; max-width: 760px; }
-    .results-grid { display: grid; gap: .45rem; }
-    .results-grid p { margin: 0; }
-    .chart-box { margin: 1rem auto; border: 1px solid var(--line); border-radius: 12px; padding: .9rem; background: #fcfefe; max-width: 860px; }
-    .axis { stroke: #4b5563; stroke-width: 1.1; }
-    .grid { stroke: #cbd5e1; stroke-width: 1; stroke-dasharray: 4 4; }
-    .curve { fill: none; stroke: #0f766e; stroke-width: 2.5; }
-    .point { fill: #2563eb; }
-    .optimal { fill: #b45309; }
-    .tick { fill: #111827; font-size: 11px; }
-    .legend { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: .6rem; font-size: .92rem; }
-    .legend span { display: inline-flex; align-items: center; gap: .32rem; }
-    .legend i { width: 14px; height: 14px; display: inline-block; border-radius: 50%; }
-    .legend-curve { border-radius: 0; height: 3px; background: #0f766e; }
-    .legend-point { background: #2563eb; }
-    .legend-optimal { background: #b45309; }
-    .error { margin-top: .8rem; margin-bottom: 0; color: var(--error); font-weight: 600; }
-    .menu-toggle {
-      position: fixed;
-      top: 82px;
-      left: 12px;
-      z-index: 1500;
-      border: 0;
-      border-radius: 10px;
-      background: var(--accent);
-      color: #fff;
-      width: 42px;
-      height: 42px;
-      font-size: 1.2rem;
-      cursor: pointer;
-      box-shadow: 0 8px 18px rgba(15, 118, 110, 0.25);
-    }
-    .drawer-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(4, 9, 18, 0.45);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease;
-      z-index: 1000;
-    }
-    .drawer {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: 290px;
-      background: #0f172a;
-      color: #e2e8f0;
-      padding: 1rem;
-      transform: translateX(-102%);
-      transition: transform 0.25s ease;
-      z-index: 1100;
-      overflow-y: auto;
-    }
-    body.drawer-open .drawer { transform: translateX(0); }
-    body.drawer-open .drawer-overlay { opacity: 1; pointer-events: auto; }
-    .drawer h2 { margin: 0 0 .8rem; color: #fff; font-size: 1.05rem; }
-    .menu-list { display: grid; gap: .55rem; }
-    .menu-item {
-      display: block;
-      text-decoration: none;
-      color: #e2e8f0;
-      border: 1px solid #334155;
-      border-radius: 10px;
-      padding: .65rem .7rem;
-      background: rgba(51, 65, 85, 0.35);
-    }
-    .menu-item small { display: block; margin-top: .2rem; color: #93c5fd; }
-    .menu-item.active { border-color: #14b8a6; background: rgba(20, 184, 166, 0.18); }
-    .drawer-subtitle {
-      margin: 1rem 0 0.5rem;
-      color: #cbd5e1;
-      font-size: 0.92rem;
-      font-weight: 700;
-      letter-spacing: 0.2px;
-      text-transform: uppercase;
-    }
-    @media (max-width: 640px) {
-      body { padding: .6rem; display: block; }
-      .card { padding: 1rem; border-radius: 12px; }
-      .language-form, .row { grid-template-columns: 1fr; }
-      .language-form button { width: 100%; }
-      .topbar { padding: .8rem; }
-      .info-grid { grid-template-columns: 1fr; }
-    }
-  </style>
 </head>
 <body>
-  <header class="site-header">
-    <div class="brand-name">PriceOptimize.ai</div>
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 18V9m5 9v-5m5 5V6m5 12V4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M4 15l5-4 5 2 5-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>PriceOptimize AI</a>
+      <nav class="top-nav"><a href="/">Ana Sayfa</a><a class="active" href="/price-demand/">Dashboard</a><a href="/guides/price-demand/">Analiz</a><a href="/guides/discount-optimizer/">Raporlar</a><a href="/how-to/">Fiyatlandırma</a></nav>
+      <div class="header-actions"><a href="/faq/">? Yardım</a><span class="user-chip"><span class="avatar">EA</span><span>Ecem A.</span></span></div>
+      <button class="mobile-menu-button" id="menuToggle" aria-label="Menüyü aç">☰</button>
+    </div>
   </header>
-  <button class="menu-toggle" id="menuToggle" aria-label="menu">☰</button>
+
   <div class="drawer-overlay" id="drawerOverlay"></div>
   <aside class="drawer" id="drawer">
     <h2>{{ labels.menu_engines }}</h2>
     <nav class="menu-list">
-      {% for engine in engines %}
-        <a class="menu-item {% if engine.path == request.path %}active{% endif %}" href="{{ engine.path }}">
-          {{ engine.title }}
-          <small>{{ engine.description }}</small>
-        </a>
-      {% endfor %}
+      {% for engine in engines %}<a class="menu-item {% if engine.path == request.path %}active{% endif %}" href="{{ engine.path }}">{{ engine.title }}<small>{{ engine.description }}</small></a>{% endfor %}
     </nav>
     <p class="drawer-subtitle">Bilgi</p>
-    <nav class="menu-list">
-      <a class="menu-item" href="/#about">{{ labels.about_title|default:"Hakkimizda" }}</a>
-      <a class="menu-item" href="/#howto">{{ labels.howto_title|default:"Nasil kullanilir" }}</a>
-      <a class="menu-item" href="/#faq">{{ labels.faq_title|default:"Sik sorulan sorular" }}</a>
-      <a class="menu-item" href="/#contact">{{ labels.contact_title|default:"Iletisim" }}</a>
-    </nav>
+    <nav class="menu-list"><a class="menu-item" href="/about/">{{ labels.about_title }}</a><a class="menu-item" href="/how-to/">{{ labels.howto_title }}</a><a class="menu-item" href="/faq/">{{ labels.faq_title }}</a><a class="menu-item" href="/contact/">{{ labels.contact_title }}</a></nav>
     <p class="drawer-subtitle">Politikalar</p>
-    <nav class="menu-list">
-      <a class="menu-item" href="/privacy/">{{ labels.privacy_link|default:"Privacy Policy" }}</a>
-      <a class="menu-item" href="/terms/">{{ labels.terms_link|default:"Terms of Use" }}</a>
-      <a class="menu-item" href="/cookies/">{{ labels.cookies_link|default:"Cookie Policy" }}</a>
-    </nav>
+    <nav class="menu-list"><a class="menu-item" href="/privacy/">{{ labels.privacy_link }}</a><a class="menu-item" href="/terms/">{{ labels.terms_link }}</a><a class="menu-item" href="/cookies/">{{ labels.cookies_link }}</a></nav>
   </aside>
 
-  <main class="page">
-    <section class="card">
-      <p style="margin-top:0;margin-bottom:.8rem;"><a href="/" style="color:#0f766e;font-weight:700;text-decoration:none;">&larr; Hesaplayici Merkezine Don</a></p>
-      <header class="topbar">
-        <h1>{{ labels.page_title }}</h1>
-      </header>
+  <main class="app-main">
+    <section class="hero-row">
+      <div>
+        <p class="eyebrow"><a href="/">← Hesaplayıcı Merkezine Dön</a></p>
+        <h1 class="hero-title">{{ labels.page_title }}</h1>
+        <p class="hero-subtitle">{{ labels.page_intro }}</p>
+      </div>
+      <button class="primary-action" form="priceDemandForm" type="submit"><span aria-hidden="true">▶</span>{{ labels.calculate }}</button>
+    </section>
 
+    <section class="stat-grid">
+      <article class="stat-card"><div class="stat-icon">🏷</div><div><p class="stat-label">{{ labels.price_1 }}</p><p class="stat-value">{% if inputs.price_1 %}{{ selected_symbol }}{{ inputs.price_1 }}{% else %}—{% endif %}</p><p class="stat-note">İlk satış noktası</p></div></article>
+      <article class="stat-card"><div class="stat-icon green">↗</div><div><p class="stat-label">{{ labels.best_price }}</p><p class="stat-value">{% if result %}{{ selected_symbol }}{{ result.optimal_price }}{% else %}—{% endif %}</p><p class="stat-note up">Önerilen fiyat</p></div></article>
+      <article class="stat-card"><div class="stat-icon green">⌁</div><div><p class="stat-label">{{ labels.expected_demand }}</p><p class="stat-value">{% if result %}{{ result.expected_demand }}{% else %}—{% endif %}</p><p class="stat-note">Model tahmini</p></div></article>
+      <article class="stat-card"><div class="stat-icon orange">🏆</div><div><p class="stat-label">{{ labels.max_profit }}</p><p class="stat-value">{% if result %}{{ selected_symbol }}{{ result.max_profit }}{% else %}—{% endif %}</p><p class="stat-note">Kar etkisi</p></div></article>
+    </section>
+
+    <section class="panel" style="margin-bottom:18px;">
       <form action="{% url 'set_language' %}" method="post" class="language-form">
         {% csrf_token %}
         <input name="next" type="hidden" value="{{ request.path }}">
         <label for="language">{{ labels.language }}</label>
-        <select id="language" name="language">
-          {% for lang in language_options %}
-            <option value="{{ lang.code }}" {% if lang.code == current_language %}selected{% endif %}>{{ lang.name }}</option>
-          {% endfor %}
-        </select>
-        <button type="submit">{{ labels.change_language }}</button>
+        <select id="language" name="language">{% for lang in language_options %}<option value="{{ lang.code }}" {% if lang.code == current_language %}selected{% endif %}>{{ lang.name }}</option>{% endfor %}</select>
+        <button class="btn" type="submit">{{ labels.change_language }}</button>
       </form>
-      <p class="intro-note">{{ labels.page_intro }}</p>
-      <section class="info-block">
-        <h2>{{ labels.home_detail_title }}</h2>
-        <div class="info-grid">
-          <article class="info-item">
-            <h3>{{ labels.home_purpose_title }}</h3>
-            <p>{{ labels.home_purpose_text }}</p>
-          </article>
-          <article class="info-item">
-            <h3>{{ labels.home_usage_title }}</h3>
-            <ul>
-              <li>{{ labels.home_usage_step_1 }}</li>
-              <li>{{ labels.home_usage_step_2 }}</li>
-              <li>{{ labels.home_usage_step_3 }}</li>
-            </ul>
-          </article>
-          <article class="info-item">
-            <h3>{{ labels.home_example_title }}</h3>
-            <p>{{ labels.home_example_data }}</p>
-            <p><strong>{{ labels.home_example_output_title }}</strong> {{ labels.home_example_output }}</p>
-          </article>
-          <article class="info-item">
-            <h3>{{ labels.home_interpret_title }}</h3>
-            <p>{{ labels.home_interpret_text }}</p>
-          </article>
-        </div>
-      </section>
+    </section>
 
-      {% if chart %}
-        <section class="chart-box">
-          <h2>{{ labels.chart_title }}</h2>
-          <svg
-            viewBox="0 0 {{ chart.width }} {{ chart.height }}"
-            width="100%"
-            height="auto"
-            role="img"
-            aria-label="{{ labels.chart_title }}"
-          >
-            <line x1="{{ chart.left }}" y1="{{ chart.top }}" x2="{{ chart.left }}" y2="{{ chart.bottom_y }}" class="axis"/>
-            <line x1="{{ chart.left }}" y1="{{ chart.bottom_y }}" x2="{{ chart.right_x }}" y2="{{ chart.bottom_y }}" class="axis"/>
-            <line x1="{{ chart.left }}" y1="{{ chart.x_axis_y }}" x2="{{ chart.right_x }}" y2="{{ chart.x_axis_y }}" class="grid"/>
-            <line x1="{{ chart.y_axis_x }}" y1="{{ chart.top }}" x2="{{ chart.y_axis_x }}" y2="{{ chart.bottom_y }}" class="grid"/>
-            <path d="{{ chart.path }}" class="curve"/>
+    <section class="dashboard-grid">
+      <div class="panel">
+        <div class="panel-header"><div><h2>Veri Girişi</h2><p class="form-help">Doğru ve güncel fiyat-talep verileri daha isabetli sonuç üretir.</p></div><span class="badge">Güvenli hesaplama</span></div>
+        <form method="post" id="priceDemandForm">
+          {% csrf_token %}
+          <section class="input-section">
+            <h3>{{ labels.point_1 }}</h3>
+            <div class="row"><label for="price_1">{{ labels.price_1 }}</label><input id="price_1" name="price_1" value="{{ inputs.price_1|default:'' }}" required></div>
+            <div class="row"><label for="demand_1">{{ labels.demand_1 }}</label><input id="demand_1" name="demand_1" value="{{ inputs.demand_1|default:'' }}" required></div>
+          </section>
+          <section class="input-section">
+            <h3>{{ labels.point_2 }}</h3>
+            <div class="row"><label for="price_2">{{ labels.price_2 }}</label><input id="price_2" name="price_2" value="{{ inputs.price_2|default:'' }}" required></div>
+            <div class="row"><label for="demand_2">{{ labels.demand_2 }}</label><input id="demand_2" name="demand_2" value="{{ inputs.demand_2|default:'' }}" required></div>
+          </section>
+          <section class="input-section">
+            <div class="row"><label for="currency">{{ labels.currency }}</label><select id="currency" name="currency">{% for code, symbol in currencies.items %}<option value="{{ code }}" {% if selected_currency == code %}selected{% endif %}>{{ code }} ({{ symbol }})</option>{% endfor %}</select></div>
+            <div class="row"><label for="method">{{ labels.method }}</label><select id="method" name="method">{% for method in method_options %}<option value="{{ method.code }}" {% if selected_method == method.code %}selected{% endif %}>{{ method.label }}</option>{% endfor %}</select></div>
+            <div class="row"><label for="unit_cost">{{ labels.unit_cost }}</label><input id="unit_cost" name="unit_cost" value="{{ inputs.unit_cost|default:'' }}" required></div>
+          </section>
+          <button type="submit" class="wide">{{ labels.calculate }}</button>
+        </form>
+        {% if error %}<p class="error">{{ error }}</p>{% endif %}
+      </div>
 
-            <circle cx="{{ chart.p1x }}" cy="{{ chart.p1y }}" r="5" class="point"/>
-            <circle cx="{{ chart.p2x }}" cy="{{ chart.p2y }}" r="5" class="point"/>
-            <circle cx="{{ chart.opx }}" cy="{{ chart.opy }}" r="6" class="optimal"/>
-
-            <text x="{{ chart.left }}" y="{{ chart.height|add:'-8' }}" class="tick">{{ labels.chart_x }} ({{ chart.x_min }} - {{ chart.x_max }})</text>
-            <text x="8" y="14" class="tick">{{ labels.chart_y }} ({{ chart.y_min }} - {{ chart.y_max }})</text>
-          </svg>
-          <div class="legend">
-            <span><i class="legend-curve"></i>{{ labels.legend_curve }}</span>
-            <span><i class="legend-point"></i>{{ labels.legend_data_points }}</span>
-            <span><i class="legend-optimal"></i>{{ labels.legend_optimal }}</span>
-          </div>
+      <aside class="side-grid">
+        <section class="result-card">
+          <div class="panel-header"><h2>Önerilen Sonuç</h2><span class="badge">Model güveni: %92</span></div>
+          {% if result %}
+            <div class="results-grid">
+              <p>{{ labels.method_used }}: {% if result.method == "grg_nonlinear" %}{{ labels.method_grg }}{% else %}{{ labels.method_closed_form }}{% endif %}</p>
+              <p>{{ labels.demand_formula }}: talep = {{ result.a }} + ({{ result.b }}) * fiyat</p>
+              <p>{{ labels.profit_formula }}: kar = (fiyat - {{ result.unit_cost }}) * talep</p>
+              <p class="ok">{{ labels.best_price }}: {{ selected_symbol }}{{ result.optimal_price }}</p>
+              <p>{{ labels.expected_demand }}: {{ result.expected_demand }}</p>
+              <p class="ok">{{ labels.max_profit }}: {{ selected_symbol }}{{ result.max_profit }}</p>
+              {% if result.no_profit_zone %}<p class="warn">{{ labels.no_profit_note }}</p>{% endif %}
+            </div>
+          {% else %}
+            <p>Henüz analiz çalıştırılmadı. Veri girip hesapla butonuna bastığınızda önerilen fiyat burada görünecek.</p>
+          {% endif %}
         </section>
-      {% endif %}
+        {% if chart %}
+          <section class="chart-box">
+            <h2>{{ labels.chart_title }}</h2>
+            <svg viewBox="0 0 {{ chart.width }} {{ chart.height }}" width="100%" height="auto" role="img" aria-label="{{ labels.chart_title }}">
+              <line x1="{{ chart.left }}" y1="{{ chart.top }}" x2="{{ chart.left }}" y2="{{ chart.bottom_y }}" class="axis"/><line x1="{{ chart.left }}" y1="{{ chart.bottom_y }}" x2="{{ chart.right_x }}" y2="{{ chart.bottom_y }}" class="axis"/><line x1="{{ chart.left }}" y1="{{ chart.x_axis_y }}" x2="{{ chart.right_x }}" y2="{{ chart.x_axis_y }}" class="grid"/><line x1="{{ chart.y_axis_x }}" y1="{{ chart.top }}" x2="{{ chart.y_axis_x }}" y2="{{ chart.bottom_y }}" class="grid"/><path d="{{ chart.path }}" class="curve"/><circle cx="{{ chart.p1x }}" cy="{{ chart.p1y }}" r="5" class="point"/><circle cx="{{ chart.p2x }}" cy="{{ chart.p2y }}" r="5" class="point"/><circle cx="{{ chart.opx }}" cy="{{ chart.opy }}" r="6" class="optimal"/><text x="{{ chart.left }}" y="{{ chart.height|add:'-8' }}" class="tick">{{ labels.chart_x }} ({{ chart.x_min }} - {{ chart.x_max }})</text><text x="8" y="14" class="tick">{{ labels.chart_y }} ({{ chart.y_min }} - {{ chart.y_max }})</text>
+            </svg>
+            <div class="legend"><span><i class="legend-curve"></i>{{ labels.legend_curve }}</span><span><i class="legend-point"></i>{{ labels.legend_data_points }}</span><span><i class="legend-optimal"></i>{{ labels.legend_optimal }}</span></div>
+          </section>
+        {% endif %}
+      </aside>
+    </section>
 
-      <form method="post" class="calc-form">
-        {% csrf_token %}
-        <section class="input-section">
-          <h2>{{ labels.point_1 }}</h2>
-          <div class="row">
-            <label for="price_1">{{ labels.price_1 }}</label>
-            <input id="price_1" name="price_1" value="{{ inputs.price_1|default:'' }}" required>
-          </div>
-          <div class="row">
-            <label for="demand_1">{{ labels.demand_1 }}</label>
-            <input id="demand_1" name="demand_1" value="{{ inputs.demand_1|default:'' }}" required>
-          </div>
-        </section>
-
-        <section class="input-section">
-          <h2>{{ labels.point_2 }}</h2>
-          <div class="row">
-            <label for="price_2">{{ labels.price_2 }}</label>
-            <input id="price_2" name="price_2" value="{{ inputs.price_2|default:'' }}" required>
-          </div>
-          <div class="row">
-            <label for="demand_2">{{ labels.demand_2 }}</label>
-            <input id="demand_2" name="demand_2" value="{{ inputs.demand_2|default:'' }}" required>
-          </div>
-        </section>
-
-        <section class="input-section">
-          <div class="row">
-            <label for="currency">{{ labels.currency }}</label>
-            <select id="currency" name="currency">
-              {% for code, symbol in currencies.items %}
-                <option value="{{ code }}" {% if selected_currency == code %}selected{% endif %}>{{ code }} ({{ symbol }})</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="row">
-            <label for="method">{{ labels.method }}</label>
-            <select id="method" name="method">
-              {% for method in method_options %}
-                <option value="{{ method.code }}" {% if selected_method == method.code %}selected{% endif %}>{{ method.label }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="row">
-            <label for="unit_cost">{{ labels.unit_cost }}</label>
-            <input id="unit_cost" name="unit_cost" value="{{ inputs.unit_cost|default:'' }}" required>
-          </div>
-        </section>
-
-        <button type="submit" class="wide">{{ labels.calculate }}</button>
-      </form>
-
-      {% if error %}
-        <p class="error">{{ error }}</p>
-      {% endif %}
-
-      {% if result %}
-        <section class="result">
-          <h2>{{ labels.results }}</h2>
-          <div class="results-grid">
-            <p>{{ labels.method_used }}:
-              {% if result.method == "grg_nonlinear" %}
-                {{ labels.method_grg }}
-              {% else %}
-                {{ labels.method_closed_form }}
-              {% endif %}
-            </p>
-            <p>{{ labels.demand_formula }}: talep = {{ result.a }} + ({{ result.b }}) * fiyat</p>
-            <p>{{ labels.profit_formula }}: kar = (fiyat - {{ result.unit_cost }}) * talep</p>
-            <p>{{ labels.best_price }}: {{ selected_symbol }}{{ result.optimal_price }}</p>
-            <p>{{ labels.expected_demand }}: {{ result.expected_demand }}</p>
-            <p>{{ labels.max_profit }}: {{ selected_symbol }}{{ result.max_profit }}</p>
-            {% if result.no_profit_zone %}
-              <p style="color:#b45309;font-weight:700;">{{ labels.no_profit_note }}</p>
-            {% endif %}
-          </div>
-        </section>
-      {% endif %}
-      <p style="margin:.9rem 0 0;text-align:right;display:flex;gap:.75rem;justify-content:flex-end;flex-wrap:wrap;">
-        <a href="/privacy/" style="color:#0f766e;font-weight:700;text-decoration:none;">{{ labels.privacy_link|default:"Privacy Policy" }}</a>
-        <a href="/terms/" style="color:#0f766e;font-weight:700;text-decoration:none;">{{ labels.terms_link|default:"Terms of Use" }}</a>
-        <a href="/cookies/" style="color:#0f766e;font-weight:700;text-decoration:none;">{{ labels.cookies_link|default:"Cookie Policy" }}</a>
-      </p>
+    <section class="info-grid">
+      <article class="info-card"><h2>{{ labels.home_purpose_title }}</h2><p>{{ labels.home_purpose_text }}</p></article>
+      <article class="info-card"><h2>{{ labels.home_usage_title }}</h2><ul><li>{{ labels.home_usage_step_1 }}</li><li>{{ labels.home_usage_step_2 }}</li><li>{{ labels.home_usage_step_3 }}</li></ul></article>
+      <article class="info-card"><h2>{{ labels.home_example_title }}</h2><p>{{ labels.home_example_data }}</p><p><strong>{{ labels.home_example_output_title }}</strong> {{ labels.home_example_output }}</p></article>
+      <article class="info-card"><h2>{{ labels.home_interpret_title }}</h2><p>{{ labels.home_interpret_text }}</p><p><a href="/guides/price-demand/">{{ labels.home_guide_link }} →</a></p></article>
     </section>
   </main>
-  <script>
-    (function () {
-      const body = document.body;
-      const menuToggle = document.getElementById("menuToggle");
-      const overlay = document.getElementById("drawerOverlay");
-      const closeMenu = () => body.classList.remove("drawer-open");
-      const openMenu = () => body.classList.add("drawer-open");
-      menuToggle.addEventListener("click", () => {
-        if (body.classList.contains("drawer-open")) closeMenu();
-        else openMenu();
-      });
-      overlay.addEventListener("click", closeMenu);
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") closeMenu();
-      });
-    })();
-  </script>
+
+  <footer class="app-footer"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true">↗</span>PriceOptimize AI</a><nav class="footer-links"><a href="/privacy/">{{ labels.privacy_link }}</a><a href="/terms/">{{ labels.terms_link }}</a><a href="/cookies/">{{ labels.cookies_link }}</a></nav></footer>
+  <nav class="mobile-bottom-nav"><a href="/">⌂<span>Ana Sayfa</span></a><a class="active" href="/price-demand/">⌁<span>Analiz</span></a><a href="/guides/price-demand/">▤<span>Raporlar</span></a><a href="/contact/">◎<span>Profil</span></a></nav>
+  <script>(function(){const b=document.body,t=document.getElementById('menuToggle'),o=document.getElementById('drawerOverlay');const c=()=>b.classList.remove('drawer-open');if(t)t.addEventListener('click',()=>b.classList.toggle('drawer-open'));if(o)o.addEventListener('click',c);document.addEventListener('keydown',e=>{if(e.key==='Escape')c();});})();</script>
 </body>
 </html>
