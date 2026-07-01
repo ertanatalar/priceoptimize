@@ -14,6 +14,7 @@ class PublicPageTests(SimpleTestCase):
         "how_to",
         "faq",
         "contact",
+        "ai_overview",
         "price_demand_guide",
         "discount_guide",
         "privacy_policy",
@@ -37,10 +38,31 @@ class PublicPageTests(SimpleTestCase):
             "how_to",
             "faq",
             "contact",
+            "ai_overview",
             "price_demand_guide",
             "discount_guide",
         ):
             self.assertContains(response, reverse(route_name))
+
+    def test_ai_machine_readable_files_load(self):
+        llms_response = self.client.get(reverse("llms_txt"))
+        self.assertEqual(llms_response.status_code, 200)
+        self.assertContains(llms_response, "PriceOptimize AI")
+        self.assertContains(llms_response, "/price-demand/")
+        self.assertContains(llms_response, "/ai-overview/")
+
+        robots_response = self.client.get(reverse("robots_txt"))
+        self.assertEqual(robots_response.status_code, 200)
+        self.assertContains(robots_response, "/sitemap.xml")
+        self.assertContains(robots_response, "/llms.txt")
+
+    def test_core_pages_include_structured_data(self):
+        for route_name in ("portal", "home", "discount_optimizer", "ai_overview"):
+            with self.subTest(route_name=route_name):
+                response = self.client.get(reverse(route_name))
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, 'type="application/ld+json"')
+                self.assertContains(response, "PriceOptimize AI")
 
 
 class AdsTxtTests(SimpleTestCase):

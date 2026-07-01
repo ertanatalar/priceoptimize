@@ -4,8 +4,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{{ page_description }}">
+  <link rel="canonical" href="{{ canonical_url }}">
+  <meta property="og:title" content="{{ labels.terms_title }} | PriceOptimize AI">
+  <meta property="og:description" content="{{ page_description }}">
+  <meta property="og:url" content="{{ canonical_url }}">
+  <meta property="og:type" content="article">
   <title>{{ labels.terms_title }} | PriceOptimize AI</title>
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  {% if structured_data_json %}<script type="application/ld+json">{{ structured_data_json|safe }}</script>{% endif %}
 </head>
 <body>
   <header class="app-header"><div class="header-inner"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true">↗</span>PriceOptimize AI</a><nav class="top-nav"><a href="/">Ana Sayfa</a><a href="/price-demand/">Dashboard</a><a href="/about/">Hakkımızda</a><a href="/contact/">İletişim</a></nav><div class="header-actions">{% include "core/_auth_links.html" %}</div></div></header>

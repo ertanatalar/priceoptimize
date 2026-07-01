@@ -7,6 +7,7 @@ from django.views.i18n import set_language
 from core.views import (
     ads_txt,
     cookies_policy,
+    llms_txt,
     portal,
     privacy_policy,
     publisher_page,
@@ -27,6 +28,7 @@ urlpatterns = [
     path('i18n/setlang/', set_language, name='set_language'),
     path("ads.txt", ads_txt, name="ads_txt"),
     path("ads.txt/", ads_txt),
+    path("llms.txt", llms_txt, name="llms_txt"),
     path("sitemap.xml", sitemap_xml, name="sitemap_xml"),
     path("robots.txt", robots_txt, name="robots_txt"),
     path("privacy/", privacy_policy, name="privacy_policy"),
@@ -36,6 +38,7 @@ urlpatterns = [
     path("how-to/", publisher_page, {"slug": "how-to"}, name="how_to"),
     path("faq/", publisher_page, {"slug": "faq"}, name="faq"),
     path("contact/", publisher_page, {"slug": "contact"}, name="contact"),
+    path("ai-overview/", publisher_page, {"slug": "ai-overview"}, name="ai_overview"),
     path("signin/", sign_in, name="sign_in"),
     path("signup/", sign_up, name="sign_up"),
     path("signout/", sign_out, name="sign_out"),

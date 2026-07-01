@@ -1,5 +1,6 @@
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from itertools import zip_longest
+import json
 from math import isfinite
 import os
 import re
@@ -26,6 +27,23 @@ CURRENCIES = {
 ENGINE_MENU = [
     {"path": "/price-demand/", "enabled": True},
     {"path": "/price-demand/discount-optimizer/", "enabled": True},
+]
+
+SITE_BASE_URL = os.getenv("SITE_BASE_URL", "https://www.priceoptimize.ai").rstrip("/")
+
+AI_RELEVANT_PATHS = [
+    ("Home", "/"),
+    ("Price and Sales Calculator", "/price-demand/"),
+    ("Discount Impact Engine", "/price-demand/discount-optimizer/"),
+    ("About PriceOptimize.ai", "/about/"),
+    ("How to use PriceOptimize.ai", "/how-to/"),
+    ("Frequently Asked Questions", "/faq/"),
+    ("Price and Demand Optimization Guide", "/guides/price-demand/"),
+    ("Discount and Maximum Profit Guide", "/guides/discount-optimizer/"),
+    ("AI Overview for PriceOptimize.ai", "/ai-overview/"),
+    ("Privacy Policy", "/privacy/"),
+    ("Terms of Use", "/terms/"),
+    ("Cookie Policy", "/cookies/"),
 ]
 
 LANGUAGE_OPTIONS = [
@@ -855,6 +873,161 @@ def _localized_engines(labels: dict) -> list[dict]:
     ]
 
 
+def _absolute_url(path: str) -> str:
+    if path.startswith("http://") or path.startswith("https://"):
+        return path
+    if not path.startswith("/"):
+        path = "/" + path
+    return SITE_BASE_URL + path
+
+
+def _jsonld(*items: dict) -> str:
+    payload = [item for item in items if item]
+    if len(payload) == 1:
+        payload = payload[0]
+    return json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+
+
+def _organization_schema() -> dict:
+    return {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "@id": _absolute_url("/#organization"),
+        "name": "PriceOptimize AI",
+        "url": _absolute_url("/"),
+        "email": "admin@priceoptimize.ai",
+        "description": (
+            "PriceOptimize AI provides practical price optimization calculators "
+            "for retailers, online sellers, and product teams using historical "
+            "price, sales quantity, unit cost, and discount observations."
+        ),
+    }
+
+
+def _software_schema() -> dict:
+    return {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "@id": _absolute_url("/#webapp"),
+        "name": "PriceOptimize AI",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "url": _absolute_url("/"),
+        "creator": {"@id": _absolute_url("/#organization")},
+        "description": (
+            "A browser-based pricing analysis tool that estimates optimal price, "
+            "expected demand, maximum profit, and discount impact from simple "
+            "sales observations."
+        ),
+        "featureList": [
+            "Price-demand optimization from two sales points",
+            "Discount impact and maximum profit calculation",
+            "Unit cost aware profit estimation",
+            "Multilingual public interface",
+            "Public guides, FAQs, privacy, terms, and cookie pages",
+        ],
+        "inLanguage": ["tr", "en", "de", "es", "it", "ru", "fr"],
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock",
+        },
+    }
+
+
+def _webpage_schema(title: str, description: str, path: str, page_type: str = "WebPage") -> dict:
+    return {
+        "@context": "https://schema.org",
+        "@type": page_type,
+        "@id": _absolute_url(path) + "#webpage",
+        "url": _absolute_url(path),
+        "name": title,
+        "description": description,
+        "isPartOf": {"@id": _absolute_url("/#webapp")},
+        "publisher": {"@id": _absolute_url("/#organization")},
+        "inLanguage": ["tr", "en"],
+    }
+
+
+def _breadcrumb_schema(items: list[tuple[str, str]]) -> dict:
+    return {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": index,
+                "name": name,
+                "item": _absolute_url(path),
+            }
+            for index, (name, path) in enumerate(items, start=1)
+        ],
+    }
+
+
+def _faq_schema(page: dict) -> dict | None:
+    questions = [
+        {
+            "@type": "Question",
+            "name": section["heading"],
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": " ".join(section.get("paragraphs", [])),
+            },
+        }
+        for section in page.get("sections", [])
+        if section.get("paragraphs")
+    ]
+    if not questions:
+        return None
+    return {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": questions}
+
+
+def _howto_schema(page: dict) -> dict | None:
+    steps = [
+        {
+            "@type": "HowToStep",
+            "name": section["heading"],
+            "text": " ".join(section.get("paragraphs", [])),
+        }
+        for section in page.get("sections", [])
+        if section.get("heading") and section.get("paragraphs")
+    ]
+    if not steps:
+        return None
+    return {
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        "name": page["title"],
+        "description": page["description"],
+        "step": steps,
+    }
+
+
+def _article_schema(page: dict, path: str) -> dict:
+    return {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": page["title"],
+        "description": page["description"],
+        "url": _absolute_url(path),
+        "author": {"@id": _absolute_url("/#organization")},
+        "publisher": {"@id": _absolute_url("/#organization")},
+        "mainEntityOfPage": _absolute_url(path),
+    }
+
+
+def _structured_data_json(title: str, description: str, path: str, *extra_items: dict) -> str:
+    return _jsonld(
+        _organization_schema(),
+        _software_schema(),
+        _webpage_schema(title, description, path),
+        _breadcrumb_schema([("PriceOptimize AI", "/"), (title, path)]),
+        *extra_items,
+    )
+
+
 def _safe_next_url(request):
     next_url = request.POST.get("next") or request.GET.get("next")
     if next_url and url_has_allowed_host_and_scheme(
@@ -1424,6 +1597,7 @@ def home(request):
     engines = _localized_engines(labels)
     selected_currency = request.POST.get("currency", "TRY")
     selected_method = request.POST.get("method", "closed_form")
+    page_description = "Geçmiş fiyat ve talep verilerinden optimum satış fiyatını, beklenen talebi ve maksimum kârı hesaplayın."
     method_options = [
         {"code": "closed_form", "label": labels["method_closed_form"]},
         {"code": "grg_nonlinear", "label": labels["method_grg"]},
@@ -1439,6 +1613,9 @@ def home(request):
         "currencies": CURRENCIES,
         "selected_currency": selected_currency,
         "selected_symbol": CURRENCIES.get(selected_currency, "₺"),
+        "canonical_url": _absolute_url("/price-demand/"),
+        "page_description": page_description,
+        "structured_data_json": _structured_data_json(labels["page_title"], page_description, "/price-demand/"),
     }
     if request.method != "POST":
         return render(request, "core/home.html", context)
@@ -1506,6 +1683,10 @@ def portal(request):
     current_language = (get_language() or "tr").split("-")[0]
     labels = {**TEXTS["en"], **TEXTS.get(current_language, TEXTS["en"])}
     engines = _localized_engines(labels)
+    page_description = (
+        "PriceOptimize AI fiyat, satış adedi, birim maliyet ve indirim verilerinden "
+        "optimum fiyat ve maksimum kâr senaryoları hesaplayan web uygulamasıdır."
+    )
     return render(
         request,
         "core/portal.html",
@@ -1515,6 +1696,9 @@ def portal(request):
             "current_language": current_language,
             "language_options": LANGUAGE_OPTIONS,
             "show_adsense": False,
+            "canonical_url": _absolute_url("/"),
+            "page_description": page_description,
+            "structured_data_json": _structured_data_json("PriceOptimize AI", page_description, "/"),
         },
     )
 
@@ -1536,12 +1720,20 @@ def publisher_page(request, slug):
         ("contact", "/contact/"),
         ("price-demand-guide", "/guides/price-demand/"),
         ("discount-guide", "/guides/discount-optimizer/"),
+        ("ai-overview", "/ai-overview/"),
     ]
     navigation = []
     for nav_slug, path in page_paths:
         translations = PUBLISHER_CONTENT[nav_slug]
         language = content_language if content_language in translations else "en"
         navigation.append({"path": path, "title": translations[language]["title"]})
+
+    current_path = dict(page_paths)[slug]
+    schema_extras = [_article_schema(page, current_path)]
+    if slug == "faq":
+        schema_extras.append(_faq_schema(page))
+    if slug == "how-to":
+        schema_extras.append(_howto_schema(page))
 
     return render(
         request,
@@ -1553,6 +1745,13 @@ def publisher_page(request, slug):
             "current_language": current_language,
             "content_language": content_language,
             "language_options": LANGUAGE_OPTIONS,
+            "canonical_url": _absolute_url(current_path),
+            "structured_data_json": _structured_data_json(
+                page["title"],
+                page["description"],
+                current_path,
+                *schema_extras,
+            ),
         },
     )
 
@@ -1560,6 +1759,7 @@ def publisher_page(request, slug):
 def privacy_policy(request):
     current_language = (get_language() or "tr").split("-")[0]
     labels = {**TEXTS["en"], **TEXTS.get(current_language, TEXTS["en"])}
+    page_description = "PriceOptimize AI gizlilik politikası ve hesaplama verilerinin kullanımı hakkında bilgi."
     return render(
         request,
         "core/privacy.html",
@@ -1567,6 +1767,9 @@ def privacy_policy(request):
             "labels": labels,
             "current_language": current_language,
             "show_adsense": False,
+            "canonical_url": _absolute_url("/privacy/"),
+            "page_description": page_description,
+            "structured_data_json": _structured_data_json("Gizlilik Politikası", page_description, "/privacy/"),
         },
     )
 
@@ -1574,6 +1777,7 @@ def privacy_policy(request):
 def terms_of_use(request):
     current_language = (get_language() or "tr").split("-")[0]
     labels = {**TEXTS["en"], **TEXTS.get(current_language, TEXTS["en"])}
+    page_description = "PriceOptimize AI kullanım şartları, sorumluluk sınırları ve kullanıcı yükümlülükleri."
     return render(
         request,
         "core/terms.html",
@@ -1581,6 +1785,9 @@ def terms_of_use(request):
             "labels": labels,
             "current_language": current_language,
             "show_adsense": False,
+            "canonical_url": _absolute_url("/terms/"),
+            "page_description": page_description,
+            "structured_data_json": _structured_data_json("Kullanım Şartları", page_description, "/terms/"),
         },
     )
 
@@ -1588,6 +1795,7 @@ def terms_of_use(request):
 def cookies_policy(request):
     current_language = (get_language() or "tr").split("-")[0]
     labels = {**TEXTS["en"], **TEXTS.get(current_language, TEXTS["en"])}
+    page_description = "PriceOptimize AI çerez politikası ve analitik teknolojileri hakkında bilgi."
     return render(
         request,
         "core/cookies.html",
@@ -1595,6 +1803,9 @@ def cookies_policy(request):
             "labels": labels,
             "current_language": current_language,
             "show_adsense": False,
+            "canonical_url": _absolute_url("/cookies/"),
+            "page_description": page_description,
+            "structured_data_json": _structured_data_json("Çerez Politikası", page_description, "/cookies/"),
         },
     )
 
@@ -1617,21 +1828,57 @@ def ads_txt(request):
     return HttpResponse(f"{line}\n", content_type="text/plain; charset=utf-8")
 
 
+def llms_txt(request):
+    lines = [
+        "# PriceOptimize AI",
+        "",
+        "PriceOptimize AI is a web-based price optimization application for retailers, online sellers, marketplace merchants, and product teams.",
+        "It helps users estimate optimal selling price, expected demand, maximum profit, and discount impact from historical sales observations.",
+        "",
+        "Primary capabilities:",
+        "- Price and Sales Calculator: builds a simple demand model from two price-quantity points and estimates the profit-maximizing price.",
+        "- Discount Impact Engine: compares discount steps using observed sales lift and estimates the discount level with the highest profit.",
+        "- Public educational guides: explain model assumptions, worked examples, limitations, and safe interpretation of outputs.",
+        "",
+        "Important limitations:",
+        "- Results are model-based estimates, not guaranteed sales outcomes.",
+        "- Users should consider stock availability, advertising, seasonality, competitor prices, brand effects, and data quality.",
+        "- The application does not provide financial, tax, legal, or investment advice.",
+        "",
+        "Important URLs:",
+    ]
+    for title, path in AI_RELEVANT_PATHS:
+        lines.append(f"- {title}: {_absolute_url(path)}")
+
+    lines.extend(
+        [
+            "",
+            "Recommended citation:",
+            "PriceOptimize AI is a price optimization web application that estimates optimal price and discount impact from sales observations.",
+            "",
+            f"Sitemap: {_absolute_url('/sitemap.xml')}",
+            "Contact: admin@priceoptimize.ai",
+            "",
+        ]
+    )
+    return HttpResponse("\n".join(lines), content_type="text/plain; charset=utf-8")
+
+
 def sitemap_xml(request):
-    base = "https://www.priceoptimize.ai"
     urls = [
-        base + reverse("portal"),
-        base + reverse("home"),
-        base + reverse("discount_optimizer"),
-        base + reverse("about"),
-        base + reverse("how_to"),
-        base + reverse("faq"),
-        base + reverse("contact"),
-        base + reverse("price_demand_guide"),
-        base + reverse("discount_guide"),
-        base + reverse("privacy_policy"),
-        base + reverse("terms_of_use"),
-        base + reverse("cookies_policy"),
+        _absolute_url(reverse("portal")),
+        _absolute_url(reverse("home")),
+        _absolute_url(reverse("discount_optimizer")),
+        _absolute_url(reverse("about")),
+        _absolute_url(reverse("how_to")),
+        _absolute_url(reverse("faq")),
+        _absolute_url(reverse("contact")),
+        _absolute_url(reverse("ai_overview")),
+        _absolute_url(reverse("price_demand_guide")),
+        _absolute_url(reverse("discount_guide")),
+        _absolute_url(reverse("privacy_policy")),
+        _absolute_url(reverse("terms_of_use")),
+        _absolute_url(reverse("cookies_policy")),
     ]
     lastmod = timezone.now().date().isoformat()
     body = [
@@ -1654,7 +1901,8 @@ def robots_txt(request):
         [
             "User-agent: *",
             "Allow: /",
-            "Sitemap: https://www.priceoptimize.ai/sitemap.xml",
+            f"Sitemap: {_absolute_url('/sitemap.xml')}",
+            f"# AI-readable site summary: {_absolute_url('/llms.txt')}",
             "",
         ]
     )
@@ -1666,6 +1914,7 @@ def discount_optimizer(request):
     labels = {**TEXTS["en"], **TEXTS.get(current_language, TEXTS["en"])}
     engines = _localized_engines(labels)
     selected_currency = request.POST.get("currency", "TRY")
+    page_description = "İndirim tutarlarının satış adedi ve maksimum kâr üzerindeki etkisini hesaplayın."
     prompt_text = request.POST.get("goal_text", labels.get("discount_calc_target_value", ""))
     sale_qty_values = request.POST.getlist("sale_qty[]")
     sale_price_values = request.POST.getlist("sale_price[]")
@@ -1691,6 +1940,13 @@ def discount_optimizer(request):
         "prompt_text": prompt_text,
         "sales_rows": sales_rows,
         "discount_rows": discount_rows,
+        "canonical_url": _absolute_url("/price-demand/discount-optimizer/"),
+        "page_description": page_description,
+        "structured_data_json": _structured_data_json(
+            labels["discount_page_title"],
+            page_description,
+            "/price-demand/discount-optimizer/",
+        ),
     }
 
     if request.method != "POST":

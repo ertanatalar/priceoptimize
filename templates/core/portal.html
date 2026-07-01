@@ -4,9 +4,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="PriceOptimize AI fiyat ve satis verilerinden optimum fiyat, indirim etkisi ve kar senaryolari hesaplayan pratik analiz panelidir.">
+  <meta name="description" content="{{ page_description }}">
+  <link rel="canonical" href="{{ canonical_url }}">
+  <meta property="og:title" content="PriceOptimize AI">
+  <meta property="og:description" content="{{ page_description }}">
+  <meta property="og:url" content="{{ canonical_url }}">
+  <meta property="og:type" content="website">
   <title>PriceOptimize AI - Dashboard</title>
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  {% if structured_data_json %}<script type="application/ld+json">{{ structured_data_json|safe }}</script>{% endif %}
   {% if ga_measurement_id %}
   <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_measurement_id }}"></script>
   <script>
@@ -59,6 +65,7 @@
       <a class="menu-item" href="/how-to/">{{ labels.howto_title|default:"Nasil kullanilir" }}</a>
       <a class="menu-item" href="/faq/">{{ labels.faq_title|default:"Sik sorulan sorular" }}</a>
       <a class="menu-item" href="/contact/">{{ labels.contact_title|default:"Iletisim" }}</a>
+      <a class="menu-item" href="/ai-overview/">PriceOptimize AI Nedir?</a>
     </nav>
     <p class="drawer-subtitle">Politikalar</p>
     <nav class="menu-list">

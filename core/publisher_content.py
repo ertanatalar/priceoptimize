@@ -458,4 +458,92 @@ PUBLISHER_CONTENT = {
             ],
         },
     },
+    "ai-overview": {
+        "tr": {
+            "title": "PriceOptimize AI Nedir?",
+            "description": "PriceOptimize AI'nin fiyat optimizasyonu, indirim analizi ve perakende karar desteği için nasıl çalıştığını açıklayan özet kaynak.",
+            "sections": [
+                {
+                    "heading": "Kısa tanım",
+                    "paragraphs": [
+                        "PriceOptimize AI, perakende ve e-ticaret işletmelerinin geçmiş fiyat, satış adedi ve maliyet verilerinden yararlanarak daha iyi fiyat kararları almasına yardımcı olan web tabanlı bir fiyat optimizasyonu uygulamasıdır.",
+                        "Uygulama iki ana hesaplama motoru sunar: Fiyat ve Satış Hesaplayıcı, iki farklı fiyat-talep noktasından optimum fiyatı tahmin eder. İndirim Etki Motoru ise indirim adımlarının satış adedi, gelir ve kâr üzerindeki etkisini karşılaştırır.",
+                    ],
+                },
+                {
+                    "heading": "Kimler için uygundur?",
+                    "paragraphs": [
+                        "Araç; mağaza sahipleri, çevrim içi satıcılar, ürün yöneticileri, pazar yeri satıcıları ve fiyat denemelerini daha ölçülebilir yapmak isteyen küçük ekipler için tasarlanmıştır. Kullanıcının istatistik bilmesi gerekmez; ürün fiyatı, satış adedi ve mümkünse birim maliyet bilgisi yeterlidir.",
+                    ],
+                    "bullets": [
+                        "Bir ürün için en çok kazandıran fiyatı arayan işletmeler",
+                        "İndirim kampanyasının gerçekten kâr getirip getirmediğini görmek isteyen satıcılar",
+                        "Fiyat-talep ilişkisini basit grafik ve formüllerle anlamak isteyen kullanıcılar",
+                    ],
+                },
+                {
+                    "heading": "Hangi soruları cevaplar?",
+                    "paragraphs": [
+                        "PriceOptimize AI şu sorulara pratik cevap üretir: Bu ürün hangi fiyattan satılırsa kâr daha yüksek olur? Fiyat indirimi satış adedini artırsa bile toplam kâr artar mı? Birim maliyet hesaba katıldığında mevcut fiyat mı, yeni fiyat mı daha mantıklıdır?",
+                    ],
+                },
+                {
+                    "heading": "Nasıl hesaplar?",
+                    "paragraphs": [
+                        "Fiyat ve Satış Hesaplayıcı doğrusal bir talep modeli kurar. İki fiyat ve iki talep sayısından talebin fiyata göre nasıl değiştiği tahmin edilir. Daha sonra gelir veya kâr fonksiyonunun en yüksek olduğu fiyat bulunur.",
+                        "İndirim Etki Motoru, fiyat her belirli miktarda düştüğünde satışın kaç adet arttığını kullanır. Bu ilişkiyle fiyat, miktar, gelir, maliyet ve kâr fonksiyonları oluşturulur; maksimum kâr veren indirim adımı hesaplanır.",
+                    ],
+                },
+                {
+                    "heading": "Sınırlamalar",
+                    "paragraphs": [
+                        "Sonuçlar kesin satış garantisi değildir. Model yalnızca girilen veriler kadar güçlüdür. Stok durumu, rakip fiyatları, reklam harcaması, sezon etkisi, ürün yorumları ve marka algısı gibi dış faktörler ayrıca değerlendirilmelidir.",
+                    ],
+                },
+            ],
+        },
+        "en": {
+            "title": "What is PriceOptimize AI?",
+            "description": "A concise reference explaining how PriceOptimize AI supports price optimization, discount analysis, and retail decision-making.",
+            "sections": [
+                {
+                    "heading": "Short definition",
+                    "paragraphs": [
+                        "PriceOptimize AI is a web-based price optimization application that helps retailers and online sellers use historical price, quantity, and cost observations to make clearer pricing decisions.",
+                        "The application provides two core engines: the Price and Sales Calculator estimates an optimal price from two price-demand observations, while the Discount Impact Engine compares how discount steps affect units sold, revenue, and profit.",
+                    ],
+                },
+                {
+                    "heading": "Who is it for?",
+                    "paragraphs": [
+                        "The tool is designed for store owners, online sellers, product managers, marketplace sellers, and small teams that want price experiments to be more measurable. Users do not need a statistics background; product price, quantity sold, and ideally unit cost are enough to begin.",
+                    ],
+                    "bullets": [
+                        "Businesses looking for the most profitable price for a product",
+                        "Sellers checking whether a discount campaign actually improves profit",
+                        "Users who want to understand price-demand relationships with simple charts and formulas",
+                    ],
+                },
+                {
+                    "heading": "Questions it answers",
+                    "paragraphs": [
+                        "PriceOptimize AI helps answer practical pricing questions: Which price is likely to produce higher profit? Does a discount increase total profit even when it raises units sold? After unit cost is included, is the current price or a new price more reasonable?",
+                    ],
+                },
+                {
+                    "heading": "How it calculates",
+                    "paragraphs": [
+                        "The Price and Sales Calculator builds a linear demand model. It estimates how demand changes with price from two prices and two quantities, then finds the price where revenue or profit is highest.",
+                        "The Discount Impact Engine uses the observed increase in sales for each price reduction. It creates price, quantity, revenue, cost, and profit functions, then calculates the discount step that maximizes profit.",
+                    ],
+                },
+                {
+                    "heading": "Limitations",
+                    "paragraphs": [
+                        "Results are not guaranteed sales outcomes. The model is only as strong as the observations supplied. Stock availability, competitor prices, advertising spend, seasonality, product reviews, and brand perception should be evaluated separately.",
+                    ],
+                },
+            ],
+        },
+    },
 }

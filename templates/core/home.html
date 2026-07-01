@@ -4,9 +4,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Geçmiş fiyat ve talep verilerinden optimum satış fiyatını, beklenen talebi ve maksimum kârı hesaplayın.">
+  <meta name="description" content="{{ page_description }}">
+  <link rel="canonical" href="{{ canonical_url }}">
+  <meta property="og:title" content="{{ labels.page_title }} | PriceOptimize AI">
+  <meta property="og:description" content="{{ page_description }}">
+  <meta property="og:url" content="{{ canonical_url }}">
+  <meta property="og:type" content="website">
   <title>{{ labels.page_title }} | PriceOptimize AI</title>
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  {% if structured_data_json %}<script type="application/ld+json">{{ structured_data_json|safe }}</script>{% endif %}
   {% if ga_measurement_id %}
   <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_measurement_id }}"></script>
   <script>
@@ -36,7 +42,7 @@
     <p class="drawer-subtitle">Giriş</p>
     <nav class="menu-list">{% include "core/_auth_menu_links.html" %}</nav>
     <p class="drawer-subtitle">Bilgi</p>
-    <nav class="menu-list"><a class="menu-item" href="/about/">{{ labels.about_title }}</a><a class="menu-item" href="/how-to/">{{ labels.howto_title }}</a><a class="menu-item" href="/faq/">{{ labels.faq_title }}</a><a class="menu-item" href="/contact/">{{ labels.contact_title }}</a></nav>
+    <nav class="menu-list"><a class="menu-item" href="/about/">{{ labels.about_title }}</a><a class="menu-item" href="/how-to/">{{ labels.howto_title }}</a><a class="menu-item" href="/faq/">{{ labels.faq_title }}</a><a class="menu-item" href="/contact/">{{ labels.contact_title }}</a><a class="menu-item" href="/ai-overview/">PriceOptimize AI Nedir?</a></nav>
     <p class="drawer-subtitle">Politikalar</p>
     <nav class="menu-list"><a class="menu-item" href="/privacy/">{{ labels.privacy_link }}</a><a class="menu-item" href="/terms/">{{ labels.terms_link }}</a><a class="menu-item" href="/cookies/">{{ labels.cookies_link }}</a></nav>
   </aside>
