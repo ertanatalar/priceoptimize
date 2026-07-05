@@ -111,6 +111,28 @@ class RecommendationEngineTests(PricingFixtureMixin, TestCase):
         self.assertGreaterEqual(result.confidence_score, 80)
         self.assertEqual(result.confidence_level, "high")
 
+    def test_competitor_median_uses_median_not_average(self):
+        _user, organization, product, profile = self.create_pricing_fixture()
+        for index, price in enumerate(("900.00", "920.00", "2000.00"), start=1):
+            CompetitorPriceSnapshot.objects.create(
+                organization=organization,
+                product=product,
+                competitor_name=f"Rakip {index}",
+                price=Decimal(price),
+            )
+        result = build_recommendation(profile, product.competitor_price_snapshots.all(), [])
+        self.assertEqual(result.competitor_median_price, Decimal("920.00"))
+
+    def test_missing_competitor_data_keeps_recommendation_conservative(self):
+        _user, _organization, product, profile = self.create_pricing_fixture()
+        result = build_recommendation(profile, product.competitor_price_snapshots.all(), [])
+        self.assertEqual(result.recommended_price, Decimal("1000.00"))
+        self.assertIn("INSUFFICIENT_DATA", result.reason_codes)
+        self.assertIn("STABLE_PRICE", result.reason_codes)
+
+    def test_money_values_are_rounded_to_two_decimals(self):
+        self.assertEqual(minimum_allowed_price(Decimal("333.33"), Decimal("17.5")), Decimal("404.04"))
+
 
 class PricingApiTests(PricingFixtureMixin, TestCase):
     def test_pricing_assistant_requires_login(self):
@@ -158,3 +180,16 @@ class PricingApiTests(PricingFixtureMixin, TestCase):
         profile.refresh_from_db()
         recommendation = PriceRecommendation.objects.get(id=recommendation_id)
         self.assertEqual(recommendation.status, PriceRecommendation.STATUS_ACCEPTED)
+
+    def test_reject_recommendation_is_idempotent_for_same_action(self):
+        user, organization, product, _profile = self.create_pricing_fixture()
+        self.client.login(username=user.username, password="test-pass-123")
+        first = self.client.post(reverse("pricing_api_generate_recommendation", args=[product.id]))
+        recommendation_id = first.json()["id"]
+        first_reject = self.client.post(reverse("pricing_api_reject_recommendation", args=[recommendation_id]))
+        second_reject = self.client.post(reverse("pricing_api_reject_recommendation", args=[recommendation_id]))
+        self.assertEqual(first_reject.status_code, 200)
+        self.assertEqual(second_reject.status_code, 200)
+        recommendation = PriceRecommendation.objects.get(id=recommendation_id)
+        self.assertEqual(recommendation.status, PriceRecommendation.STATUS_REJECTED)
+        self.assertEqual(organization.pricing_audit_logs.filter(action="recommendation_rejected").count(), 1)
