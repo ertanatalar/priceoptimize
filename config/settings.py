@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "core",
+    "pricing",
 ]
 
 MIDDLEWARE = [
@@ -110,6 +111,7 @@ if importlib.util.find_spec("whitenoise"):
     )
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+PRICING_MAX_CHANGE_PERCENT = os.getenv("PRICING_MAX_CHANGE_PERCENT", "5")
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SESSION_COOKIE_SECURE = not DEBUG

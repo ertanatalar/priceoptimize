@@ -42,6 +42,8 @@ urlpatterns = [
     path("signin/", sign_in, name="sign_in"),
     path("signup/", sign_up, name="sign_up"),
     path("signout/", sign_out, name="sign_out"),
+    path("pricing-assistant/", include("pricing.urls")),
+    path("api/", include("pricing.api_urls")),
     path(
         "guides/price-demand/",
         publisher_page,

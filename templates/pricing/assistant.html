@@ -1,0 +1,138 @@
+{% load static %}
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Fiyatlandirma Asistani - PriceOptimize AI</title>
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="brand" href="/" aria-label="PriceOptimize AI ana sayfa">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 18V9m5 9v-5m5 5V6m5 12V4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M4 15l5-4 5 2 5-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        PriceOptimize AI
+      </a>
+      <nav class="top-nav" aria-label="Ana menu">
+        <a href="/">Ana Sayfa</a>
+        <a class="active" href="{% url 'pricing_assistant' %}">Fiyatlandirma Asistani</a>
+        <a href="/price-demand/">Hesaplayicilar</a>
+        <a href="/faq/">Yardim</a>
+      </nav>
+      <div class="header-actions">{% include "core/_auth_links.html" %}</div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <section class="hero-row">
+      <div>
+        <p class="eyebrow">PRICING ASSISTANT V1</p>
+        <h1 class="hero-title">Fiyatlandirma Asistani</h1>
+        <p class="hero-subtitle">Urun maliyeti, mevcut fiyat, rakip fiyatlari, stok ve satis verilerine gore aciklanabilir fiyat onerisi uretir. Bu surum magaza fiyatini otomatik degistirmez.</p>
+      </div>
+    </section>
+
+    {% if messages %}
+      <div class="alert-stack" style="margin-bottom:18px;">
+        {% for message in messages %}<div class="alert {% if message.tags == 'success' %}success{% elif message.tags == 'error' %}warn{% else %}info{% endif %}">{{ message }}</div>{% endfor %}
+      </div>
+    {% endif %}
+
+    <section class="stat-grid" aria-label="Ozet">
+      <article class="stat-card"><div class="stat-icon">₺</div><div><p class="stat-label">Mevcut Fiyat</p><p class="stat-value">{% if latest_recommendation %}{{ latest_recommendation.current_price }}{% else %}-{% endif %}</p><p class="stat-note">Son girilen fiyat</p></div></article>
+      <article class="stat-card"><div class="stat-icon green">↗</div><div><p class="stat-label">Onerilen Fiyat</p><p class="stat-value">{% if latest_recommendation %}{{ latest_recommendation.recommended_price }}{% else %}-{% endif %}</p><p class="stat-note up">Guvenli sinir korunur</p></div></article>
+      <article class="stat-card"><div class="stat-icon green">⌁</div><div><p class="stat-label">Tahmini Brut Kar</p><p class="stat-value">{% if latest_recommendation %}{{ latest_recommendation.expected_gross_profit }}{% else %}-{% endif %}</p><p class="stat-note">Girilen veriye gore</p></div></article>
+      <article class="stat-card"><div class="stat-icon orange">🏆</div><div><p class="stat-label">Veri Guveni</p><p class="stat-value">{% if latest_recommendation %}{{ latest_recommendation.confidence_score }} / 100{% else %}-{% endif %}</p><p class="stat-note">Garanti degil, veri yeterliligi</p></div></article>
+    </section>
+
+    <section class="dashboard-grid">
+      <article class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Yeni fiyat onerisi olustur</h2>
+            <p class="form-help">Alanlari doldurun. Rakip fiyatlarini her satira bir fiyat gelecek sekilde yazabilirsiniz. Daha cok ve daha temiz veri daha guvenilir sonuc verir.</p>
+          </div>
+          <span class="badge">{{ organization.name }}</span>
+        </div>
+        <form method="post" class="field-grid">
+          {% csrf_token %}
+          <div class="input-section">
+            <h3>Urun bilgileri</h3>
+            <div class="row"><label for="product_name">Urun adi</label><input id="product_name" name="product_name" placeholder="Orn. Kablosuz kulaklik" required></div>
+            <div class="row"><label for="cost_price">Maliyet</label><input id="cost_price" name="cost_price" inputmode="decimal" placeholder="700" required></div>
+            <div class="row"><label for="current_price">Mevcut fiyat</label><input id="current_price" name="current_price" inputmode="decimal" placeholder="1000" required></div>
+            <div class="row"><label for="minimum_margin_percent">Minimum brut kar marji (%)</label><input id="minimum_margin_percent" name="minimum_margin_percent" inputmode="decimal" placeholder="20" required></div>
+            <div class="row"><label for="currency">Para birimi</label><select id="currency" name="currency"><option>TRY</option><option>USD</option><option>EUR</option></select></div>
+          </div>
+
+          <div class="input-section">
+            <h3>Piyasa ve stok bilgileri</h3>
+            <div class="row"><label for="stock_quantity">Stok miktari</label><input id="stock_quantity" name="stock_quantity" inputmode="numeric" placeholder="120" value="0"></div>
+            <div class="row"><label for="target_stock_quantity">Hedef stok</label><input id="target_stock_quantity" name="target_stock_quantity" inputmode="numeric" placeholder="80" value="0"></div>
+            <div class="row"><label for="competitor_prices">Rakip fiyatlari</label><textarea id="competitor_prices" name="competitor_prices" rows="4" placeholder="950\n980\n1010"></textarea></div>
+          </div>
+
+          <div class="input-section">
+            <h3>Satis egilimi</h3>
+            <div class="row"><label for="previous_units_sold">Onceki donem satis adedi</label><input id="previous_units_sold" name="previous_units_sold" inputmode="numeric" placeholder="120" value="0"></div>
+            <div class="row"><label for="latest_units_sold">Son donem satis adedi</label><input id="latest_units_sold" name="latest_units_sold" inputmode="numeric" placeholder="98" value="0"></div>
+          </div>
+
+          <button class="wide-btn" type="submit">Yeni Oneri Olustur</button>
+        </form>
+      </article>
+
+      <aside class="side-grid">
+        <article class="result-card">
+          <h2>Oneri karti</h2>
+          {% if latest_recommendation %}
+            <div class="result-grid">
+              <p><strong>Urun:</strong> {{ latest_recommendation.product.name }}</p>
+              <p><strong>Mevcut fiyat:</strong> {{ latest_recommendation.current_price }}</p>
+              <p><strong>Onerilen fiyat:</strong> {{ latest_recommendation.recommended_price }}</p>
+              <p><strong>Minimum guvenli fiyat:</strong> {{ latest_recommendation.minimum_allowed_price }}</p>
+              <p><strong>Rakip medyan fiyati:</strong> {{ latest_recommendation.competitor_median_price|default:"Rakip verisi yok" }}</p>
+              <p><strong>Tahmini brut kar:</strong> {{ latest_recommendation.expected_gross_profit }}</p>
+              <p><strong>Tahmini brut kar marji:</strong> %{{ latest_recommendation.expected_margin_percent }}</p>
+              <p><strong>Guven seviyesi:</strong> {{ latest_recommendation.confidence_level }} ({{ latest_recommendation.confidence_score }}/100)</p>
+              <p><strong>Neden:</strong> {{ latest_recommendation.explanation }}</p>
+              <p><strong>Durum:</strong> {{ latest_recommendation.status }}</p>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
+              <form method="post" action="{% url 'pricing_recommendation_accept' latest_recommendation.id %}">{% csrf_token %}<button class="btn" type="submit">Oneriyi kabul et</button></form>
+              <form method="post" action="{% url 'pricing_recommendation_reject' latest_recommendation.id %}">{% csrf_token %}<button class="btn secondary" type="submit">Oneriyi reddet</button></form>
+            </div>
+          {% else %}
+            <p>Henuz fiyat onerisi yok. Soldaki formu doldurarak ilk oneriyi olusturun.</p>
+          {% endif %}
+        </article>
+
+        <article class="alert info">
+          <strong>Guven seviyesi nedir?</strong><br>
+          Guven seviyesi, onerinin dayandigi verilerin yeterliligini gosterir. Gelecekteki satis veya kar sonucunu garanti etmez.
+        </article>
+      </aside>
+    </section>
+
+    <section class="panel" style="margin-top:18px;">
+      <div class="panel-header"><h2>Oneri gecmisi</h2><span class="badge">Son 20 kayit</span></div>
+      <div style="overflow-x:auto;">
+        <table class="pricing-table">
+          <thead><tr><th>Tarih</th><th>Urun</th><th>Eski fiyat</th><th>Onerilen fiyat</th><th>Guven</th><th>Durum</th><th>Karar veren</th></tr></thead>
+          <tbody>
+            {% for item in recommendations %}
+              <tr><td>{{ item.created_at|date:"d.m.Y H:i" }}</td><td>{{ item.product.name }}</td><td>{{ item.current_price }}</td><td>{{ item.recommended_price }}</td><td>{{ item.confidence_level }} / {{ item.confidence_score }}</td><td>{{ item.status }}</td><td>{{ item.decided_by|default:"-" }}</td></tr>
+            {% empty %}
+              <tr><td colspan="7">Henuz gecmis yok.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
