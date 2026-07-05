@@ -66,6 +66,37 @@ class PublicPageTests(SimpleTestCase):
                 self.assertContains(response, 'type="application/ld+json"')
                 self.assertContains(response, "PriceOptimize AI")
 
+    def test_policy_pages_are_substantive_and_transparent(self):
+        expected_terms = {
+            "privacy_policy": (
+                "Topladığımız bilgiler",
+                "Analitik, reklam ve çerez teknolojileri",
+                "Google AdSense",
+                "admin@priceoptimize.ai",
+            ),
+            "terms_of_use": (
+                "Hizmetin amacı",
+                "Sonuçların niteliği",
+                "Finansal, hukuki ve ticari tavsiye değildir",
+                "Kullanıcı sorumlulukları",
+            ),
+            "cookies_policy": (
+                "Zorunlu çerezler",
+                "Analitik çerezleri",
+                "Reklam çerezleri",
+                "Çerezleri yönetme",
+            ),
+        }
+        for route_name, terms in expected_terms.items():
+            with self.subTest(route_name=route_name):
+                response = self.client.get(reverse(route_name))
+                self.assertEqual(response.status_code, 200)
+                self.assertGreater(len(response.content.decode()), 2500)
+                self.assertContains(response, 'rel="canonical"')
+                self.assertContains(response, '<meta name="description"')
+                for term in terms:
+                    self.assertContains(response, term)
+
     def test_smart_pricing_returns_recommendation(self):
         response = self.client.post(
             reverse("smart_pricing"),

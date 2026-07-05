@@ -1827,11 +1827,56 @@ def privacy_policy(request):
     current_language = (get_language() or "tr").split("-")[0]
     labels = {**TEXTS["en"], **TEXTS.get(current_language, TEXTS["en"])}
     page_description = "PriceOptimize AI gizlilik politikası ve hesaplama verilerinin kullanımı hakkında bilgi."
+    sections = [
+        {
+            "heading": "Topladığımız bilgiler",
+            "paragraphs": [
+                "PriceOptimize AI, fiyat optimizasyonu hesaplaması yapabilmek için kullanıcının forma yazdığı satış fiyatı, talep sayısı, maliyet, indirim tutarı, rakip fiyatı ve benzeri ticari verileri işler.",
+                "Bu bilgiler hesaplama sonucunu üretmek, modelin neden bu sonucu verdiğini açıklamak ve kullanıcının fiyat kararını daha anlaşılır hale getirmek için kullanılır.",
+            ],
+        },
+        {
+            "heading": "Hesaplama verileri nasıl kullanılır?",
+            "paragraphs": [
+                "Girilen veriler matematiksel fiyat, talep, gelir ve kâr modelleri kurmak için kullanılır. Sonuçlar tahmini niteliktedir; stok durumu, sezon etkisi, reklam harcaması, marka gücü ve piyasa koşulları gibi dış faktörler nihai satış performansını değiştirebilir.",
+                "İlk sürümde kullanıcıdan üyelik almadan çalışan hesaplama ekranlarında kişisel müşteri listesi veya ödeme bilgisi saklanmaz. İleride üyelik, ödeme veya kayıtlı ürün takibi eklendiğinde bu politika yeni veri işleme kapsamını açıkça gösterecek şekilde güncellenecektir.",
+            ],
+        },
+        {
+            "heading": "Analitik, reklam ve çerez teknolojileri",
+            "paragraphs": [
+                "Site performansını, hangi sayfaların daha çok kullanıldığını ve kullanıcıların hesaplama adımlarında nerede zorlandığını anlamak için analitik araçlar kullanılabilir.",
+                "Google AdSense onayı ve reklam yayını aktif olduğunda Google tarafından sunulan reklam teknolojileri kullanılabilir. Bu teknolojiler reklam gösterimi, reklam güvenliği, kötüye kullanımın önlenmesi ve reklam performansının ölçülmesi için çerez veya benzeri tanımlayıcılar kullanabilir.",
+            ],
+        },
+        {
+            "heading": "Veri paylaşımı",
+            "paragraphs": [
+                "PriceOptimize AI, kullanıcıların hesaplama için girdiği ticari verileri satmak amacıyla üçüncü taraflarla paylaşmaz.",
+                "Barındırma, güvenlik, analitik, reklam ve teknik bakım hizmetleri için Render, Google veya benzeri altyapı sağlayıcılarıyla sınırlı teknik veri işlenebilir. Bu işlem sitenin çalışması, güvenliği ve ölçümlenmesi için gereklidir.",
+            ],
+        },
+        {
+            "heading": "Güvenlik ve saklama",
+            "paragraphs": [
+                "Site HTTPS üzerinden yayınlanır ve üretim ortamında Django güvenlik ayarları kullanılır. Amaç, hesaplama ekranlarının güvenli şekilde erişilebilir olması ve kullanıcıların temel gizlilik beklentilerinin korunmasıdır.",
+                "Kullanıcılar hassas müşteri listesi, banka bilgisi, kart bilgisi veya ticari sır niteliğindeki ayrıntıları gereksiz yere formlara yazmamalıdır. Hesaplama için yalnızca sonucu üretmeye yetecek sayısal veriler girilmelidir.",
+            ],
+        },
+        {
+            "heading": "Haklarınız ve iletişim",
+            "paragraphs": [
+                "Gizlilik, veri işleme, reklam teknolojileri veya hesaplama sonuçlarıyla ilgili sorularınız için admin@priceoptimize.ai adresinden iletişime geçebilirsiniz.",
+                "Politika sayfaları site geliştikçe güncellenebilir. Güncellemeler, bu sayfada yayınlandığı anda kullanıcıların erişimine açık hale gelir.",
+            ],
+        },
+    ]
     return render(
         request,
         "core/privacy.html",
         {
             "labels": labels,
+            "sections": sections,
             "current_language": current_language,
             "show_adsense": False,
             "canonical_url": _absolute_url("/privacy/"),
@@ -1845,11 +1890,55 @@ def terms_of_use(request):
     current_language = (get_language() or "tr").split("-")[0]
     labels = {**TEXTS["en"], **TEXTS.get(current_language, TEXTS["en"])}
     page_description = "PriceOptimize AI kullanım şartları, sorumluluk sınırları ve kullanıcı yükümlülükleri."
+    sections = [
+        {
+            "heading": "Hizmetin amacı",
+            "paragraphs": [
+                "PriceOptimize AI, perakende satış yapan işletmelere fiyat, talep, indirim ve kâr ilişkisini daha anlaşılır hale getiren hesaplama motorları sunar.",
+                "Uygulama; geçmiş satış fiyatı, talep sayısı, maliyet, indirim ve rakip fiyatı gibi kullanıcı tarafından girilen verilerden hareketle tahmini fiyat önerileri üretir.",
+            ],
+        },
+        {
+            "heading": "Sonuçların niteliği",
+            "paragraphs": [
+                "Hesaplama sonuçları kesin satış garantisi değildir. Sonuçlar, girilen verilerin doğruluğuna ve kullanılan matematiksel modelin varsayımlarına bağlıdır.",
+                "Kullanıcı fiyat kararını verirken stok, lojistik, reklam, vergi, rekabet, sezon, ürün kalitesi ve müşteri davranışı gibi ek faktörleri ayrıca değerlendirmelidir.",
+            ],
+        },
+        {
+            "heading": "Kullanıcı sorumlulukları",
+            "paragraphs": [
+                "Kullanıcı, forma girdiği verilerin doğru ve kullanım amacına uygun olmasından sorumludur. Yanlış veya eksik veri, yanıltıcı hesaplama sonuçlarına neden olabilir.",
+                "Uygulama, yasa dışı faaliyet, manipülatif piyasa davranışı, tüketiciyi yanıltıcı fiyatlandırma veya haksız ticari uygulama amacıyla kullanılmamalıdır.",
+            ],
+        },
+        {
+            "heading": "Finansal, hukuki ve ticari tavsiye değildir",
+            "paragraphs": [
+                "PriceOptimize AI tarafından üretilen sonuçlar genel hesaplama ve karar destek çıktısıdır. Finansal, hukuki, vergi veya yatırım danışmanlığı olarak yorumlanmamalıdır.",
+                "Önemli ticari kararlar öncesinde kullanıcıların kendi muhasebe, hukuk, finans veya sektör danışmanlarıyla değerlendirme yapması önerilir.",
+            ],
+        },
+        {
+            "heading": "Hizmet değişiklikleri",
+            "paragraphs": [
+                "PriceOptimize AI yeni hesaplama motorları, üyelik seçenekleri, ödeme planları, analitik özellikler veya reklam alanları ekleyebilir.",
+                "Hizmetin kapsamı değiştiğinde kullanım şartları güncellenebilir. Güncel şartlar bu sayfada yayınlanır.",
+            ],
+        },
+        {
+            "heading": "İletişim",
+            "paragraphs": [
+                "Kullanım şartları, hesaplama sonuçları veya site erişimiyle ilgili sorular için admin@priceoptimize.ai adresinden iletişime geçebilirsiniz.",
+            ],
+        },
+    ]
     return render(
         request,
         "core/terms.html",
         {
             "labels": labels,
+            "sections": sections,
             "current_language": current_language,
             "show_adsense": False,
             "canonical_url": _absolute_url("/terms/"),
@@ -1863,11 +1952,55 @@ def cookies_policy(request):
     current_language = (get_language() or "tr").split("-")[0]
     labels = {**TEXTS["en"], **TEXTS.get(current_language, TEXTS["en"])}
     page_description = "PriceOptimize AI çerez politikası ve analitik teknolojileri hakkında bilgi."
+    sections = [
+        {
+            "heading": "Çerez nedir?",
+            "paragraphs": [
+                "Çerezler, web sitesinin tarayıcı üzerinde küçük bilgiler tutmasını sağlayan teknik dosyalardır. Bu bilgiler siteyi çalıştırmak, tercihleri hatırlamak, güvenliği sağlamak ve kullanım istatistiklerini anlamak için kullanılabilir.",
+                "PriceOptimize AI, hesaplama ekranlarının düzgün çalışması ve kullanıcı deneyiminin iyileştirilmesi amacıyla çerez veya benzeri teknolojiler kullanabilir.",
+            ],
+        },
+        {
+            "heading": "Zorunlu çerezler",
+            "paragraphs": [
+                "Zorunlu çerezler site güvenliği, form gönderimi, dil tercihi ve oturum gibi temel işlevlerin çalışması için gereklidir.",
+                "Bu çerezler olmadan hesaplama formları, dil değiştirme, oturum açma veya güvenlik korumaları beklenen şekilde çalışmayabilir.",
+            ],
+        },
+        {
+            "heading": "Analitik çerezleri",
+            "paragraphs": [
+                "Analitik çerezleri, hangi sayfaların ziyaret edildiğini, kullanıcıların hangi motorlarla daha çok etkileşim kurduğunu ve hangi içeriklerin daha faydalı olduğunu anlamaya yardımcı olabilir.",
+                "Bu veriler siteyi geliştirmek, düşük değerli sayfaları iyileştirmek ve kullanıcıların daha açık hesaplama sonuçları görmesini sağlamak için değerlendirilir.",
+            ],
+        },
+        {
+            "heading": "Reklam çerezleri",
+            "paragraphs": [
+                "Google AdSense veya benzeri reklam teknolojileri aktif olduğunda reklam gösterimi, reklam güvenliği, kötüye kullanımın önlenmesi ve reklam performansının ölçülmesi için reklam çerezleri kullanılabilir.",
+                "Reklam çerezleri, kullanıcının tarayıcı veya Google hesabı ayarlarına göre kişiselleştirilmiş ya da kişiselleştirilmemiş reklam deneyimini etkileyebilir.",
+            ],
+        },
+        {
+            "heading": "Çerezleri yönetme",
+            "paragraphs": [
+                "Kullanıcılar tarayıcı ayarlarından çerezleri silebilir, engelleyebilir veya belirli siteler için izinleri değiştirebilir.",
+                "Avrupa Ekonomik Alanı, Birleşik Krallık veya İsviçre gibi bölgelerde gereken durumlarda kullanıcı rızası mesajı gösterilebilir ve reklam/analitik tercihleri bu mesaj üzerinden yönetilebilir.",
+            ],
+        },
+        {
+            "heading": "İletişim",
+            "paragraphs": [
+                "Çerez kullanımı veya gizlilik tercihleri hakkında sorularınız için admin@priceoptimize.ai adresinden iletişime geçebilirsiniz.",
+            ],
+        },
+    ]
     return render(
         request,
         "core/cookies.html",
         {
             "labels": labels,
+            "sections": sections,
             "current_language": current_language,
             "show_adsense": False,
             "canonical_url": _absolute_url("/cookies/"),

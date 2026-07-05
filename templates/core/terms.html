@@ -18,7 +18,14 @@
   <header class="app-header"><div class="header-inner"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true">↗</span>PriceOptimize AI</a><nav class="top-nav"><a href="/">Ana Sayfa</a><a href="/price-demand/">Dashboard</a><a href="/about/">Hakkımızda</a><a href="/contact/">İletişim</a></nav><div class="header-actions">{% include "core/_auth_links.html" %}</div></div></header>
   <main class="policy-main">
     <section class="hero-row"><div><p class="eyebrow"><a href="/">← PriceOptimize AI</a></p><h1 class="hero-title">{{ labels.terms_title }}</h1><p class="hero-subtitle">{{ labels.terms_intro }}</p></div></section>
-    <article class="content-card"><h2>{{ labels.terms_section_use }}</h2><p>{{ labels.terms_use_text }}</p><h2>{{ labels.terms_section_content }}</h2><p>{{ labels.terms_content_text }}</p><h2>{{ labels.terms_section_changes }}</h2><p>{{ labels.terms_changes_text }}</p></article>
+    <article class="content-card">
+      {% for section in sections %}
+        <h2>{{ section.heading }}</h2>
+        {% for paragraph in section.paragraphs %}
+          <p>{{ paragraph }}</p>
+        {% endfor %}
+      {% endfor %}
+    </article>
   </main>
   <footer class="app-footer"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true">↗</span>PriceOptimize AI</a><nav class="footer-links"><a href="/privacy/">{{ labels.privacy_link }}</a><a href="/terms/">{{ labels.terms_link }}</a><a href="/cookies/">{{ labels.cookies_link }}</a></nav></footer>
 </body>
