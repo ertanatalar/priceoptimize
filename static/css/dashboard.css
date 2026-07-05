@@ -290,6 +290,9 @@ body.drawer-open .drawer-overlay { opacity: 1; pointer-events: auto; }
   gap: 18px;
   align-items: start;
 }
+.portal-grid {
+  grid-template-columns: 1fr;
+}
 .side-grid { display: grid; gap: 14px; }
 .panel { padding: 20px; }
 .panel-header {
@@ -416,6 +419,15 @@ input:focus, select:focus, textarea:focus {
 .info-card ul { margin: 0; padding-left: 1.1rem; }
 
 .alert-stack { display: grid; gap: 10px; }
+.engine-support-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, .7fr);
+  gap: 16px;
+  margin-top: 18px;
+}
+.support-panel {
+  box-shadow: none;
+}
 .alert {
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -598,6 +610,7 @@ input:focus, select:focus, textarea:focus {
   .top-nav, .header-actions { display: none; }
   .mobile-menu-button { display: grid; place-items: center; margin-left: auto; }
   .dashboard-grid { grid-template-columns: 1fr; }
+  .engine-support-grid { grid-template-columns: 1fr; }
   .stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .engine-list, .info-grid { grid-template-columns: 1fr; }
 }
