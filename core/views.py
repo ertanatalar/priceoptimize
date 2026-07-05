@@ -27,6 +27,7 @@ CURRENCIES = {
 ENGINE_MENU = [
     {"path": "/price-demand/", "enabled": True},
     {"path": "/price-demand/discount-optimizer/", "enabled": True},
+    {"path": "/price-demand/smart-pricing/", "enabled": True},
 ]
 
 SITE_BASE_URL = os.getenv("SITE_BASE_URL", "https://www.priceoptimize.ai").rstrip("/")
@@ -35,6 +36,7 @@ AI_RELEVANT_PATHS = [
     ("Home", "/"),
     ("Price and Sales Calculator", "/price-demand/"),
     ("Discount Impact Engine", "/price-demand/discount-optimizer/"),
+    ("Smart Price Update Assistant", "/price-demand/smart-pricing/"),
     ("About PriceOptimize.ai", "/about/"),
     ("How to use PriceOptimize.ai", "/how-to/"),
     ("Frequently Asked Questions", "/faq/"),
@@ -94,6 +96,35 @@ TEXTS = {
         "engine_price_demand_desc": "Iki fiyat bilgisinden en cok kazandiran fiyati bulur.",
         "engine_discount_title": "Indirim Etki Motoru",
         "engine_discount_desc": "Kalkulus tabanli fiyat indirimi modeli: her indirim adiminda satis artisini kullanarak maksimum kari bulur.",
+        "engine_smart_title": "Akilli Fiyat Guncelleme",
+        "engine_smart_desc": "Maliyet, rakip fiyati ve satis degisimini izleyerek net fiyat onerisi uretir.",
+        "smart_page_title": "Akilli Fiyat Guncelleme",
+        "smart_intro": "Urununuzu tek sefer hesaplamak yerine maliyet, rakip fiyati, satis sonucu ve kar hedefiyle duzenli fiyat onerisine donusturun.",
+        "smart_product_name": "Urun Adi",
+        "smart_current_price": "Mevcut Satis Fiyati",
+        "smart_unit_cost": "Birim Maliyet",
+        "smart_competitor_price": "Rakip Ortalama Fiyati",
+        "smart_previous_sales": "Onceki Donem Satis Adedi",
+        "smart_current_sales": "Son Donem Satis Adedi",
+        "smart_target_margin": "Hedef Brut Kar Marji (%)",
+        "smart_tested_price": "Test Edilen Yeni Fiyat (Opsiyonel)",
+        "smart_realized_sales": "Test Sonrasi Gerceklesen Satis (Opsiyonel)",
+        "smart_result_title": "Fiyat Guncelleme Onerisi",
+        "smart_recommended_price": "Onerilen Satis Fiyati",
+        "smart_reason": "Oneri Nedeni",
+        "smart_action": "Onerilen Islem",
+        "smart_tracking": "Takip Edilecek Sonuc",
+        "smart_expected_margin": "Tahmini Brut Kar Marji",
+        "smart_market_gap": "Pazar Farki",
+        "smart_sales_trend": "Satis Degisimi",
+        "smart_default_action": "Fiyati onerilen seviyede 7 gun test edin ve gerceklesen satis adedini tekrar girin.",
+        "smart_error": "Lutfen mevcut fiyat, birim maliyet, rakip ortalama fiyati ve satis adetlerini sayi olarak girin.",
+        "smart_loop_title": "Temel Dongu",
+        "smart_loop_text": "Veriyi al, analiz et, fiyat oner, nedenini acikla, sonucu olc ve yeni veriye gore oneriyi guncelle.",
+        "smart_example_title": "Ornek",
+        "smart_example_text": "Mevcut fiyat 899 TL, rakip ortalamasi 835 TL ve maliyet 690 TL ise sistem pazara gore yuksek kalan fiyati dusurup marji koruyan yeni fiyat onerir.",
+        "smart_next_step_title": "Sonraki Adim",
+        "smart_next_step_text": "Uye sistemi eklendiginde bu motor urunleri kaydedip belirli araliklarla otomatik kontrol edecek.",
         "go_to_engine": "Hesapla",
         "guides_menu": "Ayrintili Rehberler",
         "home_guide_link": "Fiyat ve talep rehberini oku",
@@ -262,6 +293,35 @@ TEXTS = {
         "engine_price_demand_desc": "Builds demand model and profit optimization from two data points.",
         "engine_discount_title": "Discount Impact Engine",
         "engine_discount_desc": "Calculus-based price reduction model: finds maximum profit using step discount and demand increase.",
+        "engine_smart_title": "Smart Price Update",
+        "engine_smart_desc": "Turns cost, competitor price, and sales trend into a clear pricing action.",
+        "smart_page_title": "Smart Price Update",
+        "smart_intro": "Turn one-time price calculation into a repeatable pricing assistant using cost, competitor price, sales outcome, and target margin.",
+        "smart_product_name": "Product Name",
+        "smart_current_price": "Current Selling Price",
+        "smart_unit_cost": "Unit Cost",
+        "smart_competitor_price": "Competitor Average Price",
+        "smart_previous_sales": "Previous Period Units Sold",
+        "smart_current_sales": "Latest Period Units Sold",
+        "smart_target_margin": "Target Gross Margin (%)",
+        "smart_tested_price": "Tested New Price (Optional)",
+        "smart_realized_sales": "Realized Units After Test (Optional)",
+        "smart_result_title": "Price Update Recommendation",
+        "smart_recommended_price": "Recommended Selling Price",
+        "smart_reason": "Recommendation Reason",
+        "smart_action": "Recommended Action",
+        "smart_tracking": "Outcome to Track",
+        "smart_expected_margin": "Estimated Gross Margin",
+        "smart_market_gap": "Market Gap",
+        "smart_sales_trend": "Sales Change",
+        "smart_default_action": "Test the recommended price for 7 days and enter realized unit sales again.",
+        "smart_error": "Please enter current price, unit cost, competitor average price, and sales quantities as numbers.",
+        "smart_loop_title": "Core Loop",
+        "smart_loop_text": "Collect data, analyze it, recommend a price, explain why, measure the outcome, and update the next recommendation.",
+        "smart_example_title": "Example",
+        "smart_example_text": "If current price is 899 TRY, competitor average is 835 TRY, and cost is 690 TRY, the assistant recommends a lower market-fit price while protecting margin.",
+        "smart_next_step_title": "Next Step",
+        "smart_next_step_text": "After account features are added, this engine can save products and check them automatically at regular intervals.",
         "go_to_engine": "Open Engine",
         "guides_menu": "Detailed Guides",
         "home_guide_link": "Read the price and demand guide",
@@ -870,6 +930,12 @@ def _localized_engines(labels: dict) -> list[dict]:
             "path": "/price-demand/discount-optimizer/",
             "enabled": True,
         },
+        {
+            "title": labels["engine_smart_title"],
+            "description": labels["engine_smart_desc"],
+            "path": "/price-demand/smart-pricing/",
+            "enabled": True,
+        },
     ]
 
 
@@ -922,6 +988,7 @@ def _software_schema() -> dict:
         "featureList": [
             "Price-demand optimization from two sales points",
             "Discount impact and maximum profit calculation",
+            "Smart price update recommendation from competitor price, sales trend, and margin target",
             "Unit cost aware profit estimation",
             "Multilingual public interface",
             "Public guides, FAQs, privacy, terms, and cookie pages",
@@ -1838,6 +1905,7 @@ def llms_txt(request):
         "Primary capabilities:",
         "- Price and Sales Calculator: builds a simple demand model from two price-quantity points and estimates the profit-maximizing price.",
         "- Discount Impact Engine: compares discount steps using observed sales lift and estimates the discount level with the highest profit.",
+        "- Smart Price Update Assistant: converts product cost, competitor average price, sales trend, and target margin into an actionable price recommendation.",
         "- Public educational guides: explain model assumptions, worked examples, limitations, and safe interpretation of outputs.",
         "",
         "Important limitations:",
@@ -1869,6 +1937,7 @@ def sitemap_xml(request):
         _absolute_url(reverse("portal")),
         _absolute_url(reverse("home")),
         _absolute_url(reverse("discount_optimizer")),
+        _absolute_url(reverse("smart_pricing")),
         _absolute_url(reverse("about")),
         _absolute_url(reverse("how_to")),
         _absolute_url(reverse("faq")),
@@ -1907,6 +1976,157 @@ def robots_txt(request):
         ]
     )
     return HttpResponse(content, content_type="text/plain; charset=utf-8")
+
+
+def smart_pricing(request):
+    current_language = (get_language() or "tr").split("-")[0]
+    labels = {**TEXTS["en"], **TEXTS.get(current_language, TEXTS["en"])}
+    engines = _localized_engines(labels)
+    selected_currency = request.POST.get("currency", "TRY")
+    selected_symbol = CURRENCIES.get(selected_currency, "₺")
+    page_description = (
+        "Ürün maliyeti, rakip ortalama fiyatı, satış trendi ve hedef kâr marjına göre "
+        "uygulanabilir fiyat güncelleme önerisi üretin."
+    )
+
+    inputs = {
+        "product_name": request.POST.get("product_name", ""),
+        "current_price": request.POST.get("current_price", ""),
+        "unit_cost": request.POST.get("unit_cost", ""),
+        "competitor_price": request.POST.get("competitor_price", ""),
+        "previous_sales": request.POST.get("previous_sales", ""),
+        "current_sales": request.POST.get("current_sales", ""),
+        "target_margin": request.POST.get("target_margin", "18"),
+        "tested_price": request.POST.get("tested_price", ""),
+        "realized_sales": request.POST.get("realized_sales", ""),
+    }
+
+    context = {
+        "labels": labels,
+        "engines": engines,
+        "current_language": current_language,
+        "language_options": LANGUAGE_OPTIONS,
+        "show_adsense": False,
+        "currencies": CURRENCIES,
+        "selected_currency": selected_currency,
+        "selected_symbol": selected_symbol,
+        "inputs": inputs,
+        "canonical_url": _absolute_url("/price-demand/smart-pricing/"),
+        "page_description": page_description,
+        "structured_data_json": _structured_data_json(
+            labels["smart_page_title"],
+            page_description,
+            "/price-demand/smart-pricing/",
+        ),
+    }
+
+    if request.method != "POST":
+        return render(request, "core/smart_pricing.html", context)
+
+    def round2(value: Decimal) -> Decimal:
+        return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+    def safe_pct(numerator: Decimal, denominator: Decimal) -> Decimal:
+        if denominator == 0:
+            return Decimal("0")
+        return (numerator / denominator) * Decimal("100")
+
+    try:
+        current_price = _to_decimal(inputs["current_price"])
+        unit_cost = _to_decimal(inputs["unit_cost"])
+        competitor_price = _to_decimal(inputs["competitor_price"])
+        previous_sales = _to_decimal(inputs["previous_sales"])
+        current_sales = _to_decimal(inputs["current_sales"])
+        target_margin = _to_decimal(inputs["target_margin"] or "18")
+    except (InvalidOperation, AttributeError):
+        context["error"] = labels["smart_error"]
+        return render(request, "core/smart_pricing.html", context)
+
+    if current_price <= 0 or unit_cost < 0 or competitor_price <= 0 or previous_sales < 0 or current_sales < 0:
+        context["error"] = labels["smart_error"]
+        return render(request, "core/smart_pricing.html", context)
+
+    target_margin = max(Decimal("0"), min(target_margin, Decimal("95")))
+    margin_floor = unit_cost / (Decimal("1") - (target_margin / Decimal("100"))) if target_margin < 100 else current_price
+    market_gap_pct = safe_pct(current_price - competitor_price, competitor_price)
+    sales_change_pct = safe_pct(current_sales - previous_sales, previous_sales)
+
+    # The first MVP uses transparent business rules rather than hidden automation.
+    market_anchor = competitor_price * Decimal("1.015")
+    recommendation = current_price
+    reasons = []
+
+    if current_price < margin_floor:
+        recommendation = margin_floor
+        reasons.append(
+            f"Mevcut fiyat hedef brüt kâr marjını korumak için gereken {selected_symbol}{round2(margin_floor)} seviyesinin altında."
+        )
+    elif market_gap_pct > Decimal("5"):
+        recommendation = max(margin_floor, market_anchor)
+        reasons.append(
+            f"Mevcut fiyat rakip ortalamasının yaklaşık %{round2(market_gap_pct)} üzerinde."
+        )
+    elif market_gap_pct < Decimal("-8") and sales_change_pct >= Decimal("0"):
+        recommendation = max(margin_floor, competitor_price * Decimal("0.99"))
+        reasons.append(
+            f"Fiyatınız pazar ortalamasının %{abs(round2(market_gap_pct))} altında ve satışlar düşmüyor; küçük artış alanı var."
+        )
+    else:
+        recommendation = max(margin_floor, current_price)
+        reasons.append("Mevcut fiyat pazar ortalamasına yakın; ana risk satış trendi ve marj tarafında izlenmeli.")
+
+    if sales_change_pct < Decimal("-10") and recommendation >= current_price:
+        recommendation = max(margin_floor, current_price * Decimal("0.97"))
+        reasons.append(
+            f"Son satış adedi önceki döneme göre %{abs(round2(sales_change_pct))} azaldı; kontrollü fiyat testi önerilir."
+        )
+    elif sales_change_pct > Decimal("10"):
+        reasons.append(
+            f"Satış adedi önceki döneme göre %{round2(sales_change_pct)} arttı; öneri marjı koruyarak pazar seviyesinde kalır."
+        )
+
+    recommendation = round2(recommendation)
+    expected_margin = safe_pct(recommendation - unit_cost, recommendation)
+    recommended_delta = recommendation - current_price
+
+    action = labels["smart_default_action"]
+    if recommended_delta < 0:
+        action = f"Fiyatı {selected_symbol}{recommendation} seviyesine indirip 7 gün satış adedini takip edin."
+    elif recommended_delta > 0:
+        action = f"Fiyatı {selected_symbol}{recommendation} seviyesine yükseltmeyi küçük bir test grubunda deneyin."
+
+    learning_note = None
+    tested_price_text = (inputs.get("tested_price") or "").strip()
+    realized_sales_text = (inputs.get("realized_sales") or "").strip()
+    if tested_price_text and realized_sales_text:
+        try:
+            tested_price = _to_decimal(tested_price_text)
+            realized_sales = _to_decimal(realized_sales_text)
+            test_sales_change = safe_pct(realized_sales - current_sales, current_sales)
+            test_revenue = tested_price * realized_sales
+            current_revenue = current_price * current_sales
+            learning_note = (
+                f"Test sonucunda satış değişimi %{round2(test_sales_change)} oldu. "
+                f"Test geliri {selected_symbol}{round2(test_revenue)}, mevcut dönem geliri {selected_symbol}{round2(current_revenue)}."
+            )
+        except InvalidOperation:
+            learning_note = None
+
+    context["result"] = {
+        "product_name": inputs["product_name"] or "Ürün",
+        "current_price": round2(current_price),
+        "competitor_price": round2(competitor_price),
+        "recommended_price": recommendation,
+        "recommended_delta": round2(recommended_delta),
+        "expected_margin": round2(expected_margin),
+        "market_gap_pct": round2(market_gap_pct),
+        "sales_change_pct": round2(sales_change_pct),
+        "action": action,
+        "reasons": reasons,
+        "tracking": "7 gün sonra gerçekleşen satış adedini girin; sistem bir sonraki öneriyi bu sonuca göre güncellesin.",
+        "learning_note": learning_note,
+    }
+    return render(request, "core/smart_pricing.html", context)
 
 
 def discount_optimizer(request):

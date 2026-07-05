@@ -10,6 +10,7 @@ class PublicPageTests(SimpleTestCase):
         "portal",
         "home",
         "discount_optimizer",
+        "smart_pricing",
         "about",
         "how_to",
         "faq",
@@ -41,6 +42,7 @@ class PublicPageTests(SimpleTestCase):
             "ai_overview",
             "price_demand_guide",
             "discount_guide",
+            "smart_pricing",
         ):
             self.assertContains(response, reverse(route_name))
 
@@ -57,12 +59,30 @@ class PublicPageTests(SimpleTestCase):
         self.assertContains(robots_response, "/llms.txt")
 
     def test_core_pages_include_structured_data(self):
-        for route_name in ("portal", "home", "discount_optimizer", "ai_overview"):
+        for route_name in ("portal", "home", "discount_optimizer", "smart_pricing", "ai_overview"):
             with self.subTest(route_name=route_name):
                 response = self.client.get(reverse(route_name))
                 self.assertEqual(response.status_code, 200)
                 self.assertContains(response, 'type="application/ld+json"')
                 self.assertContains(response, "PriceOptimize AI")
+
+    def test_smart_pricing_returns_recommendation(self):
+        response = self.client.post(
+            reverse("smart_pricing"),
+            {
+                "product_name": "Test Product",
+                "current_price": "899",
+                "unit_cost": "690",
+                "competitor_price": "835",
+                "previous_sales": "120",
+                "current_sales": "98",
+                "target_margin": "18",
+                "currency": "TRY",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Fiyat Guncelleme Onerisi")
+        self.assertContains(response, "Onerilen Satis Fiyati")
 
 
 class AdsTxtTests(SimpleTestCase):

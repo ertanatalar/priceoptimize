@@ -362,6 +362,13 @@ input:focus, select:focus, textarea:focus {
 .result h2, .result-card h2 { margin-top: 0; }
 .results-grid, .result-grid { display: grid; gap: 9px; }
 .results-grid p, .result-grid p { margin: 0; color: #334155; line-height: 1.5; }
+.reason-list {
+  margin: 8px 0 16px;
+  padding-left: 1.1rem;
+  color: #334155;
+  line-height: 1.6;
+}
+.reason-list li + li { margin-top: 6px; }
 .ok { color: var(--green); font-weight: 760; }
 .warn { color: var(--orange); font-weight: 760; }
 .badge {
