@@ -1,4 +1,9 @@
 {% if request.user.is_authenticated %}
+  {% if is_pro_user %}
+    <span class="auth-pill pro">Pro</span>
+  {% else %}
+    <a class="auth-link" href="{% url 'upgrade' %}">Upgrade</a>
+  {% endif %}
   <form class="auth-inline-form" action="{% url 'sign_out' %}" method="post">
     {% csrf_token %}
     <button class="auth-link" type="submit">Sign out</button>

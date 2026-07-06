@@ -1,20 +1,29 @@
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+from datetime import timezone as datetime_timezone
+import hashlib
+import hmac
 from itertools import zip_longest
 import json
 from math import isfinite
 import os
 import re
 
+from django.contrib.auth import get_user_model
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.decorators import login_required
 from django.conf import settings
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils.dateparse import parse_datetime
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import get_language
 from django.utils import timezone
 
+from .models import UserSubscription
 from .publisher_content import PUBLISHER_CONTENT
 
 
@@ -1240,6 +1249,147 @@ def sign_out(request):
     if request.method == "POST":
         logout(request)
     return redirect("portal")
+
+
+def _parse_webhook_datetime(value):
+    if not value:
+        return None
+    parsed = parse_datetime(str(value))
+    if parsed is None:
+        return None
+    if timezone.is_naive(parsed):
+        parsed = timezone.make_aware(parsed, timezone=datetime_timezone.utc)
+    return parsed
+
+
+def _lemon_signature_is_valid(request):
+    secret = settings.LEMON_SQUEEZY_WEBHOOK_SECRET
+    signature = request.headers.get("X-Signature", "")
+    if not secret:
+        return settings.DEBUG
+    expected = hmac.new(secret.encode("utf-8"), request.body, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, signature)
+
+
+def _payload_value(payload, *keys):
+    current = payload
+    for key in keys:
+        if not isinstance(current, dict):
+            return None
+        current = current.get(key)
+    return current
+
+
+def _find_webhook_user(payload):
+    User = get_user_model()
+    custom_data = (
+        _payload_value(payload, "meta", "custom_data")
+        or _payload_value(payload, "data", "attributes", "custom_data")
+        or {}
+    )
+    user_id = custom_data.get("user_id") if isinstance(custom_data, dict) else None
+    if user_id:
+        user = User.objects.filter(pk=user_id).first()
+        if user:
+            return user
+
+    attrs = _payload_value(payload, "data", "attributes") or {}
+    email = (
+        attrs.get("user_email")
+        or attrs.get("customer_email")
+        or attrs.get("email")
+        or (custom_data.get("email") if isinstance(custom_data, dict) else None)
+    )
+    if not email:
+        return None
+    return (
+        User.objects.filter(email__iexact=email).first()
+        or User.objects.filter(username__iexact=email).first()
+    )
+
+
+def _sync_subscription_from_lemon(payload, user):
+    attrs = _payload_value(payload, "data", "attributes") or {}
+    event_name = (_payload_value(payload, "meta", "event_name") or "").lower()
+    raw_status = str(attrs.get("status") or "").lower()
+    active_statuses = {"active", "on_trial", "paid"}
+    inactive_events = {
+        "subscription_cancelled",
+        "subscription_expired",
+        "subscription_paused",
+        "subscription_payment_failed",
+    }
+
+    if raw_status in active_statuses and event_name not in inactive_events:
+        plan = UserSubscription.PLAN_PRO
+        status = UserSubscription.STATUS_ACTIVE
+    elif raw_status in {"past_due", "unpaid"}:
+        plan = UserSubscription.PLAN_FREE
+        status = UserSubscription.STATUS_PAST_DUE
+    elif "cancel" in event_name or raw_status == "cancelled":
+        plan = UserSubscription.PLAN_FREE
+        status = UserSubscription.STATUS_CANCELLED
+    elif "expire" in event_name or raw_status == "expired":
+        plan = UserSubscription.PLAN_FREE
+        status = UserSubscription.STATUS_EXPIRED
+    else:
+        plan = UserSubscription.PLAN_FREE
+        status = UserSubscription.STATUS_INACTIVE
+
+    subscription, _ = UserSubscription.objects.get_or_create(user=user)
+    subscription.plan = plan
+    subscription.status = status
+    subscription.provider = "lemon_squeezy"
+    subscription.customer_id = str(attrs.get("customer_id") or subscription.customer_id or "")
+    subscription.subscription_id = str(
+        attrs.get("subscription_id")
+        or _payload_value(payload, "data", "id")
+        or subscription.subscription_id
+        or ""
+    )
+    subscription.order_id = str(attrs.get("order_id") or subscription.order_id or "")
+    subscription.product_id = str(attrs.get("product_id") or subscription.product_id or "")
+    subscription.variant_id = str(attrs.get("variant_id") or subscription.variant_id or "")
+    subscription.user_email = attrs.get("user_email") or attrs.get("customer_email") or user.email or user.username
+    subscription.renews_at = _parse_webhook_datetime(attrs.get("renews_at")) or subscription.renews_at
+    subscription.ends_at = _parse_webhook_datetime(attrs.get("ends_at")) or subscription.ends_at
+    subscription.raw_payload = payload
+    subscription.save()
+    return subscription
+
+
+@login_required
+def upgrade(request):
+    subscription, _ = UserSubscription.objects.get_or_create(user=request.user)
+    return render(
+        request,
+        "core/upgrade.html",
+        {
+            "subscription": subscription,
+            "checkout_url": settings.LEMON_SQUEEZY_CHECKOUT_URL,
+            "show_adsense": False,
+        },
+    )
+
+
+@csrf_exempt
+@require_POST
+def lemon_squeezy_webhook(request):
+    if not _lemon_signature_is_valid(request):
+        status_code = 503 if not settings.LEMON_SQUEEZY_WEBHOOK_SECRET and not settings.DEBUG else 403
+        return JsonResponse({"ok": False, "error": "Invalid or missing webhook signature."}, status=status_code)
+
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except json.JSONDecodeError:
+        return JsonResponse({"ok": False, "error": "Invalid JSON payload."}, status=400)
+
+    user = _find_webhook_user(payload)
+    if user is None:
+        return JsonResponse({"ok": True, "detail": "No matching local user found."}, status=202)
+
+    subscription = _sync_subscription_from_lemon(payload, user)
+    return JsonResponse({"ok": True, "plan": subscription.plan, "status": subscription.status})
 
 
 def _extract_decimal_by_patterns(text: str, patterns: list[str]) -> Decimal | None:

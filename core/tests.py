@@ -1,8 +1,13 @@
 import os
 from unittest.mock import patch
 
+from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase, override_settings
+from django.test import TestCase
 from django.urls import reverse
+
+from config.settings import database_config_from_url
+from core.models import UserSubscription
 
 
 class PublicPageTests(SimpleTestCase):
@@ -132,3 +137,74 @@ class AdsTxtTests(SimpleTestCase):
         response = self.client.get(reverse("ads_txt"))
         self.assertEqual(response.status_code, 503)
         self.assertNotContains(response, "pub-0000000000000000", status_code=503)
+
+
+class DatabaseConfigurationTests(SimpleTestCase):
+    def test_mysql_database_url_builds_mysql_config(self):
+        config = database_config_from_url(
+            "mysql://price_user:secret%40pass@mysql.example.com:3307/price_db"
+        )
+
+        self.assertEqual(config["ENGINE"], "django.db.backends.mysql")
+        self.assertEqual(config["NAME"], "price_db")
+        self.assertEqual(config["USER"], "price_user")
+        self.assertEqual(config["PASSWORD"], "secret@pass")
+        self.assertEqual(config["HOST"], "mysql.example.com")
+        self.assertEqual(config["PORT"], "3307")
+        self.assertEqual(config["OPTIONS"]["charset"], "utf8mb4")
+
+
+class BillingTests(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(
+            username="owner@example.com",
+            email="owner@example.com",
+            password="safe-password-123",
+        )
+
+    def test_authenticated_user_can_open_upgrade_page(self):
+        self.client.login(username="owner@example.com", password="safe-password-123")
+        response = self.client.get(reverse("upgrade"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "PriceOptimize AI Pro")
+        self.assertContains(response, "LEMON_SQUEEZY_CHECKOUT_URL")
+
+    @override_settings(DEBUG=True, LEMON_SQUEEZY_WEBHOOK_SECRET="")
+    def test_local_webhook_can_activate_matching_user(self):
+        payload = {
+            "meta": {"event_name": "subscription_created"},
+            "data": {
+                "id": "sub_123",
+                "type": "subscriptions",
+                "attributes": {
+                    "status": "active",
+                    "user_email": "owner@example.com",
+                    "customer_id": 456,
+                    "variant_id": 789,
+                    "product_id": 111,
+                    "renews_at": "2026-08-01T00:00:00Z",
+                },
+            },
+        }
+
+        response = self.client.post(
+            reverse("lemon_squeezy_webhook"),
+            data=payload,
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        subscription = UserSubscription.objects.get(user=self.user)
+        self.assertTrue(subscription.is_pro)
+        self.assertEqual(subscription.subscription_id, "sub_123")
+        self.assertEqual(subscription.variant_id, "789")
+
+    @override_settings(DEBUG=False, LEMON_SQUEEZY_WEBHOOK_SECRET="")
+    def test_production_webhook_without_secret_fails_loudly(self):
+        response = self.client.post(
+            reverse("lemon_squeezy_webhook"),
+            data={"meta": {"event_name": "subscription_created"}},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 503)

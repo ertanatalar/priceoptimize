@@ -134,6 +134,22 @@ button, input, select, textarea { font: inherit; }
   color: #ffffff;
   box-shadow: 0 14px 26px rgba(7, 92, 248, .24);
 }
+.auth-pill {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: #eef6ff;
+  color: var(--blue);
+  font-weight: 760;
+  white-space: nowrap;
+}
+.auth-pill.pro {
+  background: #dcfce7;
+  color: #047857;
+}
 .mobile-menu-button {
   display: none;
   width: 42px;
@@ -192,6 +208,11 @@ body.drawer-open .drawer-overlay { opacity: 1; pointer-events: auto; }
 .menu-item small { display: block; margin-top: 4px; color: #93c5fd; line-height: 1.35; }
 .menu-item.active { border-color: var(--cyan); background: rgba(14, 165, 255, .18); }
 .menu-item:hover { text-decoration: none; background: rgba(30, 64, 175, .32); }
+.plan-status {
+  border-color: rgba(52, 211, 153, .55);
+  background: rgba(5, 150, 105, .22);
+  color: #bbf7d0;
+}
 
 .app-main {
   width: min(100%, 1320px);
@@ -626,6 +647,78 @@ input:focus, select:focus, textarea:focus {
   color: #0870cf;
   font-size: .9rem;
 }
+.billing-main h1 {
+  margin: 0;
+  font-size: clamp(2.4rem, 6vw, 4.8rem);
+  letter-spacing: -.05em;
+}
+.hero-copy {
+  max-width: 760px;
+  color: var(--muted);
+  font-size: 1.18rem;
+  line-height: 1.55;
+}
+.pricing-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  margin: 26px 0;
+}
+.plan-card {
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  background: #fff;
+  padding: 28px;
+  box-shadow: var(--shadow);
+}
+.plan-card.highlighted {
+  border-color: rgba(7, 92, 248, .35);
+  background: linear-gradient(145deg, #ffffff, #eef6ff);
+}
+.plan-card h2 {
+  margin: 6px 0 10px;
+  font-size: 1.65rem;
+}
+.plan-price {
+  margin: 0 0 20px;
+  color: var(--blue);
+  font-size: 2rem;
+  font-weight: 780;
+}
+.feature-list {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 24px;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+}
+.feature-list li::before {
+  content: "✓";
+  margin-right: 8px;
+  color: #059669;
+  font-weight: 800;
+}
+.billing-note {
+  color: var(--muted);
+  font-size: .95rem;
+  line-height: 1.45;
+}
+.config-warning {
+  border: 1px solid #fbbf24;
+  border-radius: 16px;
+  background: #fffbeb;
+  color: #92400e;
+  padding: 16px;
+  line-height: 1.45;
+}
+.disabled-action {
+  pointer-events: none;
+  opacity: .76;
+}
+.billing-info code {
+  overflow-wrap: anywhere;
+}
 
 @media (max-width: 1020px) {
   .top-nav, .header-actions { display: none; }
@@ -649,6 +742,7 @@ input:focus, select:focus, textarea:focus {
   .stat-value { font-size: 1.12rem; }
   .panel { padding: 16px; }
   .language-form, .row, .form-row, .field-row, .field-row.sales-row { grid-template-columns: 1fr; }
+  .pricing-plan-grid { grid-template-columns: 1fr; }
   .remove-row-btn, .add-row-btn { width: 100%; }
   .app-footer { display: none; }
   .mobile-bottom-nav {

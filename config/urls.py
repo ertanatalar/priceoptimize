@@ -7,6 +7,7 @@ from django.views.i18n import set_language
 from core.views import (
     ads_txt,
     cookies_policy,
+    lemon_squeezy_webhook,
     llms_txt,
     portal,
     privacy_policy,
@@ -17,6 +18,7 @@ from core.views import (
     sign_up,
     sitemap_xml,
     terms_of_use,
+    upgrade,
 )
 
 admin_path = os.getenv("DJANGO_ADMIN_PATH", "admin/").lstrip("/")
@@ -42,6 +44,8 @@ urlpatterns = [
     path("signin/", sign_in, name="sign_in"),
     path("signup/", sign_up, name="sign_up"),
     path("signout/", sign_out, name="sign_out"),
+    path("upgrade/", upgrade, name="upgrade"),
+    path("webhooks/lemon-squeezy/", lemon_squeezy_webhook, name="lemon_squeezy_webhook"),
     path("pricing-assistant/", include("pricing.urls")),
     path("api/", include("pricing.api_urls")),
     path(

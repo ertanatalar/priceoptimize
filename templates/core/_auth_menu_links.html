@@ -1,4 +1,9 @@
 {% if request.user.is_authenticated %}
+  {% if is_pro_user %}
+    <span class="menu-item plan-status">Pro plan aktif</span>
+  {% else %}
+    <a class="menu-item" href="{% url 'upgrade' %}">Upgrade</a>
+  {% endif %}
   <form class="auth-inline-form" action="{% url 'sign_out' %}" method="post">
     {% csrf_token %}
     <button class="menu-item menu-button" type="submit">Sign out</button>

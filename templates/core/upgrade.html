@@ -1,0 +1,106 @@
+{% load static %}
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,follow">
+  <title>Upgrade | PriceOptimize AI</title>
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="brand" href="/"><span class="brand-mark" aria-hidden="true">↗</span>PriceOptimize AI</a>
+      <nav class="top-nav">
+        <a href="/">Ana Sayfa</a>
+        <a href="/price-demand/">Dashboard</a>
+        <a href="/about/">Hakkımızda</a>
+        <a href="/contact/">İletişim</a>
+      </nav>
+      <div class="header-actions">{% include "core/_auth_links.html" %}</div>
+      <button class="mobile-menu-button" id="menuToggle" aria-label="Menüyü aç">☰</button>
+    </div>
+  </header>
+
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <aside class="drawer" id="drawer">
+    <h2>PriceOptimize AI</h2>
+    <p class="drawer-subtitle">Hesap</p>
+    <nav class="menu-list">{% include "core/_auth_menu_links.html" %}</nav>
+    <p class="drawer-subtitle">Menü</p>
+    <nav class="menu-list">
+      <a class="menu-item" href="/">Ana Sayfa</a>
+      <a class="menu-item" href="/price-demand/">Dashboard</a>
+      <a class="menu-item" href="/price-demand/discount-optimizer/">İndirim Etki Motoru</a>
+      <a class="menu-item" href="/price-demand/smart-pricing/">Akıllı Fiyat Güncelleme</a>
+      <a class="menu-item" href="/about/">Hakkımızda</a>
+      <a class="menu-item" href="/contact/">İletişim</a>
+    </nav>
+  </aside>
+
+  <main class="app-main billing-main">
+    <section class="hero-row">
+      <div>
+        <p class="eyebrow">SUBSCRIPTION</p>
+        <h1>PriceOptimize AI Pro</h1>
+        <p class="hero-copy">
+          Daha fazla ürün, daha detaylı fiyat önerisi ve düzenli fiyat takip sistemi için Pro plana geçin.
+        </p>
+      </div>
+      <span class="auth-pill {% if subscription.is_pro %}pro{% endif %}">
+        Mevcut plan: {{ subscription.get_plan_display }}
+      </span>
+    </section>
+
+    <section class="pricing-plan-grid">
+      <article class="plan-card">
+        <p class="eyebrow">FREE</p>
+        <h2>Başlangıç</h2>
+        <p class="plan-price">₺0</p>
+        <ul class="feature-list">
+          <li>Temel fiyat-talep hesaplaması</li>
+          <li>İndirim etkisi hesaplaması</li>
+          <li>Genel eğitim ve rehber içerikleri</li>
+        </ul>
+      </article>
+
+      <article class="plan-card highlighted">
+        <p class="eyebrow">PRO</p>
+        <h2>Fiyatlandırma Asistanı</h2>
+        <p class="plan-price">Aylık abonelik</p>
+        <ul class="feature-list">
+          <li>Akıllı fiyat güncelleme önerileri</li>
+          <li>Ürün bazlı fiyatlandırma takibi</li>
+          <li>Rakip fiyatı, maliyet ve hedef marj analizi</li>
+          <li>Yeni motorlar eklendikçe Pro erişim</li>
+        </ul>
+        {% if subscription.is_pro %}
+          <span class="primary-action disabled-action">Pro plan aktif</span>
+        {% elif checkout_url %}
+          <a class="primary-action" href="{{ checkout_url }}" rel="noopener noreferrer">Pro Plana Geç</a>
+          <p class="billing-note">Ödeme ekranında bu hesapla kullandığınız e-posta adresini kullanın: {{ request.user.username }}</p>
+        {% else %}
+          <div class="config-warning">
+            Lemon Squeezy ödeme linki henüz tanımlı değil. Render Environment içine
+            <strong>LEMON_SQUEEZY_CHECKOUT_URL</strong> eklenmeli.
+          </div>
+        {% endif %}
+      </article>
+    </section>
+
+    <section class="panel billing-info">
+      <h2>Ödeme sistemi nasıl çalışır?</h2>
+      <p>
+        Ödeme Lemon Squeezy üzerinde alınır. Başarılı ödeme sonrası Lemon Squeezy,
+        PriceOptimize AI uygulamasına güvenli webhook gönderir ve hesabınız otomatik olarak Pro plana geçer.
+      </p>
+      <p>
+        Webhook adresi: <code>https://www.priceoptimize.ai/webhooks/lemon-squeezy/</code>
+      </p>
+    </section>
+  </main>
+
+  <script>(function(){const b=document.body,t=document.getElementById('menuToggle'),o=document.getElementById('drawerOverlay');const c=()=>b.classList.remove('drawer-open');if(t)t.addEventListener('click',()=>b.classList.toggle('drawer-open'));if(o)o.addEventListener('click',c);document.addEventListener('keydown',e=>{if(e.key==='Escape')c();});})();</script>
+</body>
+</html>

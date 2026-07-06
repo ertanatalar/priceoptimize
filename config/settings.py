@@ -2,6 +2,7 @@
 import importlib.util
 import os
 from pathlib import Path
+from urllib.parse import parse_qsl, unquote, urlparse
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -58,6 +59,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "core.context_processors.analytics_settings",
+                "core.context_processors.billing_settings",
             ],
         },
     },
@@ -68,12 +70,58 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATA_DIR = Path(os.getenv("DATA_DIR", BASE_DIR))
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": str(DATA_DIR / "db.sqlite3"),
+
+def database_config_from_url(database_url: str) -> dict:
+    """Build a Django database config from DATABASE_URL.
+
+    Local development keeps using SQLite by default. Production can set
+    DATABASE_URL to a MySQL URL without changing source code.
+    """
+    parsed = urlparse(database_url)
+    scheme = parsed.scheme.lower()
+
+    if scheme in {"mysql", "mysql2"}:
+        if importlib.util.find_spec("pymysql"):
+            import pymysql
+
+            pymysql.install_as_MySQLdb()
+
+        options = {
+            "charset": "utf8mb4",
+            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
+        }
+        query_options = dict(parse_qsl(parsed.query))
+        if query_options.get("ssl_ca"):
+            options["ssl"] = {"ca": query_options["ssl_ca"]}
+
+        return {
+            "ENGINE": "django.db.backends.mysql",
+            "NAME": unquote(parsed.path.lstrip("/")),
+            "USER": unquote(parsed.username or ""),
+            "PASSWORD": unquote(parsed.password or ""),
+            "HOST": parsed.hostname or "",
+            "PORT": str(parsed.port or 3306),
+            "OPTIONS": options,
+        }
+
+    if scheme in {"sqlite", "sqlite3"}:
+        return {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": unquote(parsed.path),
+        }
+
+    raise ValueError(f"Unsupported DATABASE_URL scheme: {scheme}")
+
+
+if os.getenv("DATABASE_URL"):
+    DATABASES = {"default": database_config_from_url(os.environ["DATABASE_URL"])}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": str(DATA_DIR / "db.sqlite3"),
+        }
     }
-}
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -112,6 +160,12 @@ if importlib.util.find_spec("whitenoise"):
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 PRICING_MAX_CHANGE_PERCENT = os.getenv("PRICING_MAX_CHANGE_PERCENT", "5")
+
+# Lemon Squeezy subscription settings. Checkout stays on Lemon Squeezy; the
+# application only stores the resulting plan state from signed webhooks.
+LEMON_SQUEEZY_CHECKOUT_URL = os.getenv("LEMON_SQUEEZY_CHECKOUT_URL", "").strip()
+LEMON_SQUEEZY_WEBHOOK_SECRET = os.getenv("LEMON_SQUEEZY_WEBHOOK_SECRET", "").strip()
+LEMON_SQUEEZY_PRO_VARIANT_ID = os.getenv("LEMON_SQUEEZY_PRO_VARIANT_ID", "").strip()
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SESSION_COOKIE_SECURE = not DEBUG
