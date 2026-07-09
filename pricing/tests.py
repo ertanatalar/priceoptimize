@@ -9,13 +9,20 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .models import (
+    ChannelMetadata,
     CompetitorPriceSnapshot,
+    CustomerAccountSignal,
+    ExperimentObservation,
+    ExternalSignal,
     Organization,
     OrganizationMembership,
     PriceRecommendation,
     Product,
     ProductPricingProfile,
+    Promotion,
     SalesSnapshot,
+    StockSnapshot,
+    TransactionRecord,
 )
 from .services.recommendation_engine import build_recommendation, minimum_allowed_price
 
@@ -132,6 +139,118 @@ class RecommendationEngineTests(PricingFixtureMixin, TestCase):
 
     def test_money_values_are_rounded_to_two_decimals(self):
         self.assertEqual(minimum_allowed_price(Decimal("333.33"), Decimal("17.5")), Decimal("404.04"))
+
+
+class PricingDataModelTests(PricingFixtureMixin, TestCase):
+    def test_extended_product_master_data_can_be_saved(self):
+        _user, organization, product, profile = self.create_pricing_fixture()
+        product.product_id = "ERP-1001"
+        product.title = "Noise Cancelling Headphones"
+        product.brand = "Acme"
+        product.category = "Electronics"
+        product.uom = "piece"
+        product.tax_class = "standard-vat"
+        product.lifecycle_stage = Product.LIFECYCLE_ACTIVE
+        product.full_clean()
+        product.save()
+
+        profile.landed_cost = Decimal("720.00")
+        profile.cogs = Decimal("690.00")
+        profile.shipping_cost = Decimal("30.00")
+        profile.msrp = Decimal("1299.00")
+        profile.map_price = Decimal("999.00")
+        profile.full_clean()
+        profile.save()
+
+        product.refresh_from_db()
+        self.assertEqual(product.product_id, "ERP-1001")
+        self.assertEqual(product.brand, "Acme")
+        self.assertEqual(organization.products.filter(product_id="ERP-1001").count(), 1)
+
+    def test_operational_pricing_inputs_can_be_saved(self):
+        _user, organization, product, _profile = self.create_pricing_fixture()
+        now = timezone.now()
+
+        transaction = TransactionRecord.objects.create(
+            organization=organization,
+            product=product,
+            timestamp=now,
+            sku="SKU-1",
+            channel="web",
+            qty=3,
+            net_price=Decimal("999.00"),
+            discount=Decimal("50.00"),
+            order_id="ORDER-1",
+        )
+        stock = StockSnapshot.objects.create(
+            organization=organization,
+            product=product,
+            on_hand=50,
+            reserved=5,
+            lead_time_days=7,
+            stockout_flag=False,
+            warehouse_id="IST-1",
+        )
+        promotion = Promotion.objects.create(
+            organization=organization,
+            product=product,
+            promo_id="PROMO-1",
+            promo_type=Promotion.TYPE_AMOUNT,
+            discount_depth=Decimal("50.00"),
+            start_at=now,
+            end_at=now + timedelta(days=7),
+            media_support=True,
+        )
+        channel = ChannelMetadata.objects.create(
+            organization=organization,
+            channel_name="marketplace",
+            vat_mode=ChannelMetadata.VAT_INCLUDED,
+            min_price=Decimal("800.00"),
+            max_price=Decimal("1400.00"),
+            update_limit=20,
+            currency="TRY",
+        )
+        customer_signal = CustomerAccountSignal.objects.create(
+            organization=organization,
+            account_hash="hash-123",
+            segment="b2b",
+            region="TR",
+            contract_flag=True,
+        )
+        external_signal = ExternalSignal.objects.create(
+            organization=organization,
+            signal_type=ExternalSignal.SIGNAL_FX,
+            name="USDTRY",
+            region="TR",
+            numeric_value=Decimal("32.5000"),
+        )
+        experiment = ExperimentObservation.objects.create(
+            organization=organization,
+            product=product,
+            variant="price-999",
+            assignment_ts=now,
+            holdout_group=False,
+            reason_code="price_elasticity_test",
+        )
+
+        self.assertEqual(transaction.qty, 3)
+        self.assertEqual(stock.warehouse_id, "IST-1")
+        self.assertEqual(promotion.promo_id, "PROMO-1")
+        self.assertEqual(channel.channel_name, "marketplace")
+        self.assertEqual(customer_signal.account_hash, "hash-123")
+        self.assertEqual(external_signal.signal_type, ExternalSignal.SIGNAL_FX)
+        self.assertEqual(experiment.reason_code, "price_elasticity_test")
+
+    def test_channel_price_guardrail_rejects_invalid_range(self):
+        _user, organization, _product, _profile = self.create_pricing_fixture()
+        channel = ChannelMetadata(
+            organization=organization,
+            channel_name="bad-channel",
+            min_price=Decimal("1200.00"),
+            max_price=Decimal("1000.00"),
+        )
+        with self.assertRaises(ValidationError):
+            channel.full_clean()
 
 
 class PricingApiTests(PricingFixtureMixin, TestCase):
