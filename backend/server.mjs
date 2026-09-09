@@ -14,6 +14,17 @@ function required(name) {
   return value;
 }
 
+function databaseConnectionOptions() {
+  const databaseUrl = new URL(required('DATABASE_URL'));
+  return {
+    host: databaseUrl.hostname,
+    port: Number(databaseUrl.port || 3306),
+    user: decodeURIComponent(databaseUrl.username),
+    password: decodeURIComponent(databaseUrl.password),
+    database: databaseUrl.pathname.replace(/^\//, ''),
+  };
+}
+
 function tokenMatches(header, expected) {
   if (!header?.startsWith('Bearer ')) return false;
   const actual = Buffer.from(header.slice(7));
@@ -70,7 +81,7 @@ function createPool() {
   const ca = process.env.MYSQL_CA_CERT?.replace(/\\n/g, '\n');
   if (!ca) throw new Error('MYSQL_CA_CERT ortam değişkeni zorunludur.');
   return mysql.createPool({
-    uri: required('DATABASE_URL'),
+    ...databaseConnectionOptions(),
     ssl: { ca, rejectUnauthorized: true },
     connectionLimit: 8,
     enableKeepAlive: true,
@@ -83,7 +94,7 @@ function createPool() {
 async function migrate() {
   const ca = required('MYSQL_CA_CERT').replace(/\\n/g, '\n');
   const connection = await mysql.createConnection({
-    uri: required('DATABASE_URL'),
+    ...databaseConnectionOptions(),
     ssl: { ca, rejectUnauthorized: true },
     multipleStatements: true,
     timezone: 'Z',
