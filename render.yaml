@@ -16,3 +16,9 @@ services:
         sync: false
       - key: DATABASE_API_TOKEN
         generateValue: true
+      - key: MONITOR_API_TOKEN
+        generateValue: true
+      - key: RESEND_API_KEY
+        sync: false
+      - key: PRICE_ALERT_FROM
+        value: Price Optimize <onboarding@resend.dev>
