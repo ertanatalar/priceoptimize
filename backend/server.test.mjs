@@ -6,7 +6,7 @@ process.env.NODE_ENV = 'test';
 const { createApp } = await import('./server.mjs');
 
 async function withServer(pool, run) {
-  const server = createApp(pool, 'test-token');
+  const server = createApp(pool, 'test-token', 'monitor-token');
   server.listen(0, '127.0.0.1');
   await once(server, 'listening');
   const { port } = server.address();
@@ -62,5 +62,13 @@ test('transaction rolls back after a failed statement', async () => {
     });
     assert.equal(response.status, 500);
     assert.deepEqual(events, ['begin', 'execute', 'rollback', 'release']);
+  });
+});
+
+test('monitor endpoint requires bearer token', async () => {
+  const pool = { execute: async () => [[]] };
+  await withServer(pool, async (origin) => {
+    const response = await fetch(`${origin}/v1/monitor`, { method: 'POST', body: '{}' });
+    assert.equal(response.status, 401);
   });
 });

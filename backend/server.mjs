@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import mysql from 'mysql2/promise';
+import { monitorAll } from './collector.mjs';
 
 const MAX_BODY_BYTES = 1024 * 1024;
 const PORT = Number(process.env.PORT || 3001);
@@ -108,7 +109,7 @@ async function migrate() {
   }
 }
 
-export function createApp(pool, apiToken) {
+export function createApp(pool, apiToken, monitorToken = apiToken) {
   return createServer(async (request, response) => {
     try {
       if (request.method === 'GET' && request.url === '/health') {
@@ -116,14 +117,19 @@ export function createApp(pool, apiToken) {
         return json(response, 200, { status: 'ok', database: 'mysql' });
       }
 
-      if (request.method !== 'POST' || !['/v1/query', '/v1/transaction'].includes(request.url)) {
+      if (request.method !== 'POST' || !['/v1/query', '/v1/transaction', '/v1/monitor'].includes(request.url)) {
         return json(response, 404, { error: 'Bulunamadı.' });
       }
-      if (!tokenMatches(request.headers.authorization, apiToken)) {
+      const expectedToken = request.url === '/v1/monitor' ? monitorToken : apiToken;
+      if (!tokenMatches(request.headers.authorization, expectedToken)) {
         return json(response, 401, { error: 'Yetkisiz istek.' });
       }
 
       const body = await readJson(request);
+      if (request.url === '/v1/monitor') {
+        const result = await monitorAll(pool);
+        return json(response, 200, result);
+      }
       if (request.url === '/v1/query') {
         validateStatement(body);
         const [rows] = await pool.execute(body.sql, body.params ?? []);
@@ -159,6 +165,6 @@ export function createApp(pool, apiToken) {
 if (process.env.NODE_ENV !== 'test') {
   await migrate();
   const pool = createPool();
-  const server = createApp(pool, required('DATABASE_API_TOKEN'));
+  const server = createApp(pool, required('DATABASE_API_TOKEN'), required('MONITOR_API_TOKEN'));
   server.listen(PORT, '0.0.0.0', () => console.log(`Database API listening on ${PORT}`));
 }
