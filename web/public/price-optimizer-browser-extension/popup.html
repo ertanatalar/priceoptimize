@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Price Optimizer</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main>
+      <div class="brand"><span>₺</span><div><strong>Price Optimizer</strong><small>Tarayıcı kontrolü</small></div></div>
+      <p id="status" class="status">Sayfadaki fiyat okunuyor…</p>
+      <form id="captureForm" hidden>
+        <label>Ürün<input id="title" type="text" readonly /></label>
+        <div class="row"><label>Fiyat<input id="price" type="number" min="0.01" step="0.01" required /></label><label>Para birimi<input id="currency" type="text" maxlength="3" value="TRY" required /></label></div>
+        <label class="check"><input id="inStock" type="checkbox" checked /> Ürün stokta görünüyor</label>
+        <p class="note">Fiyatı sayfadaki değerle karşılaştırın. Son kayıt panelde yapılacaktır.</p>
+        <button type="submit">Price Optimizer’da doğrula</button>
+      </form>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

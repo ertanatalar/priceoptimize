@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Price Optimizer Tarayıcı Kontrolü",
+  "version": "0.1.0",
+  "description": "Açtığınız rakip ürün sayfasındaki fiyatı sizin onayınızla Price Optimizer'a aktarır.",
+  "permissions": ["activeTab", "scripting"],
+  "action": {
+    "default_title": "Fiyatı Price Optimizer'a aktar",
+    "default_popup": "popup.html"
+  }
+}

@@ -1,5 +1,31 @@
 services:
   - type: web
+    name: priceoptimize-web
+    runtime: node
+    plan: free
+    rootDir: web
+    buildCommand: pnpm install --frozen-lockfile && pnpm build
+    startCommand: pnpm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PUBLIC_BASE_URL
+        value: https://www.priceoptimize.ai
+      - key: AUTH0_DOMAIN
+        value: dev-2pq2yw3olibhha8v.eu.auth0.com
+      - key: AUTH0_CLIENT_ID
+        value: l0tHj5T8cQq9FDK9qH73es20IcpaJ10l
+      - key: AUTH0_CLIENT_SECRET
+        sync: false
+      - key: AUTH0_SECRET
+        generateValue: true
+      - key: MYSQL_HTTP_URL
+        value: https://price-optimizer-database-api.onrender.com
+      - key: MYSQL_HTTP_TOKEN
+        sync: false
+
+  - type: web
     name: price-optimizer-database-api
     runtime: node
     plan: free
