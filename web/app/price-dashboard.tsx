@@ -482,20 +482,17 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
   }
 
   function downloadBrowserQueue() {
-    const pending = data.sources.filter(
-      (source) =>
-        source.price == null ||
-        source.error === 'HTTP_403' ||
-        source.error === 'ROBOTS_DENIED',
-    );
-    if (!pending.length) {
-      setMessage('Tarayıcıyla kontrol edilecek URL bulunmuyor.');
+    const selectedSources = featuredProduct
+      ? data.sources.filter((source) => source.productId === featuredProduct.id)
+      : [];
+    if (!selectedSources.length) {
+      setMessage('Seçili ürün grubunda indirilecek URL bulunmuyor.');
       return;
     }
     const payload = {
       format: 'priceoptimize-browser-queue-v1',
       generatedAt: new Date().toISOString(),
-      sources: pending.map(
+      sources: selectedSources.map(
         ({ id, url, merchant, productName, clientName, currency }) => ({
           id,
           url,
@@ -511,7 +508,7 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
       `priceoptimize-kontrol-listesi-${new Date().toISOString().slice(0, 10)}.json`,
     );
     setMessage(
-      `${pending.length} URL içeren toplu kontrol listesi indirildi. Dosyayı Price Optimizer eklentisinde açın.`,
+      `${selectedSources.length} URL içeren seçili ürün listesi indirildi. Dosyayı Price Optimizer eklentisinde açın.`,
     );
   }
 
@@ -991,8 +988,8 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                       tarayıcı kontrolü
                     </CardTitle>
                     <CardDescription>
-                      Bekleyen URL’leri tek tek tıklamadan normal Chrome
-                      oturumunuzda sırayla kontrol edin.
+                      Seçili ürün grubundaki tüm URL’leri tek tek tıklamadan
+                      normal Chrome oturumunuzda sırayla kontrol edin.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-2">
@@ -1014,7 +1011,8 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                       onClick={downloadBrowserQueue}
                     >
                       <Download />
-                      Bekleyen listeyi indir
+                      Tüm URL listesini indir (
+                      {featuredProduct?.sourceCount ?? 0})
                     </Button>
                     <input
                       ref={batchResultRef}
