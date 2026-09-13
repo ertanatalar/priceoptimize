@@ -17,6 +17,13 @@
         <p class="note">Fiyatı sayfadaki değerle karşılaştırın. Son kayıt panelde yapılacaktır.</p>
         <button type="submit">Price Optimizer’da doğrula</button>
       </form>
+      <section class="batch">
+        <div class="divider"><span>TOPLU KONTROL</span></div>
+        <p class="note">Panelden indirdiğiniz kontrol listesini seçin. Yalnızca listedeki mağazalar için izin istenir.</p>
+        <label>Kontrol listesi<input id="batchFile" type="file" accept=".json,application/json" /></label>
+        <p id="batchStatus" class="status">Toplu işlem hazır.</p>
+        <div class="actions"><button id="startBatch" type="button">Toplu kontrolü başlat</button><button id="cancelBatch" type="button" class="secondary" hidden>Durdur</button></div>
+      </section>
     </main>
     <script src="popup.js"></script>
   </body>

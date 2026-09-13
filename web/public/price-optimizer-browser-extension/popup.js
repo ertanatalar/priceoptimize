@@ -1,11 +1,16 @@
-const APP_ORIGIN = 'https://price-optimizer-ertan.learnandteachcode.chatgpt.site';
+const APP_ORIGIN = 'https://www.priceoptimize.ai';
 const statusElement = document.querySelector('#status');
 const form = document.querySelector('#captureForm');
 const titleInput = document.querySelector('#title');
 const priceInput = document.querySelector('#price');
 const currencyInput = document.querySelector('#currency');
 const stockInput = document.querySelector('#inStock');
+const batchFileInput = document.querySelector('#batchFile');
+const batchStatus = document.querySelector('#batchStatus');
+const startBatchButton = document.querySelector('#startBatch');
+const cancelBatchButton = document.querySelector('#cancelBatch');
 let capture = null;
+let batchSources = [];
 
 function showError(message) {
   statusElement.textContent = message;
@@ -84,5 +89,67 @@ form.addEventListener('submit', async (event) => {
   await chrome.tabs.create({ url: `${APP_ORIGIN}/capture?${query.toString()}` });
   window.close();
 });
+
+batchFileInput.addEventListener('change', async () => {
+  batchSources = [];
+  const file = batchFileInput.files?.[0];
+  if (!file) return;
+  try {
+    const payload = JSON.parse(await file.text());
+    if (payload.format !== 'priceoptimize-browser-queue-v1' || !Array.isArray(payload.sources) || !payload.sources.length) throw new Error();
+    batchSources = payload.sources;
+    batchStatus.textContent = `${batchSources.length} URL sıraya alındı.`;
+    batchStatus.className = 'status';
+  } catch {
+    batchStatus.textContent = 'Bu dosya geçerli bir Price Optimizer kontrol listesi değil.';
+    batchStatus.className = 'status error';
+  }
+});
+
+startBatchButton.addEventListener('click', async () => {
+  if (!batchSources.length) {
+    batchStatus.textContent = 'Önce panelden indirdiğiniz kontrol listesini seçin.';
+    batchStatus.className = 'status error';
+    return;
+  }
+  let origins;
+  try { origins = [...new Set(batchSources.map((source) => `${new URL(source.url).origin}/*`))]; }
+  catch { batchStatus.textContent = 'Listede geçersiz ürün adresi var.'; batchStatus.className = 'status error'; return; }
+  const granted = await chrome.permissions.request({ origins });
+  if (!granted) {
+    batchStatus.textContent = 'Toplu kontrol için listedeki mağazalara erişim izni verilmelidir.';
+    batchStatus.className = 'status error';
+    return;
+  }
+  const response = await chrome.runtime.sendMessage({ type: 'START_BROWSER_BATCH', sources: batchSources });
+  if (!response?.ok) {
+    batchStatus.textContent = response?.error || 'Toplu kontrol başlatılamadı.';
+    batchStatus.className = 'status error';
+    return;
+  }
+  await refreshBatchStatus();
+});
+
+cancelBatchButton.addEventListener('click', async () => {
+  await chrome.runtime.sendMessage({ type: 'CANCEL_BROWSER_BATCH' });
+  await refreshBatchStatus();
+});
+
+async function refreshBatchStatus() {
+  const { browserBatchState: state } = await chrome.storage.local.get('browserBatchState');
+  const running = state?.status === 'running';
+  startBatchButton.disabled = running;
+  cancelBatchButton.hidden = !running;
+  if (!state) return;
+  const completed = Number(state.index || 0);
+  const total = Number(state.sources?.length || 0);
+  if (running) batchStatus.textContent = `${completed}/${total} tamamlandı. Başarılı: ${state.results?.length || 0}, inceleme: ${state.failures?.length || 0}. Chrome’u açık bırakın.`;
+  else if (state.status === 'completed') batchStatus.textContent = `Tamamlandı. ${state.results?.length || 0} sonuç indirildi; ${state.failures?.length || 0} kayıt inceleme bekliyor.`;
+  else if (state.status === 'cancelled') batchStatus.textContent = 'İşlem durduruldu. Tamamlanan sonuçlar indirildi.';
+  batchStatus.className = 'status';
+}
+
+chrome.storage.onChanged.addListener((changes) => { if (changes.browserBatchState) void refreshBatchStatus(); });
+void refreshBatchStatus();
 
 initialize().catch(() => showError('Sayfadaki fiyat okunamadı. Fiyatı ürün sayfasında gördüğünüzden emin olun.'));
