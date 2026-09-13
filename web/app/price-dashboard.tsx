@@ -106,33 +106,42 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
 
   async function addClient(formData: FormData) {
     setSaving(true); setMessage(null);
-    const payload = Object.fromEntries(formData);
-    const response = await fetch('/api/clients', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
-    const result = await response.json() as { error?: string; status?: string };
-    setSaving(false);
-    if (!response.ok) { setMessage(result.error ?? 'Müşteri kaydedilemedi.'); return; }
-    setClientOpen(false); setMessage('Müşteri kaydedildi.'); await load();
+    try {
+      const payload = Object.fromEntries(formData);
+      await apiRequest('/api/clients', { method: 'POST', body: JSON.stringify(payload) }, 'Müşteri kaydedilemedi.');
+      setClientOpen(false); setMessage('Müşteri kaydedildi.'); await load();
+    } catch (error) {
+      setMessage(errorMessage(error, 'Müşteri kaydedilemedi.'));
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function addWatch(formData: FormData) {
     setSaving(true); setMessage(null);
-    const values = Object.fromEntries(formData);
-    const payload = { clientCode: values.clientCode, rows: [{ group: values.group, name: values.name, currency: values.currency, merchant: values.merchant, url: values.url, maxPriceDropPct: Number(values.maxPriceDropPct) }] };
-    const response = await fetch('/api/watches', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
-    const result = await response.json() as { error?: string; imported?: number; status?: string };
-    setSaving(false);
-    if (!response.ok) { setMessage(result.error ?? 'Rakip URL kaydedilemedi.'); return; }
-    setWatchOpen(false); setMessage('Rakip URL kaydedildi.'); await load();
+    try {
+      const values = Object.fromEntries(formData);
+      const payload = { clientCode: values.clientCode, rows: [{ group: values.group, name: values.name, currency: values.currency, merchant: values.merchant, url: values.url, maxPriceDropPct: Number(values.maxPriceDropPct) }] };
+      await apiRequest('/api/watches', { method: 'POST', body: JSON.stringify(payload) }, 'Rakip URL kaydedilemedi.');
+      setWatchOpen(false); setMessage('Rakip URL kaydedildi.'); await load();
+    } catch (error) {
+      setMessage(errorMessage(error, 'Rakip URL kaydedilemedi.'));
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function addProduct(formData: FormData) {
     setSaving(true); setMessage(null);
-    const values = Object.fromEntries(formData);
-    const response = await fetch('/api/products', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ clientCode: values.clientCode, sku: values.sku, name: values.name, currency: values.currency, maxPriceDropPct: Number(values.maxPriceDropPct) }) });
-    const result = await response.json() as { error?: string };
-    setSaving(false);
-    if (!response.ok) { setMessage(result.error ?? 'Ürün grubu kaydedilemedi.'); return; }
-    setProductOpen(false); setMessage('Ürün grubu kaydedildi.'); await load();
+    try {
+      const values = Object.fromEntries(formData);
+      await apiRequest('/api/products', { method: 'POST', body: JSON.stringify({ clientCode: values.clientCode, sku: values.sku, name: values.name, currency: values.currency, maxPriceDropPct: Number(values.maxPriceDropPct) }) }, 'Ürün grubu kaydedilemedi.');
+      setProductOpen(false); setMessage('Ürün grubu kaydedildi.'); await load();
+    } catch (error) {
+      setMessage(errorMessage(error, 'Ürün grubu kaydedilemedi.'));
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function deleteRecord() {
@@ -253,6 +262,25 @@ function browserCaptureUrl(rawUrl: string, sourceId: number) { const url = new U
 function openBrowserCapture(rawUrl: string, sourceId: number) { const target = window.open('about:blank', '_blank'); if (!target) return; target.opener = null; target.name = `priceoptimize-source-${sourceId}`; target.location.replace(browserCaptureUrl(rawUrl, sourceId)); }
 function bestFromSources(sources: Source[]) { return sources.filter((source) => source.price != null && !source.error && source.inStock !== 0 && !source.isPriceAnomaly).reduce<{ price: number; merchant: string } | null>((best, source) => !best || Number(source.price) < best.price ? { price: Number(source.price), merchant: source.merchant } : best, null); }
 function money(value: number, currency: string) { return new Intl.NumberFormat('tr-TR', { style: 'currency', currency, minimumFractionDigits: 2 }).format(value); }
+
+async function apiRequest(path: string, init: RequestInit, fallback: string) {
+  const response = await fetch(path, {
+    ...init,
+    headers: { 'content-type': 'application/json', ...init.headers },
+  });
+  const text = await response.text();
+  let payload: { error?: string } = {};
+  if (text) {
+    try { payload = JSON.parse(text) as { error?: string }; }
+    catch { /* Sunucu HTML veya boş olmayan geçersiz bir yanıt döndürdü. */ }
+  }
+  if (!response.ok) throw new Error(payload.error ?? `${fallback} (HTTP ${response.status})`);
+  return payload;
+}
+
+function errorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
 
 function parseCsv(text: string) {
   const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean);
