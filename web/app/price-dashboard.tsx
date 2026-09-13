@@ -484,10 +484,12 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
   function downloadBrowserQueue() {
     const pending = data.sources.filter(
       (source) =>
-        source.error === 'HTTP_403' || source.error === 'ROBOTS_DENIED',
+        source.price == null ||
+        source.error === 'HTTP_403' ||
+        source.error === 'ROBOTS_DENIED',
     );
     if (!pending.length) {
-      setMessage('Tarayıcı kontrolü bekleyen URL bulunmuyor.');
+      setMessage('Tarayıcıyla kontrol edilecek URL bulunmuyor.');
       return;
     }
     const payload = {
