@@ -12,6 +12,7 @@ import {
   Download,
   ExternalLink,
   LayoutDashboard,
+  LogOut,
   MonitorUp,
   PackagePlus,
   Plus,
@@ -597,6 +598,23 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
     );
   }
 
+  async function requestErasureAction() {
+    const response = await fetch('/api/privacy-requests', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ requestType: 'erasure', jurisdiction: 'both' }),
+    });
+    const result = (await response.json()) as {
+      error?: string;
+      requestId?: string;
+    };
+    setMessage(
+      response.ok
+        ? `Silme talebiniz alındı: ${result.requestId}. Kimlik ve yasal saklama kontrolünden sonra en geç 30 gün içinde sonuçlandırılacaktır.`
+        : (result.error ?? 'Silme talebi alınamadı.'),
+    );
+  }
+
   return (
     <SidebarProvider>
       <Sidebar
@@ -669,6 +687,13 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
             className="mt-3 block text-center text-xs text-slate-400 hover:text-white"
           >
             Gizlilik ve güvenlik
+          </Link>
+          <Link
+            href="/auth/logout"
+            className="mt-2 flex items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-slate-300 hover:bg-white/10 hover:text-white"
+          >
+            <LogOut className="size-3.5" />
+            Oturumu kapat
           </Link>
         </SidebarFooter>
       </Sidebar>
@@ -750,7 +775,8 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
               </span>
               <span className="inline-flex items-center gap-2 font-medium">
                 <Database className="size-4" />
-                30 sn otomatik yenileme ·{' '}
+                Aiven MySQL · {data.account.dataRegion} veri bölgesi · 30 sn
+                otomatik yenileme ·{' '}
                 {lastUpdatedAt
                   ? lastUpdatedAt.toLocaleTimeString('tr-TR')
                   : 'yükleniyor'}
@@ -1061,7 +1087,18 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                   >
                     Verilerime erişim talebi
                   </Button>
-                  {isClientPortal && (
+                  <a
+                    href="/api/data-export"
+                    download
+                    className={buttonVariants({
+                      variant: 'outline',
+                      className: 'w-full',
+                    })}
+                  >
+                    <Download />
+                    MySQL verilerimi indir
+                  </a>
+                  {isClientPortal ? (
                     <Button
                       variant="outline"
                       className="w-full border-red-200 text-red-700 hover:bg-red-50"
@@ -1075,6 +1112,15 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                     >
                       <Trash2 />
                       Hesabımı ve verilerimi sil
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      className="w-full border-red-200 text-red-700 hover:bg-red-50"
+                      onClick={() => void requestErasureAction()}
+                    >
+                      <Trash2 />
+                      Kuruluş verilerini silme talebi
                     </Button>
                   )}
                 </CardContent>

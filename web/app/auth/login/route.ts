@@ -8,6 +8,7 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const returnTo = safeReturnTo(url.searchParams.get('returnTo'));
+  const screenHint = url.searchParams.get('screenHint') === 'signup' ? 'signup' : null;
   const state = randomToken();
   const nonce = randomToken();
   const verifier = randomToken(48);
@@ -31,6 +32,7 @@ export async function GET(request: Request) {
   authorize.searchParams.set('nonce', nonce);
   authorize.searchParams.set('code_challenge', challenge);
   authorize.searchParams.set('code_challenge_method', 'S256');
+  if (screenHint) authorize.searchParams.set('screen_hint', screenHint);
   return Response.redirect(authorize);
 }
 
