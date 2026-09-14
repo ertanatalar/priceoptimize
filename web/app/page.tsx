@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { ArrowRight, CheckCircle2, ShieldCheck, Tags } from 'lucide-react';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
 import { PriceDashboard } from '@/app/price-dashboard';
@@ -20,7 +19,7 @@ function Welcome() {
             <span className="grid size-10 place-items-center rounded-xl bg-[#28d7a1] text-[#08201a]"><Tags className="size-5" /></span>
             <div><p className="font-semibold">Price Optimizer</p><p className="text-xs text-slate-400">Rakip fiyat merkezi</p></div>
           </div>
-          <Link href="/auth/login" className="rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold hover:bg-white/10">Giriş yap</Link>
+          <a href="/auth/login" className="rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold hover:bg-white/10">Giriş yap</a>
         </header>
         <section className="grid flex-1 items-center gap-10 py-16 lg:grid-cols-[1.1fr_.9fr]">
           <div>
@@ -28,8 +27,8 @@ function Welcome() {
             <h1 className="max-w-3xl text-4xl font-semibold tracking-[-.045em] sm:text-6xl">Rakip fiyatlarını tek panelden güvenle izleyin.</h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">Müşteri, ürün grubu ve rakip URL’lerini birbirinden ayrılmış kayıtlarla yönetin. Kredi kartı gerekmeden 30 günlük denemenizi başlatın.</p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/auth/login?screenHint=signup" className="inline-flex items-center gap-2 rounded-xl bg-[#28d7a1] px-5 py-3 font-semibold text-[#08201a] hover:bg-[#35e7b0]">Ücretsiz kaydol <ArrowRight className="size-4" /></Link>
-              <Link href="/auth/login" className="rounded-xl border border-white/20 px-5 py-3 font-semibold hover:bg-white/10">Zaten hesabım var</Link>
+              <a href="/auth/login?screenHint=signup" className="inline-flex items-center gap-2 rounded-xl bg-[#28d7a1] px-5 py-3 font-semibold text-[#08201a] hover:bg-[#35e7b0]">Ücretsiz kaydol <ArrowRight className="size-4" /></a>
+              <a href="/auth/login" className="rounded-xl border border-white/20 px-5 py-3 font-semibold hover:bg-white/10">Zaten hesabım var</a>
             </div>
             <p className="mt-4 text-sm text-slate-400">Deneme süresi kayıt tamamlandığında başlar ve 30 gün sürer.</p>
           </div>
@@ -43,7 +42,7 @@ function Welcome() {
             <div className="mt-7 flex items-start gap-3 rounded-2xl bg-black/20 p-4 text-sm text-slate-300"><ShieldCheck className="mt-0.5 size-5 shrink-0 text-[#28d7a1]" /><p>Parolalar ve ödeme kartı bilgileri Price Optimizer MySQL veritabanında saklanmaz.</p></div>
           </div>
         </section>
-        <footer className="flex flex-wrap justify-between gap-3 border-t border-white/10 py-5 text-xs text-slate-500"><span>© 2026 Price Optimizer</span><Link href="/legal" className="hover:text-white">Gizlilik ve veri güvenliği</Link></footer>
+        <footer className="flex flex-wrap justify-between gap-3 border-t border-white/10 py-5 text-xs text-slate-500"><span>© 2026 Price Optimizer</span><a href="/legal" className="hover:text-white">Gizlilik ve veri güvenliği</a></footer>
       </div>
     </main>
   );

@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
 import {
   Activity,
   AlertTriangle,
@@ -682,19 +681,19 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
               <p className="truncate text-xs text-slate-400">{userEmail}</p>
             </div>
           </div>
-          <Link
+          <a
             href="/legal"
             className="mt-3 block text-center text-xs text-slate-400 hover:text-white"
           >
             Gizlilik ve güvenlik
-          </Link>
-          <Link
+          </a>
+          <a
             href="/auth/logout"
             className="mt-2 flex items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-slate-300 hover:bg-white/10 hover:text-white"
           >
             <LogOut className="size-3.5" />
             Oturumu kapat
-          </Link>
+          </a>
         </SidebarFooter>
       </Sidebar>
 
