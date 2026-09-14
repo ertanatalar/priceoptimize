@@ -33,6 +33,12 @@ export async function getChatGPTUser(): Promise<ChatGPTUser | null> {
   const auth0User = await getAuth0User();
   if (auth0User) return auth0User;
 
+  // The standalone production site uses Auth0 exclusively. Falling back to
+  // hosting-provided ChatGPT identity headers here would immediately recreate
+  // a session after /auth/logout deleted the Auth0 cookie, making logout appear
+  // broken on the custom domain.
+  if (auth0Configured()) return null;
+
   const requestHeaders = await headers();
   const userId = requestHeaders.get(USER_ID_HEADER);
   const email = requestHeaders.get(USER_EMAIL_HEADER);
