@@ -272,6 +272,20 @@ async function mapLimit(items, limit, mapper) {
   return results;
 }
 
+export async function purgeExpiredRecords(pool) {
+  const statements = [
+    ['observations', `DELETE FROM observations WHERE retention_until<CURRENT_TIMESTAMP(3)`],
+    ['auditEvents', `DELETE FROM audit_events WHERE retention_until<CURRENT_TIMESTAMP(3)`],
+    ['erasureRecords', `DELETE FROM erasure_records WHERE retain_until<CURRENT_TIMESTAMP(3) AND legal_hold=FALSE`],
+  ];
+  const deleted = {};
+  for (const [key, sql] of statements) {
+    const [result] = await pool.execute(sql);
+    deleted[key] = Number(result?.affectedRows ?? 0);
+  }
+  return deleted;
+}
+
 export async function monitorAll(pool, { concurrency = 3 } = {}) {
   const lock = await pool.getConnection();
   const [[lockRow]] = await lock.query("SELECT GET_LOCK('price-optimize-monitor',0) AS acquired");
@@ -374,7 +388,7 @@ export async function monitorAll(pool, { concurrency = 3 } = {}) {
       }
     }
 
-    await pool.execute(`DELETE FROM observations WHERE retention_until<CURRENT_TIMESTAMP(3)`);
+    const retentionDeleted = await purgeExpiredRecords(pool);
     return {
       status: emailFailures.length ? 'completed_with_email_errors' : 'completed',
       checked: results.length,
@@ -384,6 +398,7 @@ export async function monitorAll(pool, { concurrency = 3 } = {}) {
       anomalies: results.filter((item) => item.isAnomaly).length,
       emailsSent,
       emailFailures,
+      retentionDeleted,
       results: results.map((item) => ({ sourceId: item.id, merchant: item.merchant, status: item.errorCode ? 'error' : 'ok', errorCode: item.errorCode, isPriceAnomaly: item.isAnomaly })),
     };
   } finally {

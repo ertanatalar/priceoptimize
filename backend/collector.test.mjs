@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { extractOffer, parseDecimal, robotsAllows } from './collector.mjs';
+import { extractOffer, parseDecimal, purgeExpiredRecords, robotsAllows } from './collector.mjs';
 
 test('extracts a localized JSON-LD offer', () => {
   const offer = extractOffer(`<html><head><title>Test Ürün</title><script type="application/ld+json">
@@ -29,4 +29,22 @@ test('honors longest matching robots rule', () => {
   const robots = `User-agent: *\nDisallow: /urun/\nAllow: /urun/acik/`;
   assert.equal(robotsAllows(robots, 'https://example.com/urun/gizli'), false);
   assert.equal(robotsAllows(robots, 'https://example.com/urun/acik/1'), true);
+});
+
+test('purges every expired record category while preserving legal holds', async () => {
+  const statements = [];
+  const pool = {
+    execute: async (sql) => {
+      statements.push(sql);
+      return [{ affectedRows: statements.length }];
+    },
+  };
+
+  const deleted = await purgeExpiredRecords(pool);
+
+  assert.deepEqual(deleted, { observations: 1, auditEvents: 2, erasureRecords: 3 });
+  assert.equal(statements.length, 3);
+  assert.match(statements[0], /observations/);
+  assert.match(statements[1], /audit_events/);
+  assert.match(statements[2], /legal_hold=FALSE/);
 });
