@@ -45,12 +45,25 @@ async function openNext() {
   if (state.index >= state.sources.length) return finishBatch('completed');
   if (state.activeTabId) return;
   const item = state.sources[state.index];
-  const url = new URL(item.url);
+  const url = normalizedBrowserUrl(item.url);
   url.searchParams.set('priceoptimize_source', String(item.id));
   const tab = await chrome.tabs.create({ url: url.toString(), active: false });
   state.activeTabId = tab.id;
   await writeState(state);
   await chrome.alarms.create(TIMEOUT_ALARM, { when: Date.now() + LOAD_TIMEOUT_MS });
+}
+
+function normalizedBrowserUrl(rawUrl) {
+  const url = new URL(rawUrl);
+  if (/(^|\.)amazon\.com\.tr$/i.test(url.hostname)) {
+    const asin = url.pathname.match(/\/dp\/([A-Z0-9]{10})(?:\/|$)/i)?.[1];
+    if (asin) {
+      url.pathname = `/dp/${asin}`;
+      url.search = '';
+      url.hash = '';
+    }
+  }
+  return url;
 }
 
 async function handleLoadedTab(tabId) {
@@ -155,6 +168,7 @@ function extractPageOffer() {
     '#apex_desktop .a-price .a-offscreen',
     '#priceblock_ourprice',
     '#priceblock_dealprice',
+    '.product-detail-price-big .product-list__price',
     '[data-testid="price-current-price"]',
     '[data-test-id="price-current-price"]',
     '.prc-dsc',

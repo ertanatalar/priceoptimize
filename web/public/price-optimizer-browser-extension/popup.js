@@ -57,6 +57,7 @@ function extractPageOffer() {
     '#apex_desktop .a-price .a-offscreen',
     '#priceblock_ourprice',
     '#priceblock_dealprice',
+    '.product-detail-price-big .product-list__price',
     '[data-testid="price-current-price"]',
     '[data-test-id="price-current-price"]',
     '.prc-dsc',

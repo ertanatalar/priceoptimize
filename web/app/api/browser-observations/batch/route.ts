@@ -34,9 +34,16 @@ function comparableProductLocation(rawUrl: string) {
   const url = new URL(rawUrl);
   if (url.protocol !== 'https:')
     throw new Error('Yalnızca HTTPS ürün adresleri kabul edilir.');
+  const host = url.hostname.toLowerCase().replace(/^www\./, '');
+  const amazonAsin =
+    host === 'amazon.com.tr'
+      ? url.pathname.match(/\/dp\/([a-z0-9]{10})(?:\/|$)/i)?.[1]
+      : null;
   return {
-    host: url.hostname.toLowerCase().replace(/^www\./, ''),
-    path: url.pathname.replace(/\/+$/, '').toLowerCase(),
+    host,
+    path: amazonAsin
+      ? `/dp/${amazonAsin.toLowerCase()}`
+      : url.pathname.replace(/\/+$/, '').toLowerCase(),
   };
 }
 
