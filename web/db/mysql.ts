@@ -36,3 +36,14 @@ export async function execute(sql: string, params: SqlValue[] = []) {
 export async function transaction(statements: Array<{ sql: string; params?: SqlValue[] }>) {
   return request<{ status: 'ok' }>('/v1/transaction', { statements });
 }
+
+export async function notifyBrowserChanges(payload: {
+  organizationId: string;
+  clientId: number;
+  changes: string[];
+}) {
+  return request<{ status: 'sent' | 'skipped'; messageId?: string | null }>(
+    '/v1/browser-notify',
+    payload,
+  );
+}

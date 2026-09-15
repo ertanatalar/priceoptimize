@@ -63,6 +63,16 @@ export async function getAccount(user: ChatGPTUser): Promise<AccountContext | nu
     }
   }
   if (!account) return null;
+  if (user.emailVerified) {
+    await execute(
+      `UPDATE clients
+       SET notification_email_verified_at=CURRENT_TIMESTAMP(3)
+       WHERE organization_id=? AND LOWER(notification_email)=?
+         AND notification_email_verified_at IS NULL
+         AND active=TRUE AND deleted_at IS NULL`,
+      [account.organizationId, user.email.trim().toLowerCase()],
+    );
+  }
   if (account.subscriptionState === 'trialing' && new Date(account.trialEndsAt).getTime() <= Date.now()) {
     await execute(`UPDATE subscriptions SET state='expired' WHERE organization_id=? AND state='trialing' AND trial_ends_at<=CURRENT_TIMESTAMP(3)`, [account.organizationId]);
     return { ...account, subscriptionState: 'expired', trialDaysRemaining: 0 };

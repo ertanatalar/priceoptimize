@@ -1,5 +1,10 @@
 import { getChatGPTUser } from '@/app/chatgpt-auth';
-import { mysqlConfigured, query, transaction } from '@/db/mysql';
+import {
+  mysqlConfigured,
+  notifyBrowserChanges,
+  query,
+  transaction,
+} from '@/db/mysql';
 import {
   assertWritable,
   ForbiddenError,
@@ -19,6 +24,7 @@ type SourceRow = {
   id: number;
   url: string;
   merchant: string;
+  clientId: number;
   currency: string;
   maxPriceDropPct: number;
   referencePrice: number | null;
@@ -91,7 +97,7 @@ export async function POST(request: Request) {
   const placeholders = ids.map(() => '?').join(',');
   const sources = await query<SourceRow>(
     `
-    SELECT s.id,s.url,s.merchant,p.currency,p.max_price_drop_pct AS maxPriceDropPct,
+    SELECT s.id,s.url,s.merchant,p.client_id AS clientId,p.currency,p.max_price_drop_pct AS maxPriceDropPct,
            accepted.price AS referencePrice
     FROM competitor_sources s
     JOIN products p ON p.id=s.product_id AND p.organization_id=s.organization_id
@@ -115,6 +121,7 @@ export async function POST(request: Request) {
   }> = [];
   let imported = 0;
   let anomalies = 0;
+  const changesByClient = new Map<number, string[]>();
 
   for (const item of observations) {
     const sourceId = Number(item.sourceId);
@@ -163,6 +170,15 @@ export async function POST(request: Request) {
       ? `Toplu tarayıcı kontrolündeki fiyat son geçerli ${referencePrice} değerinden %${dropPct.toFixed(2)} düştü; %${Number(source.maxPriceDropPct).toFixed(2)} eşiği nedeniyle en iyi fiyat hesabından çıkarıldı.`
       : null;
     if (isAnomaly) anomalies += 1;
+    if (referencePrice != null && Number(referencePrice) !== price) {
+      const changes = changesByClient.get(Number(source.clientId)) ?? [];
+      changes.push(
+        isAnomaly
+          ? `${source.merchant}: ${referencePrice} → ${price} ${currency}; aşırı düşüş filtresine takıldı`
+          : `${source.merchant}: ${referencePrice} → ${price} ${currency}`,
+      );
+      changesByClient.set(Number(source.clientId), changes);
+    }
     statements.push({
       sql: `INSERT INTO observations(organization_id,source_id,price,currency,in_stock,error_code,is_price_anomaly,anomaly_reason,reference_price,drop_pct,retention_until) VALUES(?,?,?,?,?,NULL,?,?,?,?,DATE_ADD(CURRENT_TIMESTAMP(3),INTERVAL 730 DAY))`,
       params: [
@@ -193,8 +209,26 @@ export async function POST(request: Request) {
 
   for (let index = 0; index < statements.length; index += 100)
     await transaction(statements.slice(index, index + 100));
+
+  let emailsSent = 0;
+  const emailFailures: Array<{ clientId: number; error: string }> = [];
+  for (const [clientId, changes] of changesByClient) {
+    try {
+      const notification = await notifyBrowserChanges({
+        organizationId: account.organizationId,
+        clientId,
+        changes,
+      });
+      if (notification.status === 'sent') emailsSent += 1;
+    } catch (error) {
+      emailFailures.push({
+        clientId,
+        error: error instanceof Error ? error.message : 'E-posta gönderilemedi.',
+      });
+    }
+  }
   return Response.json(
-    { status: 'ok', imported, anomalies, failures },
+    { status: 'ok', imported, anomalies, failures, emailsSent, emailFailures },
     { status: 201 },
   );
 }

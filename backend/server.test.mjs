@@ -72,3 +72,11 @@ test('monitor endpoint requires bearer token', async () => {
     assert.equal(response.status, 401);
   });
 });
+
+test('browser notification endpoint requires bearer token', async () => {
+  const pool = { execute: async () => [[]] };
+  await withServer(pool, async (origin) => {
+    const response = await fetch(`${origin}/v1/browser-notify`, { method: 'POST', body: '{}' });
+    assert.equal(response.status, 401);
+  });
+});

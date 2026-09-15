@@ -149,7 +149,18 @@ function extractPageOffer() {
     const price = decimal(element?.getAttribute('content'));
     if (price) candidates.push({ price, currency: document.querySelector('meta[property="product:price:currency"],meta[property="og:price:currency"],meta[itemprop="priceCurrency"]')?.getAttribute('content') });
   }
-  for (const selector of ['[data-testid="price-current-price"]', '[data-test-id="price-current-price"]', '.prc-dsc', '.prc-slg', '[class*="current-price"]']) {
+  for (const selector of [
+    '.priceToPay .a-offscreen',
+    '#corePrice_feature_div .a-price .a-offscreen',
+    '#apex_desktop .a-price .a-offscreen',
+    '#priceblock_ourprice',
+    '#priceblock_dealprice',
+    '[data-testid="price-current-price"]',
+    '[data-test-id="price-current-price"]',
+    '.prc-dsc',
+    '.prc-slg',
+    '[class*="current-price"]',
+  ]) {
     const price = decimal(document.querySelector(selector)?.textContent);
     if (price) candidates.push({ price, currency: 'TRY' });
   }

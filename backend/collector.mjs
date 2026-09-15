@@ -272,6 +272,69 @@ async function mapLimit(items, limit, mapper) {
   return results;
 }
 
+function originStartLimiter(minimumIntervalMs) {
+  const tails = new Map();
+  const lastStartedAt = new Map();
+  return async (rawUrl) => {
+    const origin = new URL(rawUrl).origin;
+    const previous = tails.get(origin) ?? Promise.resolve();
+    let release;
+    const ready = new Promise((resolve) => { release = resolve; });
+    const tail = previous.then(async () => {
+      const waitMs = Math.max(0, minimumIntervalMs - (Date.now() - (lastStartedAt.get(origin) ?? 0)));
+      if (waitMs) await new Promise((resolve) => setTimeout(resolve, waitMs));
+      lastStartedAt.set(origin, Date.now());
+      release();
+    });
+    tails.set(origin, tail);
+    await ready;
+  };
+}
+
+export async function notifyBrowserChanges(pool, { organizationId, clientId, changes }) {
+  if (typeof organizationId !== 'string' || !organizationId || !Number.isInteger(clientId) || clientId < 1) {
+    throw new CollectionError('NOTIFICATION_INVALID', 'Bildirim hedefi geçersiz.');
+  }
+  const cleanChanges = Array.isArray(changes)
+    ? changes.map((item) => String(item).trim()).filter(Boolean).slice(0, 100)
+    : [];
+  if (!cleanChanges.length) return { status: 'skipped', messageId: null };
+
+  const [[client]] = await pool.execute(
+    `SELECT name,notification_email,notification_email_verified_at
+     FROM clients
+     WHERE id=? AND organization_id=? AND active=TRUE AND deleted_at IS NULL
+     LIMIT 1`,
+    [clientId, organizationId],
+  );
+  if (!client?.notification_email || !client.notification_email_verified_at) {
+    return { status: 'skipped', messageId: null };
+  }
+  const [[best]] = await pool.execute(
+    `SELECT latest.price,latest.currency,s.merchant
+     FROM competitor_sources s
+     JOIN products p ON p.id=s.product_id AND p.organization_id=s.organization_id
+     JOIN observations latest ON latest.id=(
+       SELECT o.id FROM observations o
+       WHERE o.source_id=s.id AND o.price IS NOT NULL AND o.error_code IS NULL
+         AND o.is_price_anomaly=FALSE AND (o.in_stock IS NULL OR o.in_stock=TRUE)
+       ORDER BY o.checked_at DESC,o.id DESC LIMIT 1
+     )
+     WHERE s.organization_id=? AND p.client_id=?
+       AND s.active=TRUE AND s.deleted_at IS NULL AND p.active=TRUE AND p.deleted_at IS NULL
+     ORDER BY latest.price ASC LIMIT 1`,
+    [organizationId, clientId],
+  );
+  let text = `Merhaba,\n\n${client.name} için rakip fiyat takibinde değişiklik tespit edildi:\n\n${cleanChanges.map((item) => `- ${item}`).join('\n')}`;
+  if (best) text += `\n\nEn iyi geçerli fiyat: ${best.price} ${best.currency} (${best.merchant})`;
+  text += '\n\n%25 veya üzerindeki aşırı düşüşler en iyi fiyat hesabına dahil edilmez.';
+  return sendEmail({
+    to: client.notification_email,
+    subject: `Rakip fiyat değişikliği: ${client.name}`,
+    text,
+  });
+}
+
 export async function purgeExpiredRecords(pool) {
   const statements = [
     ['observations', `DELETE FROM observations WHERE retention_until<CURRENT_TIMESTAMP(3)`],
@@ -286,7 +349,7 @@ export async function purgeExpiredRecords(pool) {
   return deleted;
 }
 
-export async function monitorAll(pool, { concurrency = 3 } = {}) {
+export async function monitorAll(pool, { concurrency = 3, perOriginIntervalMs = 2000 } = {}) {
   const lock = await pool.getConnection();
   const [[lockRow]] = await lock.query("SELECT GET_LOCK('price-optimize-monitor',0) AS acquired");
   if (!lockRow.acquired) {
@@ -319,6 +382,7 @@ export async function monitorAll(pool, { concurrency = 3 } = {}) {
       ORDER BY s.id
     `);
 
+    const waitForOrigin = originStartLimiter(perOriginIntervalMs);
     const results = await mapLimit(sources, concurrency, async (source) => {
       const previous = source.previous_price == null && source.previous_error_code == null ? null : {
         price: source.previous_price,
@@ -329,6 +393,7 @@ export async function monitorAll(pool, { concurrency = 3 } = {}) {
       };
       let current;
       try {
+        await waitForOrigin(source.url);
         const offer = await fetchOffer(source.url);
         const currency = offer.currency || source.product_currency;
         if (currency !== source.product_currency) {

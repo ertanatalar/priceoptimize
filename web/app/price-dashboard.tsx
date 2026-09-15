@@ -531,8 +531,10 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
     setSaving(true);
     try {
       const result = await apiRequest<{
+        error?: string;
         imported?: number;
         anomalies?: number;
+        emailsSent?: number;
         failures?: Array<{ sourceId: number; error: string }>;
       }>(
         '/api/browser-observations/batch',
@@ -545,7 +547,7 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
       const failedCount =
         (payload.failures?.length ?? 0) + (result.failures?.length ?? 0);
       setMessage(
-        `${result.imported ?? 0} fiyat kaydedildi${result.anomalies ? `, ${result.anomalies} anomali ayrıldı` : ''}${failedCount ? `; ${failedCount} kayıt inceleme bekliyor` : ''}.`,
+        `${result.imported ?? 0} fiyat kaydedildi${result.anomalies ? `, ${result.anomalies} anomali ayrıldı` : ''}${failedCount ? `; ${failedCount} kayıt inceleme bekliyor` : ''}${result.emailsSent ? `; ${result.emailsSent} değişiklik e-postası gönderildi` : ''}.`,
       );
       await load();
     } catch (error) {
@@ -1750,7 +1752,11 @@ function StatusBadge({ source, isBest }: { source: Source; isBest: boolean }) {
     );
   if (source.isPriceAnomaly)
     return <Badge variant="destructive">%25 filtresi</Badge>;
-  if (source.error === 'HTTP_403' || source.error === 'ROBOTS_DENIED')
+  if (
+    source.error === 'HTTP_403' ||
+    source.error === 'ROBOTS_DENIED' ||
+    source.error === 'PRICE_NOT_FOUND'
+  )
     return (
       <Badge className="bg-amber-100 text-amber-800">
         Tarayıcı kontrolü gerekli
