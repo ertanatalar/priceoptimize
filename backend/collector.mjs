@@ -228,20 +228,12 @@ function publicError(error) {
   return { code: 'COLLECTION_FAILED', message: 'Fiyat güvenilir biçimde alınamadı.' };
 }
 
-function stateChanged(previous, current) {
-  if (!previous) return null;
-  if (previous.error_code || current.errorCode) {
-    if (previous.error_code === current.errorCode) return null;
-    return current.errorCode ? `${current.merchant}: erişim sorunu (${current.errorCode})` : `${current.merchant}: erişim yeniden sağlandı`;
-  }
-  if (Number(previous.is_price_anomaly) !== Number(current.isAnomaly)) {
-    return current.isAnomaly ? `${current.merchant}: aşırı fiyat düşüşü filtresine takıldı` : `${current.merchant}: fiyat yeniden geçerli aralığa döndü`;
-  }
-  if (Number(previous.price) !== Number(current.price)) return `${current.merchant}: ${previous.price} → ${current.price} ${current.currency}`;
-  if (previous.in_stock != null && current.inStock != null && Boolean(previous.in_stock) !== Boolean(current.inStock)) {
-    return `${current.merchant}: stok durumu ${current.inStock ? 'stokta' : 'tükendi'} olarak değişti`;
-  }
-  return null;
+function priceChanged(referencePrice, current) {
+  if (current.errorCode || current.price == null || referencePrice == null) return null;
+  if (Number(referencePrice) === Number(current.price)) return null;
+  return current.isAnomaly
+    ? `${current.merchant}: ${referencePrice} → ${current.price} ${current.currency}; aşırı düşüş filtresine takıldı`
+    : `${current.merchant}: ${referencePrice} → ${current.price} ${current.currency}`;
 }
 
 async function sendEmail({ to, subject, text }) {
@@ -361,15 +353,10 @@ export async function monitorAll(pool, { concurrency = 3, perOriginIntervalMs = 
       SELECT s.id,s.organization_id,s.merchant,s.url,p.id AS product_id,p.sku,p.name AS product_name,
              p.currency AS product_currency,p.max_price_drop_pct,c.id AS client_id,c.name AS client_name,
              c.notification_email,c.notification_email_verified_at,
-             latest.price AS previous_price,latest.currency AS previous_currency,latest.in_stock AS previous_in_stock,
-             latest.error_code AS previous_error_code,latest.is_price_anomaly AS previous_is_price_anomaly,
              accepted.price AS reference_price
       FROM competitor_sources s
       JOIN products p ON p.id=s.product_id AND p.organization_id=s.organization_id
       JOIN clients c ON c.id=p.client_id AND c.organization_id=p.organization_id
-      LEFT JOIN observations latest ON latest.id=(
-        SELECT o1.id FROM observations o1 WHERE o1.source_id=s.id ORDER BY o1.checked_at DESC,o1.id DESC LIMIT 1
-      )
       LEFT JOIN observations accepted ON accepted.id=(
         SELECT o2.id FROM observations o2 WHERE o2.source_id=s.id AND o2.price IS NOT NULL
           AND o2.error_code IS NULL AND o2.is_price_anomaly=FALSE ORDER BY o2.checked_at DESC,o2.id DESC LIMIT 1
@@ -384,13 +371,6 @@ export async function monitorAll(pool, { concurrency = 3, perOriginIntervalMs = 
 
     const waitForOrigin = originStartLimiter(perOriginIntervalMs);
     const results = await mapLimit(sources, concurrency, async (source) => {
-      const previous = source.previous_price == null && source.previous_error_code == null ? null : {
-        price: source.previous_price,
-        currency: source.previous_currency,
-        in_stock: source.previous_in_stock,
-        error_code: source.previous_error_code,
-        is_price_anomaly: source.previous_is_price_anomaly,
-      };
       let current;
       try {
         await waitForOrigin(source.url);
@@ -427,7 +407,7 @@ export async function monitorAll(pool, { concurrency = 3, perOriginIntervalMs = 
         VALUES(?,?,?,?,?,?,?,?,?,?,DATE_ADD(CURRENT_TIMESTAMP(3),INTERVAL 730 DAY))
       `, [source.organization_id, source.id, current.price, current.currency, current.inStock, current.errorCode,
         current.isAnomaly, anomalyReason, current.referencePrice, current.dropPct]);
-      return { ...current, change: stateChanged(previous, current) };
+      return { ...current, change: priceChanged(source.reference_price, current) };
     });
 
     const byClient = new Map();
