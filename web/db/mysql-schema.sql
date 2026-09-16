@@ -51,6 +51,50 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   KEY ix_subscription_trial_end (trial_ends_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Payment cards and full Paddle payloads are deliberately not stored here.
+-- This table is a minimal, organization-scoped cache of the billing state
+-- required to authorize access and create short-lived customer portal links.
+CREATE TABLE IF NOT EXISTS billing_accounts (
+  organization_id CHAR(36) PRIMARY KEY,
+  provider ENUM('paddle') NOT NULL DEFAULT 'paddle',
+  provider_customer_id VARCHAR(64) NULL,
+  provider_subscription_id VARCHAR(64) NULL,
+  provider_price_id VARCHAR(64) NULL,
+  current_period_ends_at TIMESTAMP(3) NULL,
+  scheduled_change VARCHAR(40) NULL,
+  last_event_occurred_at TIMESTAMP(3) NULL,
+  created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  updated_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  CONSTRAINT fk_billing_account_org FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+  UNIQUE KEY uq_billing_provider_customer (provider, provider_customer_id),
+  UNIQUE KEY uq_billing_provider_subscription (provider, provider_subscription_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS billing_checkout_sessions (
+  id CHAR(36) PRIMARY KEY,
+  organization_id CHAR(36) NOT NULL,
+  user_id CHAR(36) NOT NULL,
+  plan_code VARCHAR(40) NOT NULL,
+  provider_price_id VARCHAR(64) NOT NULL,
+  expires_at TIMESTAMP(3) NOT NULL,
+  consumed_at TIMESTAMP(3) NULL,
+  created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  CONSTRAINT fk_billing_checkout_org FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
+  CONSTRAINT fk_billing_checkout_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  KEY ix_billing_checkout_expiry (expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS billing_webhook_events (
+  provider ENUM('paddle') NOT NULL DEFAULT 'paddle',
+  event_id VARCHAR(80) NOT NULL,
+  event_type VARCHAR(80) NOT NULL,
+  payload_sha256 CHAR(64) NOT NULL,
+  occurred_at TIMESTAMP(3) NOT NULL,
+  processed_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (provider, event_id),
+  KEY ix_billing_event_occurred (occurred_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS legal_acceptances (
   id CHAR(36) PRIMARY KEY,
   organization_id CHAR(36) NOT NULL,

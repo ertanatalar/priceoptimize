@@ -36,6 +36,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { BillingActions } from '@/app/billing-actions';
 import {
   Card,
   CardContent,
@@ -124,6 +125,7 @@ type Account = {
   trialDaysRemaining: number;
   databaseEngine: string;
   dataRegion: string;
+  billingConfigured: boolean;
 };
 type DashboardData = {
   clients: Client[];
@@ -814,6 +816,26 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
               </span>
             </div>
           )}
+          {data.account &&
+            !isClientPortal &&
+            ['owner', 'admin'].includes(data.account.role) && (
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm">
+                <div>
+                  <p className="font-semibold text-[#0b1720]">
+                    Abonelik:{' '}
+                    {subscriptionLabel(data.account.subscriptionState)}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    Ödeme, iptal, ödeme yöntemi ve faturalar güvenli Paddle
+                    portalında yönetilir.
+                  </p>
+                </div>
+                <BillingActions
+                  state={data.account.subscriptionState}
+                  configured={data.account.billingConfigured}
+                />
+              </div>
+            )}
           <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <div className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-500">
@@ -1977,6 +1999,14 @@ function downloadJson(payload: unknown, filename: string) {
 
 function errorMessage(error: unknown, fallback: string) {
   return error instanceof Error && error.message ? error.message : fallback;
+}
+
+function subscriptionLabel(state: string) {
+  if (state === 'trialing') return '30 günlük deneme';
+  if (state === 'active') return 'Aktif';
+  if (state === 'past_due') return 'Ödeme gecikmiş';
+  if (state === 'cancelled') return 'İptal edilmiş';
+  return 'Süresi dolmuş';
 }
 
 function parseCsv(text: string) {

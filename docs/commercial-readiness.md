@@ -16,7 +16,8 @@ Price Optimizer may be used with a small number of named pilot customers while t
 - [ ] **Blocker:** configure a verified Resend sending domain and complete an external-recipient delivery test
 - [ ] **Blocker:** verify Aiven automated backups, point-in-time recovery, restore procedure, encryption, EU region, MFA, and least-privilege credentials
 - [ ] **Blocker:** add production error tracking, uptime alerts, and an owner/on-call destination
-- [ ] **Blocker for paid self-service:** integrate checkout, subscription webhooks, invoices, cancellation, and failed-payment handling
+- [x] Paddle checkout, signed/idempotent subscription webhooks, customer invoice/cancellation portal, and failed-payment access state implemented
+- [ ] **Blocker for paid self-service:** create/approve the Paddle account and Starter price, configure Render secrets, then pass sandbox and live payment acceptance tests
 - [ ] **Blocker for protected marketplaces:** contract an authorized data provider/API; browser-assisted checks are not unattended monitoring
 - [ ] Add Apple sign-in only if it remains a launch requirement
 

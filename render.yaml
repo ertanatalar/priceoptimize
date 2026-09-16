@@ -24,6 +24,16 @@ services:
         value: https://price-optimizer-database-api.onrender.com
       - key: MYSQL_HTTP_TOKEN
         sync: false
+      - key: PADDLE_ENVIRONMENT
+        value: sandbox
+      - key: NEXT_PUBLIC_PADDLE_CLIENT_TOKEN
+        sync: false
+      - key: PADDLE_API_KEY
+        sync: false
+      - key: PADDLE_WEBHOOK_SECRET
+        sync: false
+      - key: PADDLE_PRICE_ID_STARTER
+        sync: false
 
   - type: web
     name: price-optimizer-database-api
