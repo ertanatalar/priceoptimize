@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity,
   AlertTriangle,
+  ArrowRightLeft,
   Bell,
   Building2,
   CheckCircle2,
@@ -160,6 +161,10 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
     kind: 'client' | 'product' | 'source' | 'account';
     id: number;
     label: string;
+  } | null>(null);
+  const [moveTarget, setMoveTarget] = useState<{
+    source: Source;
+    targetProductId: number;
   } | null>(null);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -432,19 +437,44 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
   async function moveSource(sourceId: number, targetProductId: number) {
     setSaving(true);
     setMessage(null);
-    const response = await fetch('/api/sources', {
-      method: 'PATCH',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ id: sourceId, targetProductId }),
-    });
-    const result = (await response.json()) as { error?: string };
-    setSaving(false);
-    if (!response.ok) {
-      setMessage(result.error ?? 'URL taşınamadı.');
+    try {
+      const response = await fetch('/api/sources', {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ id: sourceId, targetProductId }),
+      });
+      const result = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        setMessage(result.error ?? 'URL taşınamadı.');
+        return;
+      }
+      const targetName = data.products.find(
+        (product) => product.id === targetProductId,
+      )?.name;
+      setMoveTarget(null);
+      setSelectedProductId(targetProductId);
+      setMessage(
+        `Rakip URL${targetName ? ` “${targetName}”` : ''} ürün grubuna taşındı ve görünür durumda.`,
+      );
+      await load();
+    } catch {
+      setMessage('URL taşınırken bağlantı hatası oluştu.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function requestMove(source: Source) {
+    const firstTarget = data.products.find(
+      (product) =>
+        product.clientCode === source.clientCode &&
+        product.id !== source.productId,
+    );
+    if (!firstTarget) {
+      setMessage('Bu müşteriye ait başka bir ürün grubu bulunmuyor.');
       return;
     }
-    setMessage('Rakip URL doğru ürün grubuna taşındı.');
-    await load();
+    setMoveTarget({ source, targetProductId: firstTarget.id });
   }
 
   async function importCsv(file: File) {
@@ -940,7 +970,7 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                           source={source}
                           best={best}
                           products={data.products}
-                          onMove={moveSource}
+                          onRequestMove={requestMove}
                           onDelete={() =>
                             setDeleteTarget({
                               kind: 'source',
@@ -1232,6 +1262,22 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
         saving={saving}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={deleteRecord}
+      />
+      <MoveSourceDialog
+        target={moveTarget}
+        products={data.products}
+        saving={saving}
+        onTargetChange={(targetProductId) =>
+          setMoveTarget((current) =>
+            current ? { ...current, targetProductId } : null,
+          )
+        }
+        onCancel={() => setMoveTarget(null)}
+        onConfirm={() =>
+          moveTarget
+            ? moveSource(moveTarget.source.id, moveTarget.targetProductId)
+            : Promise.resolve()
+        }
       />
     </SidebarProvider>
   );
@@ -1564,6 +1610,91 @@ function DeleteDialog({
   );
 }
 
+function MoveSourceDialog({
+  target,
+  products,
+  saving,
+  onTargetChange,
+  onCancel,
+  onConfirm,
+}: {
+  target: { source: Source; targetProductId: number } | null;
+  products: Product[];
+  saving: boolean;
+  onTargetChange: (targetProductId: number) => void;
+  onCancel: () => void;
+  onConfirm: () => Promise<void>;
+}) {
+  const targets = target
+    ? products.filter(
+        (product) =>
+          product.clientCode === target.source.clientCode &&
+          product.id !== target.source.productId,
+      )
+    : [];
+  const currentProduct = target
+    ? products.find((product) => product.id === target.source.productId)
+    : null;
+  const destination = target
+    ? products.find((product) => product.id === target.targetProductId)
+    : null;
+
+  return (
+    <Dialog
+      open={Boolean(target)}
+      onOpenChange={(open) => {
+        if (!open && !saving) onCancel();
+      }}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Rakip URL’yi başka gruba taşı</DialogTitle>
+          <DialogDescription>
+            {target?.source.merchant ?? 'Bu URL'} kaydı
+            {currentProduct ? ` “${currentProduct.name}”` : ''} grubundan
+            seçtiğiniz gruba taşınır. Kayıt silinmez; işlemden sonra hedef grup
+            otomatik olarak açılır.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2">
+          <Label htmlFor="move-source-target">Hedef ürün grubu</Label>
+          <select
+            id="move-source-target"
+            value={target?.targetProductId ?? ''}
+            disabled={saving}
+            onChange={(event) => onTargetChange(Number(event.target.value))}
+            className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm"
+          >
+            {targets.map((product) => (
+              <option key={product.id} value={product.id}>
+                {product.name} ({product.sku})
+              </option>
+            ))}
+          </select>
+        </div>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={saving}
+            onClick={onCancel}
+          >
+            Vazgeç
+          </Button>
+          <Button
+            type="button"
+            disabled={saving || !destination}
+            onClick={() => void onConfirm()}
+          >
+            <ArrowRightLeft />
+            {saving ? 'Taşınıyor…' : 'URL’yi taşı'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function Field({
   label,
   name,
@@ -1646,7 +1777,7 @@ function SourceRow({
   source,
   best,
   products,
-  onMove,
+  onRequestMove,
   onDelete,
   saving,
   readOnly,
@@ -1654,7 +1785,7 @@ function SourceRow({
   source: Source;
   best: { price: number; merchant: string } | null;
   products: Product[];
-  onMove: (sourceId: number, targetProductId: number) => Promise<void>;
+  onRequestMove: (source: Source) => void;
   onDelete: () => void;
   saving: boolean;
   readOnly: boolean;
@@ -1690,22 +1821,18 @@ function SourceRow({
         <div className="flex items-center justify-end gap-1">
           {!readOnly && (
             <>
-              <select
-                value={source.productId}
+              <Button
+                size="sm"
+                variant="outline"
                 disabled={saving || targets.length < 2}
-                onChange={(event) =>
-                  void onMove(source.id, Number(event.target.value))
-                }
+                onClick={() => onRequestMove(source)}
                 aria-label={`${source.merchant} URL’sini ürün grubuna taşı`}
                 title="URL’yi başka ürün grubuna taşı"
-                className="h-8 max-w-44 rounded-md border border-slate-200 bg-white px-2 text-xs"
+                className="h-8"
               >
-                {targets.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.name}
-                  </option>
-                ))}
-              </select>
+                <ArrowRightLeft />
+                Gruba taşı
+              </Button>
               <Button
                 size="icon-sm"
                 variant="ghost"
