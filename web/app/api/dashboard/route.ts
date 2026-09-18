@@ -50,20 +50,29 @@ export async function GET() {
       WITH latest AS (
         SELECT o.*,ROW_NUMBER() OVER(PARTITION BY o.source_id ORDER BY o.checked_at DESC,o.id DESC) rn
         FROM observations o WHERE o.organization_id=?
+      ), accepted AS (
+        SELECT o.*,ROW_NUMBER() OVER(PARTITION BY o.source_id ORDER BY o.checked_at DESC,o.id DESC) rn
+        FROM observations o
+        WHERE o.organization_id=? AND o.price IS NOT NULL AND o.error_code IS NULL AND o.is_price_anomaly=FALSE
       )
       SELECT s.id,s.merchant,s.url,s.product_id AS productId,p.sku,p.name AS productName,p.currency,
-             c.code AS clientCode,c.name AS clientName,l.price,l.currency AS observedCurrency,
-             l.in_stock AS inStock,l.checked_at AS checkedAt,l.error_code AS error,
-             l.is_price_anomaly AS isPriceAnomaly,l.anomaly_reason AS anomalyReason
+             c.code AS clientCode,c.name AS clientName,
+             CASE WHEN l.error_code IS NULL THEN l.price ELSE a.price END AS price,
+             CASE WHEN l.error_code IS NULL THEN l.currency ELSE a.currency END AS observedCurrency,
+             CASE WHEN l.error_code IS NULL THEN l.in_stock ELSE a.in_stock END AS inStock,
+             l.checked_at AS checkedAt,a.checked_at AS lastSuccessfulCheckedAt,l.error_code AS error,
+             l.is_price_anomaly AS isPriceAnomaly,l.anomaly_reason AS anomalyReason,
+             CASE WHEN l.error_code IS NOT NULL AND a.id IS NOT NULL THEN TRUE ELSE FALSE END AS isStale
       FROM competitor_sources s
       JOIN products p ON p.id=s.product_id AND p.organization_id=s.organization_id
       JOIN clients c ON c.id=p.client_id AND c.organization_id=p.organization_id
       LEFT JOIN latest l ON l.source_id=s.id AND l.rn=1
+      LEFT JOIN accepted a ON a.source_id=s.id AND a.rn=1
       WHERE s.organization_id=? AND (? IS NULL OR c.id=?) AND s.active=TRUE AND s.deleted_at IS NULL
         AND p.active=TRUE AND p.deleted_at IS NULL AND c.active=TRUE AND c.deleted_at IS NULL
       ORDER BY c.name,p.name,s.merchant
     `,
-      [organizationId, organizationId, clientId, clientId],
+      [organizationId, organizationId, organizationId, clientId, clientId],
     ),
   ]);
   const validSources = sources.filter(

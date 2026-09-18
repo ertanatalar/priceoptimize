@@ -111,7 +111,9 @@ type Source = {
   price: number | null;
   inStock: number | null;
   checkedAt: string | null;
+  lastSuccessfulCheckedAt: string | null;
   error: string | null;
+  isStale: number | boolean | null;
   isPriceAnomaly: number | null;
   anomalyReason: string | null;
 };
@@ -1829,7 +1831,17 @@ function SourceRow({
             : 'font-semibold text-slate-700'
         }
       >
-        {source.price == null ? '—' : money(source.price, source.currency)}
+        <div>
+          <p>
+            {source.price == null ? '—' : money(source.price, source.currency)}
+          </p>
+          {source.isStale && source.lastSuccessfulCheckedAt && (
+            <p className="mt-0.5 text-[11px] font-normal text-amber-700">
+              Son geçerli fiyat ·{' '}
+              {new Date(source.lastSuccessfulCheckedAt).toLocaleString('tr-TR')}
+            </p>
+          )}
+        </div>
       </TableCell>
       <TableCell>
         <StatusBadge source={source} isBest={Boolean(isBest)} />
@@ -1907,9 +1919,16 @@ function StatusBadge({ source, isBest }: { source: Source; isBest: boolean }) {
     source.error === 'PRICE_NOT_FOUND'
   )
     return (
-      <Badge className="bg-amber-100 text-amber-800">
-        Tarayıcı kontrolü gerekli
-      </Badge>
+      <div className="space-y-1">
+        <Badge className="bg-amber-100 text-amber-800">
+          Tarayıcı kontrolü gerekli
+        </Badge>
+        {source.isStale && (
+          <p className="text-[11px] text-amber-700">
+            Gösterilen fiyat güncel değil
+          </p>
+        )}
+      </div>
     );
   if (source.error) return <Badge variant="destructive">Erişim hatası</Badge>;
   if (source.inStock === 0)

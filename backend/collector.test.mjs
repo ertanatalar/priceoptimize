@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { extractOffer, parseDecimal, purgeExpiredRecords, robotsAllows } from './collector.mjs';
+import { extractOffer, parseDecimal, purgeExpiredRecords, robotsAllows, shouldDeferCloudCheck } from './collector.mjs';
 
 test('extracts a localized JSON-LD offer', () => {
   const offer = extractOffer(`<html><head><title>Test Ürün</title><script type="application/ld+json">
@@ -29,6 +29,22 @@ test('honors longest matching robots rule', () => {
   const robots = `User-agent: *\nDisallow: /urun/\nAllow: /urun/acik/`;
   assert.equal(robotsAllows(robots, 'https://example.com/urun/gizli'), false);
   assert.equal(robotsAllows(robots, 'https://example.com/urun/acik/1'), true);
+});
+
+test('does not retry a robots-denied source from the cloud', () => {
+  assert.equal(shouldDeferCloudCheck({ latest_error_code: 'ROBOTS_DENIED' }), true);
+});
+
+test('backs off repeated browser-fallback errors for 24 hours', () => {
+  const now = Date.parse('2026-09-19T12:00:00Z');
+  const repeated = {
+    latest_error_code: 'HTTP_403',
+    previous_error_code: 'HTTP_403',
+    latest_checked_at: '2026-09-19T06:00:00Z',
+  };
+  assert.equal(shouldDeferCloudCheck(repeated, { now }), true);
+  assert.equal(shouldDeferCloudCheck({ ...repeated, latest_checked_at: '2026-09-18T06:00:00Z' }, { now }), false);
+  assert.equal(shouldDeferCloudCheck({ ...repeated, previous_error_code: null }, { now }), false);
 });
 
 test('purges every expired record category while preserving legal holds', async () => {

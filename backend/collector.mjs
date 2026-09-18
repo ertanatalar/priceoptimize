@@ -236,6 +236,17 @@ function priceChanged(referencePrice, current) {
     : `${current.merchant}: ${referencePrice} → ${current.price} ${current.currency}`;
 }
 
+const BROWSER_FALLBACK_ERRORS = new Set(['HTTP_401', 'HTTP_403', 'PRICE_NOT_FOUND']);
+
+export function shouldDeferCloudCheck(source, { now = Date.now(), cooldownMs = 24 * 60 * 60 * 1000 } = {}) {
+  if (source.latest_error_code === 'ROBOTS_DENIED') return true;
+  if (!BROWSER_FALLBACK_ERRORS.has(source.latest_error_code) || source.previous_error_code !== source.latest_error_code) {
+    return false;
+  }
+  const lastAttemptAt = new Date(source.latest_checked_at).getTime();
+  return Number.isFinite(lastAttemptAt) && now - lastAttemptAt < cooldownMs;
+}
+
 async function sendEmail({ to, subject, text }) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.PRICE_ALERT_FROM;
@@ -353,7 +364,13 @@ export async function monitorAll(pool, { concurrency = 3, perOriginIntervalMs = 
       SELECT s.id,s.organization_id,s.merchant,s.url,p.id AS product_id,p.sku,p.name AS product_name,
              p.currency AS product_currency,p.max_price_drop_pct,c.id AS client_id,c.name AS client_name,
              c.notification_email,c.notification_email_verified_at,
-             accepted.price AS reference_price
+             accepted.price AS reference_price,
+             (SELECT o3.error_code FROM observations o3 WHERE o3.source_id=s.id
+               ORDER BY o3.checked_at DESC,o3.id DESC LIMIT 1) AS latest_error_code,
+             (SELECT o4.checked_at FROM observations o4 WHERE o4.source_id=s.id
+               ORDER BY o4.checked_at DESC,o4.id DESC LIMIT 1) AS latest_checked_at,
+             (SELECT o5.error_code FROM observations o5 WHERE o5.source_id=s.id
+               ORDER BY o5.checked_at DESC,o5.id DESC LIMIT 1 OFFSET 1) AS previous_error_code
       FROM competitor_sources s
       JOIN products p ON p.id=s.product_id AND p.organization_id=s.organization_id
       JOIN clients c ON c.id=p.client_id AND c.organization_id=p.organization_id
@@ -369,8 +386,10 @@ export async function monitorAll(pool, { concurrency = 3, perOriginIntervalMs = 
       ORDER BY s.id
     `);
 
+    const eligibleSources = sources.filter((source) => !shouldDeferCloudCheck(source));
+    const deferred = sources.length - eligibleSources.length;
     const waitForOrigin = originStartLimiter(perOriginIntervalMs);
-    const results = await mapLimit(sources, concurrency, async (source) => {
+    const results = await mapLimit(eligibleSources, concurrency, async (source) => {
       let current;
       try {
         await waitForOrigin(source.url);
@@ -437,6 +456,7 @@ export async function monitorAll(pool, { concurrency = 3, perOriginIntervalMs = 
     return {
       status: emailFailures.length ? 'completed_with_email_errors' : 'completed',
       checked: results.length,
+      deferred,
       successful: results.filter((item) => !item.errorCode).length,
       failed: results.filter((item) => item.errorCode).length,
       changed: results.filter((item) => item.change).length,
