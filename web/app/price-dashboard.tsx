@@ -54,6 +54,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { createBrowserQueue } from '@/lib/browser-queue';
 import {
   Sidebar,
   SidebarContent,
@@ -515,34 +516,33 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
     await load();
   }
 
-  function downloadBrowserQueue() {
-    const selectedSources = featuredProduct
-      ? data.sources.filter((source) => source.productId === featuredProduct.id)
-      : [];
-    if (!selectedSources.length) {
-      setMessage('Seçili ürün grubunda indirilecek URL bulunmuyor.');
+  function downloadBrowserQueue(scope: 'selected' | 'all') {
+    const payload = createBrowserQueue(
+      data.sources,
+      scope === 'selected' && featuredProduct
+        ? { productId: featuredProduct.id }
+        : {},
+    );
+    if (!payload.sources.length) {
+      setMessage(
+        scope === 'selected'
+          ? 'Seçili ürün grubunda indirilecek URL bulunmuyor.'
+          : 'İndirilecek rakip URL bulunmuyor.',
+      );
       return;
     }
-    const payload = {
-      format: 'priceoptimize-browser-queue-v1',
-      generatedAt: new Date().toISOString(),
-      sources: selectedSources.map(
-        ({ id, url, merchant, productName, clientName, currency }) => ({
-          id,
-          url,
-          merchant,
-          productName,
-          clientName,
-          currency,
-        }),
-      ),
-    };
+    if (payload.sources.length > 1000) {
+      setMessage(
+        'Tek toplu kontrolde en fazla 1000 URL işlenebilir. URL’leri müşteri bazında bölün.',
+      );
+      return;
+    }
     downloadJson(
       payload,
-      `priceoptimize-kontrol-listesi-${new Date().toISOString().slice(0, 10)}.json`,
+      `priceoptimize-kontrol-listesi-${scope === 'all' ? 'tum-urunler' : 'secili-urun'}-${new Date().toISOString().slice(0, 10)}.json`,
     );
     setMessage(
-      `${selectedSources.length} URL içeren seçili ürün listesi indirildi. Dosyayı Price Optimizer eklentisinde açın.`,
+      `${payload.productCount} ürün grubundaki ${payload.sources.length} URL tek kontrol listesine indirildi. Dosyayı Price Optimizer eklentisinde açın.`,
     );
   }
 
@@ -1069,8 +1069,9 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                       tarayıcı kontrolü
                     </CardTitle>
                     <CardDescription>
-                      Seçili ürün grubundaki tüm URL’leri tek tek tıklamadan
-                      normal Chrome oturumunuzda sırayla kontrol edin.
+                      Tüm ürün gruplarındaki URL’leri tek kontrol ve tek sonuç
+                      dosyasıyla normal Chrome oturumunuzda sırayla kontrol
+                      edin.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-2">
@@ -1086,13 +1087,21 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                       Chrome eklentisini indir
                     </a>
                     <Button
+                      className="w-full bg-[#0b1720] text-white hover:bg-[#15303d]"
+                      disabled={saving || data.sources.length === 0}
+                      onClick={() => downloadBrowserQueue('all')}
+                    >
+                      <Download />
+                      Tüm ürün gruplarını indir ({data.sources.length})
+                    </Button>
+                    <Button
                       variant="outline"
                       className="w-full"
                       disabled={saving}
-                      onClick={downloadBrowserQueue}
+                      onClick={() => downloadBrowserQueue('selected')}
                     >
                       <Download />
-                      Tüm URL listesini indir (
+                      Yalnız seçili ürünü indir (
                       {featuredProduct?.sourceCount ?? 0})
                     </Button>
                     <input

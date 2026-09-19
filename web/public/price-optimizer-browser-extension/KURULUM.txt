@@ -7,16 +7,16 @@ PRICE OPTIMIZER CHROME EKLENTISI
 5. ZIP'ten cikan price-optimizer-browser-extension klasorunu secin.
 
 TOPLU KONTROL
-1. Price Optimizer panelinde "Bekleyen listeyi indir" dugmesine basin.
+1. Price Optimizer panelinde "Tum urun gruplarini indir" dugmesine basin.
 2. Eklentiyi acip indirilen JSON kontrol listesini secin.
 3. "Toplu kontrolu baslat" dugmesine basin ve yalnizca listelenen magazalar icin erisim izni verin.
 4. Chrome'u acik birakin. Eklenti sayfalari tek sekmede ve aralarinda bekleyerek kontrol eder.
-5. Islem bitince priceoptimize-sonuclar-...json dosyasi otomatik indirilir.
+5. Islem bitince tum urun gruplarini iceren priceoptimize-sonuclar-...json dosyasi otomatik indirilir.
 6. Panelde "Sonuc dosyasini yukle" dugmesiyle bu dosyayi secin.
 
 Eklenti CAPTCHA veya erisim engelini asmaya calismaz; bu kayitlari inceleme listesine ayirir.
-6. Price Optimizer panelinde bir rakip URL'nin yanindaki tarayici simgesine basin.
-7. Urun sayfasi acilinca eklenti simgesine basin, fiyati kontrol edin ve onaylayin.
+7. Tekli kontrol icin panelde bir rakip URL'nin yanindaki tarayici simgesine basin.
+8. Urun sayfasi acilinca eklenti simgesine basin, fiyati kontrol edin ve onaylayin.
 
 Eklenti sayfayi kendiliginden gezmez, CAPTCHA cozmez ve bot korumasini atlatmaz.
 Yalnizca sizin actiginiz sayfadaki gorunen fiyati onayinizla Price Optimizer'a aktarir.
