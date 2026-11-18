@@ -37,7 +37,8 @@ export async function getChatGPTUser(): Promise<ChatGPTUser | null> {
   // hosting-provided ChatGPT identity headers here would immediately recreate
   // a session after /auth/logout deleted the Auth0 cookie, making logout appear
   // broken on the custom domain.
-  if (auth0Configured()) return null;
+  if (auth0Configured() || process.env.RENDER === 'true' || process.env.AUTH_PROVIDER === 'auth0'
+    || process.env.AUTH0_DOMAIN || process.env.AUTH0_CLIENT_ID) return null;
 
   const requestHeaders = await headers();
   const userId = requestHeaders.get(USER_ID_HEADER);
@@ -94,7 +95,7 @@ async function getAuth0User(): Promise<ChatGPTUser | null> {
   if (!token) return null;
 
   const session = await decryptSession(token);
-  if (!session || session.exp <= Math.floor(Date.now() / 1000)) return null;
+  if (!session || session.email_verified !== true || session.exp <= Math.floor(Date.now() / 1000)) return null;
   return {
     userId: session.sub,
     displayName: session.name ?? session.email,
@@ -115,6 +116,7 @@ export async function encryptAuth0Session(session: Auth0Session): Promise<string
 
 async function decryptSession(token: string): Promise<Auth0Session | null> {
   try {
+    if (token.length > 8192 || token.split('.').length !== 2) return null;
     const [ivPart, ciphertextPart] = token.split('.');
     if (!ivPart || !ciphertextPart) return null;
     const plaintext = await crypto.subtle.decrypt(
@@ -123,7 +125,9 @@ async function decryptSession(token: string): Promise<Auth0Session | null> {
       fromBase64url(ciphertextPart),
     );
     const value = JSON.parse(new TextDecoder().decode(plaintext)) as Auth0Session;
-    return value.sub && value.email && Number.isFinite(value.exp) ? value : null;
+    return typeof value.sub === 'string' && value.sub.length > 0
+      && typeof value.email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.email)
+      && Number.isFinite(value.exp) ? value : null;
   } catch {
     return null;
   }
@@ -131,7 +135,7 @@ async function decryptSession(token: string): Promise<Auth0Session | null> {
 
 async function sessionKey(): Promise<CryptoKey> {
   const secret = process.env.AUTH0_SECRET;
-  if (!secret) throw new Error('AUTH0_SECRET yapılandırılmadı.');
+  if (!secret || secret.length < 32) throw new Error('AUTH0_SECRET en az 32 karakter olmalıdır.');
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(secret));
   return crypto.subtle.importKey('raw', digest, 'AES-GCM', false, ['encrypt', 'decrypt']);
 }
@@ -142,7 +146,7 @@ function base64url(bytes: Uint8Array): string {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
-function fromBase64url(value: string): Uint8Array {
+function fromBase64url(value: string): Uint8Array<ArrayBuffer> {
   const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
   const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
   const binary = atob(padded);
@@ -159,7 +163,7 @@ export function chatGPTSignOutPath(returnTo = '/'): string {
   return `${SIGN_OUT_PATH}?return_to=${encodeURIComponent(safeReturnTo)}`;
 }
 
-function safeRelativeReturnPath(value: string): string {
+export function safeRelativeReturnPath(value: string): string {
   if (!value.startsWith('/') || value.startsWith('//')) return '/';
 
   let url: URL;
@@ -189,3 +193,4 @@ function safeDecodeURIComponent(value: string): string | null {
     return null;
   }
 }
+

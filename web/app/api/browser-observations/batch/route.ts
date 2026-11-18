@@ -1,3 +1,4 @@
+import { rejectCrossOriginMutation } from '@/lib/request-security';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
 import {
   mysqlConfigured,
@@ -48,6 +49,8 @@ function comparableProductLocation(rawUrl: string) {
 }
 
 export async function POST(request: Request) {
+  const rejected = rejectCrossOriginMutation(request);
+  if (rejected) return rejected;
   const user = await getChatGPTUser();
   if (!user) return Response.json({ error: 'Oturum gerekli' }, { status: 401 });
   if (!mysqlConfigured())
@@ -239,3 +242,4 @@ export async function POST(request: Request) {
     { status: 201 },
   );
 }
+

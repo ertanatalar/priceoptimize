@@ -11,7 +11,8 @@
     "start": "vinext start",
     "test": "node --experimental-strip-types --test lib/*.test.ts",
     "lint": "oxlint",
-    "format": "oxfmt"
+    "format": "oxfmt",
+    "test:security": "node --test tests/security.test.cjs"
   },
   "dependencies": {
     "react": "19.2.6",

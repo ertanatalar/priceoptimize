@@ -1,4 +1,4 @@
-import { auth0Configured } from '@/app/chatgpt-auth';
+import { safeRelativeReturnPath, auth0Configured } from '@/app/chatgpt-auth';
 import { cookies } from 'next/headers';
 
 const TRANSACTION_COOKIE = 'po_auth_tx';
@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   if (!auth0Configured()) return Response.json({ error: 'Auth0 yapılandırılmadı.' }, { status: 503 });
 
   const url = new URL(request.url);
-  const returnTo = safeReturnTo(url.searchParams.get('returnTo'));
+  const returnTo = safeRelativeReturnPath(url.searchParams.get('returnTo') || '/');
   const screenHint = url.searchParams.get('screenHint') === 'signup' ? 'signup' : null;
   const state = randomToken();
   const nonce = randomToken();
@@ -41,10 +41,6 @@ function publicOrigin(requestUrl: URL): string {
   return configured || requestUrl.origin;
 }
 
-function safeReturnTo(value: string | null): string {
-  if (!value?.startsWith('/') || value.startsWith('//')) return '/';
-  return value;
-}
 
 function randomToken(length = 32): string {
   const bytes = crypto.getRandomValues(new Uint8Array(length));

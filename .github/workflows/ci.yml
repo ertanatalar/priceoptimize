@@ -38,5 +38,9 @@ jobs:
           version: '11.19.0'
       - run: pnpm install --frozen-lockfile
         working-directory: web
+      - run: pnpm test:security
+        working-directory: web
+      - run: pnpm exec tsc --noEmit --incremental false
+        working-directory: web
       - run: pnpm build
         working-directory: web

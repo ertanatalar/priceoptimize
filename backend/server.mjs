@@ -39,6 +39,7 @@ function json(response, status, payload) {
     'cache-control': 'no-store',
     'x-content-type-options': 'nosniff',
     'referrer-policy': 'no-referrer',
+    'strict-transport-security': 'max-age=31536000',
   });
   response.end(JSON.stringify(payload));
 }
@@ -126,6 +127,7 @@ export function createApp(pool, apiToken, monitorToken = apiToken) {
       }
 
       const body = await readJson(request);
+      if (!body || typeof body !== 'object' || Array.isArray(body)) throw new RequestError(400, 'JSON nesnesi zorunludur.');
       if (request.url === '/v1/monitor') {
         const result = await monitorAll(pool);
         return json(response, 200, result);
@@ -160,15 +162,22 @@ export function createApp(pool, apiToken, monitorToken = apiToken) {
       return json(response, 200, { status: 'ok' });
     } catch (error) {
       const status = error instanceof RequestError ? error.status : 500;
-      if (status === 500) console.error('Database API request failed', error);
+      if (status === 500) console.error('Database API request failed', { code: typeof error?.code === 'string' && /^[A-Z0-9_]+$/.test(error.code) ? error.code : 'INTERNAL_ERROR' });
       return json(response, status, { error: status === 500 ? 'Veritabanı işlemi başarısız.' : error.message });
     }
   });
 }
 
 if (process.env.NODE_ENV !== 'test') {
-  await migrate();
+  if (process.argv.includes('--migrate')) {
+    await migrate();
+  } else {
   const pool = createPool();
   const server = createApp(pool, required('DATABASE_API_TOKEN'), required('MONITOR_API_TOKEN'));
+  server.requestTimeout = 60_000;
+  server.headersTimeout = 15_000;
+  server.maxRequestsPerSocket = 100;
   server.listen(PORT, '0.0.0.0', () => console.log(`Database API listening on ${PORT}`));
+  }
 }
+

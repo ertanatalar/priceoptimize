@@ -1,8 +1,11 @@
+import { rejectCrossOriginMutation } from '@/lib/request-security';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
 import { execute, mysqlConfigured, query, transaction } from '@/db/mysql';
 import { assertWritable, ForbiddenError, getAccount, TrialExpiredError } from '@/lib/account';
 
 export async function POST(request: Request) {
+  const rejected = rejectCrossOriginMutation(request);
+  if (rejected) return rejected;
   const user = await getChatGPTUser();
   if (!user) return Response.json({ error: 'Oturum gerekli' }, { status: 401 });
   if (!mysqlConfigured()) return Response.json({ error: 'MySQL bağlantısı henüz yapılandırılmadı.' }, { status: 503 });
@@ -29,6 +32,8 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const rejected = rejectCrossOriginMutation(request);
+  if (rejected) return rejected;
   const user = await getChatGPTUser();
   if (!user) return Response.json({ error: 'Oturum gerekli' }, { status: 401 });
   if (!mysqlConfigured()) return Response.json({ error: 'MySQL bağlantısı henüz yapılandırılmadı.' }, { status: 503 });
