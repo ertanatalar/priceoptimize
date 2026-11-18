@@ -1,3 +1,4 @@
+import { rejectCrossOriginMutation } from '@/lib/request-security';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
 import { execute, mysqlConfigured, query, transaction } from '@/db/mysql';
 import { assertWritable, ForbiddenError, getAccount, TrialExpiredError } from '@/lib/account';
@@ -18,6 +19,8 @@ async function writableAccount() {
 }
 
 export async function POST(request: Request) {
+  const rejected = rejectCrossOriginMutation(request);
+  if (rejected) return rejected;
   const context = await writableAccount();
   if ('response' in context) return context.response;
   const { account } = context;
@@ -38,6 +41,8 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const rejected = rejectCrossOriginMutation(request);
+  if (rejected) return rejected;
   const context = await writableAccount();
   if ('response' in context) return context.response;
   const { account } = context;

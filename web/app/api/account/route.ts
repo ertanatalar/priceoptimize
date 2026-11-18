@@ -1,9 +1,12 @@
+import { rejectCrossOriginMutation } from '@/lib/request-security';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
 import { mysqlConfigured, transaction } from '@/db/mysql';
 import { getAccount } from '@/lib/account';
 import { sha256, uuid } from '@/lib/security';
 
-export async function DELETE() {
+export async function DELETE(request: Request) {
+  const rejected = rejectCrossOriginMutation(request);
+  if (rejected) return rejected;
   const user = await getChatGPTUser();
   if (!user) return Response.json({ error: 'Oturum gerekli' }, { status: 401 });
   if (!mysqlConfigured()) return Response.json({ error: 'MySQL bağlantısı henüz yapılandırılmadı.' }, { status: 503 });

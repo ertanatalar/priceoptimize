@@ -1,4 +1,4 @@
-import { encryptAuth0Session } from '@/app/chatgpt-auth';
+import { safeRelativeReturnPath, encryptAuth0Session } from '@/app/chatgpt-auth';
 import { cookies } from 'next/headers';
 
 const TRANSACTION_COOKIE = 'po_auth_tx';
@@ -69,7 +69,7 @@ export async function GET(request: Request) {
     path: '/',
     maxAge: 60 * 60 * 8,
   });
-  return Response.redirect(new URL(safeReturnTo(transaction.returnTo), url.origin));
+  return Response.redirect(new URL(safeRelativeReturnPath(transaction.returnTo), url.origin));
 }
 
 function readTransaction(value: string | undefined): Transaction | null {
@@ -87,9 +87,4 @@ function constantTimeEqual(left: string, right: string): boolean {
   let result = 0;
   for (let index = 0; index < left.length; index += 1) result |= left.charCodeAt(index) ^ right.charCodeAt(index);
   return result === 0;
-}
-
-function safeReturnTo(value: string): string {
-  if (!value.startsWith('/') || value.startsWith('//')) return '/';
-  return value;
 }

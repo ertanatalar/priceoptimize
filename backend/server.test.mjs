@@ -80,3 +80,28 @@ test('browser notification endpoint requires bearer token', async () => {
     assert.equal(response.status, 401);
   });
 });
+
+
+test('monitor token cannot access SQL query endpoint', async () => {
+  let calls = 0;
+  const pool = { execute: async () => { calls++; return [[]]; } };
+  await withServer(pool, async (origin) => {
+    const response = await fetch(`${origin}/v1/query`, { method: 'POST', headers: { authorization: 'Bearer monitor-token' }, body: JSON.stringify({ sql: 'SELECT 1' }) });
+    assert.equal(response.status, 401);
+    assert.equal(calls, 0);
+  });
+});
+
+test('malformed bodies and destructive SQL never reach the database', async () => {
+  let calls = 0;
+  const pool = { execute: async () => { calls++; return [[]]; }, getConnection: async () => { calls++; } };
+  await withServer(pool, async (origin) => {
+    for (const payload of [null, [], 'bad', { sql: 'DROP TABLE users' }, { sql: 'SELECT 1; SELECT 2' }, { sql: 'SELECT ?', params: 'not-array' }]) {
+      const response = await fetch(`${origin}/v1/query`, { method: 'POST', headers: { authorization: 'Bearer test-token' }, body: JSON.stringify(payload) });
+      assert.equal(response.status, 400);
+    }
+    const response = await fetch(`${origin}/v1/transaction`, { method: 'POST', headers: { authorization: 'Bearer test-token' }, body: JSON.stringify({ statements: [{ sql: 'INSERT INTO clients(name) VALUES(?)', params: ['A'] }, { sql: 'DELETE FROM users' }] }) });
+    assert.equal(response.status, 400);
+    assert.equal(calls, 0);
+  });
+});

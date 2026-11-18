@@ -12,7 +12,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  async headers() { return [{ source: '/(.*)', headers: securityHeaders }]; },
+  async headers() { return [{ source: '/(.*)', headers: securityHeaders }, { source: '/api/(.*)', headers: [{ key: 'Cache-Control', value: 'private, no-store' }, { key: 'Vary', value: 'Cookie' }] }, { source: '/auth/(.*)', headers: [{ key: 'Cache-Control', value: 'private, no-store' }] }]; },
 };
 
 export default nextConfig;
