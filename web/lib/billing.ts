@@ -1,4 +1,5 @@
 import { query } from '@/db/mysql';
+import { billingConfigurationIssues } from '@/lib/billing-config';
 export { verifyPaddleSignature } from '@/lib/billing-signature';
 
 export type BillingStatus =
@@ -9,12 +10,7 @@ export type BillingStatus =
   | 'expired';
 
 export function paddleConfigured() {
-  return Boolean(
-    process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN &&
-    process.env.PADDLE_API_KEY &&
-    process.env.PADDLE_WEBHOOK_SECRET &&
-    process.env.PADDLE_PRICE_ID_STARTER,
-  );
+  return billingConfigurationIssues(process.env).length === 0;
 }
 
 export function paddleEnvironment(): 'sandbox' | 'production' {

@@ -22,6 +22,21 @@ const user = { userId: 'subject', identityProvider: 'auth0', email: 'person@exam
 const account = { userId: 'user-1', organizationId: 'org-1', scope: 'organization', role: 'owner', subscriptionState: 'active', trialEndsAt: '2099-01-01' };
 const hash = async (v) => createHash('sha256').update(v).digest('hex');
 
+test('checkout CSP permits official Paddle endpoints and isolates live from sandbox', async () => {
+  for (const environment of ['sandbox', 'production']) {
+    const config = load('next.config.ts', {}, { PADDLE_ENVIRONMENT: environment }).default;
+    const headers = await config.headers();
+    const policy = headers[0].headers.find((header) => header.key === 'Content-Security-Policy').value;
+    assert.match(policy, /script-src 'self' https:\/\/cdn\.paddle\.com;/);
+    assert.match(policy, /frame-ancestors 'none'/);
+    assert.doesNotMatch(policy, /unsafe-eval|https:\/\/\*/);
+    if (environment === 'production') {
+      assert.doesNotMatch(policy, /sandbox-/);
+      assert.match(policy, /frame-src https:\/\/buy\.paddle\.com https:\/\/create-checkout\.paddle\.com;/);
+    } else assert.match(policy, /https:\/\/sandbox-buy\.paddle\.com/);
+  }
+});
+
 test('Render and partial Auth0 configuration never accept client platform identity headers', async () => {
   for (const env of [{ RENDER: 'true' }, { AUTH_PROVIDER: 'auth0' }, { AUTH0_DOMAIN: 'example.auth0.com' }, { AUTH0_CLIENT_ID: 'client' }]) {
     assert.equal(await authHarness(env).auth.getChatGPTUser(), null);

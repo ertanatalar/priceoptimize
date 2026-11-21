@@ -1,7 +1,15 @@
 import type { NextConfig } from 'next';
 
+// Only official checkout endpoints; production never authorizes sandbox hosts.
+const paddleSandbox = process.env.PADDLE_ENVIRONMENT !== 'production';
+const paddleCdn = 'https://cdn.paddle.com';
+const paddleApi = paddleSandbox ? 'https://sandbox-api.paddle.com' : 'https://api.paddle.com';
+const paddleBuy = paddleSandbox ? 'https://sandbox-buy.paddle.com' : 'https://buy.paddle.com';
+const paddleCheckout = paddleSandbox ? 'https://sandbox-create-checkout.paddle.com' : 'https://create-checkout.paddle.com';
+const paddleStyles = paddleSandbox ? `${paddleCdn} https://sandbox-cdn.paddle.com` : paddleCdn;
+
 const securityHeaders = [
-  { key: 'Content-Security-Policy', value: "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; upgrade-insecure-requests" },
+  { key: 'Content-Security-Policy', value: `default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' ${paddleStyles}; script-src 'self' ${paddleCdn}; connect-src 'self' ${paddleApi} ${paddleCheckout}; frame-src ${paddleBuy} ${paddleCheckout}; upgrade-insecure-requests` },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=()' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },

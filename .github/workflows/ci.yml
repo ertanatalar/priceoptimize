@@ -40,6 +40,8 @@ jobs:
         working-directory: web
       - run: pnpm test:security
         working-directory: web
+      - run: pnpm test
+        working-directory: web
       - run: pnpm exec tsc --noEmit --incremental false
         working-directory: web
       - run: pnpm build
