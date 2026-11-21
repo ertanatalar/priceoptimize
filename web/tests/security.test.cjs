@@ -92,3 +92,22 @@ test('foreign client deletion cannot write; portal viewer cannot modify clients'
   assert.equal((await route.DELETE(request())).status, 403);
   assert.equal(writes, 0);
 });
+
+test('public origin works behind a proxy without trusting forged host headers', () => {
+  const { rejectCrossOriginMutation } = load('lib/request-security.ts', {}, { PUBLIC_BASE_URL: 'https://www.priceoptimize.ai/' });
+  const request = (headers) => new Request('http://localhost:3000/api/browser-observations', { method: 'POST', headers });
+  assert.equal(rejectCrossOriginMutation(request({ origin: 'https://www.priceoptimize.ai', 'sec-fetch-site': 'same-origin' })), null);
+  for (const headers of [
+    { origin: 'https://evil.test', 'x-forwarded-host': 'evil.test', 'x-forwarded-proto': 'https' },
+    { origin: 'http://localhost:3000' },
+    { origin: 'https://priceoptimize.ai' },
+    { origin: 'null' },
+    { origin: 'https://www.priceoptimize.ai', 'sec-fetch-site': 'cross-site' },
+  ]) assert.equal(rejectCrossOriginMutation(request(headers)).status, 403);
+});
+test('invalid configured public origins fail closed', () => {
+  for (const PUBLIC_BASE_URL of ['invalid-url', 'file:///tmp/app', 'https://user:password@app.test']) {
+    const { rejectCrossOriginMutation } = load('lib/request-security.ts', {}, { PUBLIC_BASE_URL });
+    assert.equal(rejectCrossOriginMutation(new Request('https://app.test/api/browser-observations', { method: 'POST', headers: { origin: 'https://app.test' } })).status, 403);
+  }
+});
