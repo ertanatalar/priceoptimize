@@ -1,6 +1,6 @@
 import { rejectCrossOriginMutation } from '@/lib/request-security';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
-import { execute, mysqlConfigured, query, transaction } from '@/db/mysql';
+import { DatabaseRequestError, mysqlConfigured, query, transaction } from '@/db/mysql';
 import { assertWritable, ForbiddenError, getAccount, TrialExpiredError } from '@/lib/account';
 import { sha256 } from '@/lib/security';
 
@@ -25,6 +25,7 @@ export async function POST(request: Request) {
   if (!clientCode || rows.length === 0 || rows.length > 1000) return Response.json({ error: 'Müşteri ve 1–1000 URL satırı gereklidir.' }, { status: 400 });
   const client = (await query<{ id: number }>(`SELECT id FROM clients WHERE organization_id=? AND code=? AND active=TRUE AND deleted_at IS NULL LIMIT 1`, [account.organizationId, clientCode]))[0];
   if (!client) return Response.json({ error: 'Müşteri bulunamadı.' }, { status: 404 });
+  const statements: Array<{ sql: string; params: Array<string | number | null> }> = [];
   for (const row of rows) {
     const group = row.group?.trim(); const name = row.name?.trim(); const merchant = row.merchant?.trim();
     const currency = (row.currency?.trim() || 'TRY').toUpperCase(); const threshold = Number(row.maxPriceDropPct ?? 25);
@@ -34,11 +35,18 @@ export async function POST(request: Request) {
     if (!/^[A-Z]{3}$/.test(currency)) return Response.json({ error: 'Para birimi üç harfli ISO kodu olmalıdır.' }, { status: 400 });
     if (!(threshold >= 0 && threshold < 100)) return Response.json({ error: 'Düşüş eşiği 0 ile 100 arasında olmalıdır.' }, { status: 400 });
     const normalizedUrl = url.toString(); const urlHash = await sha256(normalizedUrl);
-    await transaction([
+    statements.push(
       { sql: `INSERT INTO products(organization_id,client_id,sku,name,currency,max_price_drop_pct) VALUES(?,?,?,?,?,?) ON DUPLICATE KEY UPDATE name=VALUES(name),currency=VALUES(currency),max_price_drop_pct=VALUES(max_price_drop_pct),active=TRUE,deleted_at=NULL`, params: [account.organizationId, client.id, group, name, currency, threshold] },
       { sql: `INSERT INTO competitor_sources(organization_id,product_id,merchant,url,url_hash) SELECT ?,id,?,?,? FROM products WHERE organization_id=? AND client_id=? AND sku=? ON DUPLICATE KEY UPDATE merchant=VALUES(merchant),active=TRUE,deleted_at=NULL`, params: [account.organizationId, merchant, normalizedUrl, urlHash, account.organizationId, client.id, group] },
-    ]);
+    );
   }
-  await execute(`INSERT INTO audit_events(organization_id,actor_user_id,event_type,object_type,object_id,outcome,metadata_json,retention_until) VALUES(?,?,'watch.imported','competitor_source',NULL,'success',JSON_OBJECT('count',?),DATE_ADD(CURRENT_TIMESTAMP(3),INTERVAL 1095 DAY))`, [account.organizationId, account.userId, rows.length]);
+  statements.push({ sql: `INSERT INTO audit_events(organization_id,actor_user_id,event_type,object_type,object_id,outcome,metadata_json,retention_until) VALUES(?,?,'watch.imported','competitor_source',NULL,'success',JSON_OBJECT('count',?),DATE_ADD(CURRENT_TIMESTAMP(3),INTERVAL 1095 DAY))`, params: [account.organizationId, account.userId, rows.length] });
+  try {
+    await transaction(statements, { sourceQuota: { organizationId: account.organizationId } });
+  } catch (error) {
+    if (error instanceof DatabaseRequestError && error.status === 404) return Response.json({ error: 'Link ekleme hizmeti güncelleniyor. Lütfen kısa süre sonra tekrar deneyin.' }, { status: 503 });
+    if (error instanceof DatabaseRequestError && [400, 402, 409].includes(error.status)) return Response.json({ error: error.message }, { status: error.status });
+    throw error;
+  }
   return Response.json({ status: 'ok', imported: rows.length }, { status: 201 });
 }

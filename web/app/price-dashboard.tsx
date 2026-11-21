@@ -129,6 +129,8 @@ type Account = {
   databaseEngine: string;
   dataRegion: string;
   billingConfigured: boolean;
+  planName: string;
+  sourceLimit: number;
 };
 type DashboardData = {
   clients: Client[];
@@ -798,7 +800,7 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
               <span>
                 {isClientPortal ? (
                   <strong>Müşteri görünümü · yalnızca size ait kayıtlar</strong>
-                ) : (
+                ) : data.account.subscriptionState === 'trialing' ? (
                   <>
                     <strong>{data.account.trialDaysRemaining} gün</strong>{' '}
                     deneme süreniz kaldı. Bitiş:{' '}
@@ -806,7 +808,7 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                       'tr-TR',
                     )}
                   </>
-                )}
+                ) : <strong>{subscriptionLabel(data.account.subscriptionState)} · {data.metrics.watchedUrls} / {data.account.sourceLimit} link</strong>}
               </span>
               <span className="inline-flex items-center gap-2 font-medium">
                 <Database className="size-4" />
@@ -824,12 +826,10 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm">
                 <div>
                   <p className="font-semibold text-[#0b1720]">
-                    Abonelik:{' '}
-                    {subscriptionLabel(data.account.subscriptionState)}
+                    {data.account.planName} · 29 USD / ay · {data.metrics.watchedUrls} / {data.account.sourceLimit} link
                   </p>
                   <p className="text-xs text-slate-500">
-                    Ödeme, iptal, ödeme yöntemi ve faturalar güvenli Paddle
-                    portalında yönetilir.
+                    <a href="/pricing" className="underline">Paket ayrıntıları</a> · <a href="/refunds" className="underline">İade ve iptal</a>. Ödeme etkinleştirildiğinde aylık yenilenir.
                   </p>
                 </div>
                 <BillingActions
@@ -1354,7 +1354,7 @@ function OnboardingDialog({
                 required
                 className="mt-1"
               />
-              <span>KVKK/GDPR aydınlatma metnini okudum.</span>
+              <span><a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline">Gizlilik ve aydınlatma metnini</a> okudum.</span>
             </label>
             <label className="flex items-start gap-3">
               <input
@@ -1363,7 +1363,7 @@ function OnboardingDialog({
                 required
                 className="mt-1"
               />
-              <span>Hizmet koşullarını kabul ediyorum.</span>
+              <span><a href="/terms" target="_blank" rel="noopener noreferrer" className="underline">Hizmet koşullarını</a> kabul ediyorum. 30 günlük deneme 10 link içerir; otomatik ücretli geçiş yapılmaz.</span>
             </label>
             <label className="flex items-start gap-3 text-slate-600">
               <input name="marketingConsent" type="checkbox" className="mt-1" />

@@ -2,6 +2,7 @@ import { getChatGPTUser } from '@/app/chatgpt-auth';
 import { mysqlConfigured, query } from '@/db/mysql';
 import { getAccount } from '@/lib/account';
 import { paddleConfigured } from '@/lib/billing';
+import { STARTER_PLAN, sourceLimitForState } from '@/lib/plans';
 
 export const dynamic = 'force-dynamic';
 
@@ -108,6 +109,8 @@ export async function GET() {
       databaseEngine: 'MySQL',
       dataRegion: 'EU',
       billingConfigured: paddleConfigured(),
+      planName: account.subscriptionState === 'trialing' ? 'Ücretsiz deneme' : STARTER_PLAN.name,
+      sourceLimit: sourceLimitForState(account.subscriptionState),
     },
     metrics: {
       activeClients: clients.length,

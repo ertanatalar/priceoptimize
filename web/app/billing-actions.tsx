@@ -129,7 +129,7 @@ export function BillingActions({
         ) : (
           <CreditCard />
         )}
-        {paid ? 'Aboneliği ve faturaları yönet' : 'Starter pakete geç'}
+        {paid ? 'Aboneliği ve faturaları yönet' : 'Başlangıç · 29 USD / ay · 50 link'}
       </Button>
       {error && (
         <span className="text-xs font-medium text-red-700">{error}</span>
