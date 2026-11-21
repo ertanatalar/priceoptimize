@@ -14,6 +14,25 @@ async function withServer(pool, run) {
   finally { server.close(); await once(server, 'close'); }
 }
 
+test('source import exceeding quota rolls back all statements before commit', async () => {
+  const events = [];
+  const connection = {
+    beginTransaction: async () => events.push('begin'),
+    execute: async (sql) => {
+      if (sql.includes('FOR UPDATE')) { events.push('lock'); return [[{ state: 'active', trial_valid: 1 }]]; }
+      if (sql.includes('COUNT(*)')) { events.push('count'); return [[{ used: 51 }]]; }
+      events.push('write'); return [{}];
+    },
+    commit: async () => events.push('commit'), rollback: async () => events.push('rollback'), release: () => events.push('release'),
+  };
+  await withServer({ getConnection: async () => connection }, async (origin) => {
+    const response = await fetch(`${origin}/v1/source-transaction`, { method: 'POST', headers: { authorization: 'Bearer test-token', 'content-type': 'application/json' }, body: JSON.stringify({ sourceQuota: { organizationId: '87174023-405f-491f-be9a-e4bb680084d7' }, statements: [{ sql: 'INSERT INTO competitor_sources(id) VALUES(?)', params: [51] }] }) });
+    assert.equal(response.status, 409);
+    assert.match((await response.json()).error, /50/);
+    assert.deepEqual(events, ['begin', 'lock', 'write', 'count', 'rollback', 'release']);
+  });
+});
+
 test('health endpoint checks MySQL', async () => {
   const pool = { query: async () => [[{ ok: 1 }]] };
   await withServer(pool, async (origin) => {

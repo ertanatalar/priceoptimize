@@ -1,5 +1,9 @@
 type SqlValue = string | number | boolean | null | Date;
 
+export class DatabaseRequestError extends Error {
+  constructor(message: string, public status: number) { super(message); }
+}
+
 export function mysqlConfigured() {
   return Boolean(process.env.MYSQL_HTTP_URL && process.env.MYSQL_HTTP_TOKEN);
 }
@@ -20,7 +24,7 @@ async function request<T>(path: string, body: unknown): Promise<T> {
     cache: 'no-store',
   });
   const payload = await response.json() as { error?: string } & T;
-  if (!response.ok) throw new Error(payload.error || 'MySQL işlemi başarısız.');
+  if (!response.ok) throw new DatabaseRequestError(payload.error || 'MySQL işlemi başarısız.', response.status);
   return payload;
 }
 
@@ -33,8 +37,8 @@ export async function execute(sql: string, params: SqlValue[] = []) {
   return request<{ rows: unknown }>('/v1/query', { sql, params });
 }
 
-export async function transaction(statements: Array<{ sql: string; params?: SqlValue[] }>) {
-  return request<{ status: 'ok' }>('/v1/transaction', { statements });
+export async function transaction(statements: Array<{ sql: string; params?: SqlValue[] }>, options?: { sourceQuota: { organizationId: string } }) {
+  return request<{ status: 'ok' }>(options?.sourceQuota ? '/v1/source-transaction' : '/v1/transaction', { statements, ...options });
 }
 
 export async function notifyBrowserChanges(payload: {

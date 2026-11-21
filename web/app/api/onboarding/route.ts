@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   const code = body.organizationCode?.trim().toLowerCase();
   const locale = body.locale === 'en' ? 'en-GB' : 'tr-TR';
   if (!name || !code || !/^[a-z0-9][a-z0-9-]{1,48}$/.test(code)) return Response.json({ error: 'Geçerli kuruluş adı ve kodu zorunludur.' }, { status: 400 });
-  if (!body.acceptedTerms || !body.acceptedPrivacy) return Response.json({ error: 'Hizmet koşulları ve aydınlatma metni kabul edilmelidir.' }, { status: 400 });
+  if (body.acceptedTerms !== true || body.acceptedPrivacy !== true) return Response.json({ error: 'Hizmet koşulları kabul edilmeli ve aydınlatma metni okunmalıdır.' }, { status: 400 });
 
   const organizationId = uuid();
   const userId = uuid();

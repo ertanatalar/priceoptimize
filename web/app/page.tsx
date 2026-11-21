@@ -19,7 +19,7 @@ function Welcome() {
             <span className="grid size-10 place-items-center rounded-xl bg-[#28d7a1] text-[#08201a]"><Tags className="size-5" /></span>
             <div><p className="font-semibold">Price Optimizer</p><p className="text-xs text-slate-400">Rakip fiyat merkezi</p></div>
           </div>
-          <a href="/auth/login" className="rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold hover:bg-white/10">Giriş yap</a>
+          <nav className="flex flex-wrap items-center gap-5 text-sm"><a href="/pricing" className="font-semibold text-[#28d7a1]">Fiyatlandırma · 29 USD / ay</a><a href="/auth/login" className="rounded-lg border border-white/20 px-4 py-2 font-semibold hover:bg-white/10">Giriş yap</a></nav>
         </header>
         <section className="grid flex-1 items-center gap-10 py-16 lg:grid-cols-[1.1fr_.9fr]">
           <div>
@@ -30,7 +30,7 @@ function Welcome() {
               <a href="/auth/login?screenHint=signup" className="inline-flex items-center gap-2 rounded-xl bg-[#28d7a1] px-5 py-3 font-semibold text-[#08201a] hover:bg-[#35e7b0]">Ücretsiz kaydol <ArrowRight className="size-4" /></a>
               <a href="/auth/login" className="rounded-xl border border-white/20 px-5 py-3 font-semibold hover:bg-white/10">Zaten hesabım var</a>
             </div>
-            <p className="mt-4 text-sm text-slate-400">Deneme süresi kayıt tamamlandığında başlar ve 30 gün sürer.</p>
+            <p className="mt-4 text-sm text-slate-400">30 gün · 10 link · Kredi kartı gerekmez. Devam etmek isterseniz aylık 29 USD ile 50 link. Otomatik ücretli geçiş yok.</p>
           </div>
           <div className="rounded-3xl border border-white/10 bg-white/5 p-7 shadow-2xl backdrop-blur">
             <p className="text-sm font-semibold text-slate-300">Deneme paketine dahil</p>
@@ -42,7 +42,7 @@ function Welcome() {
             <div className="mt-7 flex items-start gap-3 rounded-2xl bg-black/20 p-4 text-sm text-slate-300"><ShieldCheck className="mt-0.5 size-5 shrink-0 text-[#28d7a1]" /><p>Parolalar ve ödeme kartı bilgileri Price Optimizer MySQL veritabanında saklanmaz.</p></div>
           </div>
         </section>
-        <footer className="flex flex-wrap justify-between gap-3 border-t border-white/10 py-5 text-xs text-slate-500"><span>© 2026 Price Optimizer</span><a href="/legal" className="hover:text-white">Gizlilik ve veri güvenliği</a></footer>
+        <footer className="flex flex-wrap justify-between gap-5 border-t border-white/10 py-5 text-sm text-slate-400"><span>© 2026 Price Optimizer · Ertan Atalar</span><nav className="flex flex-wrap gap-5"><a href="/pricing">Fiyatlandırma</a><a href="/terms">Kullanım koşulları</a><a href="/refunds">İade ve iptal</a><a href="/privacy">Gizlilik</a><a href="/contact">İletişim</a></nav></footer>
       </div>
     </main>
   );

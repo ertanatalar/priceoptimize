@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import mysql from 'mysql2/promise';
+import { lockSourceQuota, assertSourceQuota, SourceQuotaError } from './source-quota.mjs';
 import { monitorAll, notifyBrowserChanges } from './collector.mjs';
 
 const MAX_BODY_BYTES = 1024 * 1024;
@@ -118,7 +119,7 @@ export function createApp(pool, apiToken, monitorToken = apiToken) {
         return json(response, 200, { status: 'ok', database: 'mysql' });
       }
 
-      if (request.method !== 'POST' || !['/v1/query', '/v1/transaction', '/v1/monitor', '/v1/browser-notify'].includes(request.url)) {
+      if (request.method !== 'POST' || !['/v1/query', '/v1/transaction', '/v1/source-transaction', '/v1/monitor', '/v1/browser-notify'].includes(request.url)) {
         return json(response, 404, { error: 'Bulunamadı.' });
       }
       const expectedToken = request.url === '/v1/monitor' ? monitorToken : apiToken;
@@ -142,16 +143,20 @@ export function createApp(pool, apiToken, monitorToken = apiToken) {
         return json(response, 200, { rows });
       }
 
-      if (!Array.isArray(body.statements) || body.statements.length < 1 || body.statements.length > 50) {
-        throw new RequestError(400, 'İşlem 1 ile 50 SQL ifadesi içermelidir.');
+      if (request.url === '/v1/source-transaction' && !body.sourceQuota) throw new RequestError(400, 'Link işlemi için kuruluş sınırı kontrolü gereklidir.');
+      const maxStatements = body.sourceQuota ? 2001 : 50;
+      if (!Array.isArray(body.statements) || body.statements.length < 1 || body.statements.length > maxStatements) {
+        throw new RequestError(400, `İşlem 1 ile ${maxStatements} SQL ifadesi içermelidir.`);
       }
       body.statements.forEach(validateStatement);
       const connection = await pool.getConnection();
       try {
         await connection.beginTransaction();
+        const sourceLimit = body.sourceQuota ? await lockSourceQuota(connection, body.sourceQuota.organizationId) : null;
         for (const statement of body.statements) {
           await connection.execute(statement.sql, statement.params ?? []);
         }
+        if (sourceLimit !== null) await assertSourceQuota(connection, body.sourceQuota.organizationId, sourceLimit);
         await connection.commit();
       } catch (error) {
         await connection.rollback();
@@ -161,7 +166,7 @@ export function createApp(pool, apiToken, monitorToken = apiToken) {
       }
       return json(response, 200, { status: 'ok' });
     } catch (error) {
-      const status = error instanceof RequestError ? error.status : 500;
+      const status = error instanceof RequestError || error instanceof SourceQuotaError ? error.status : 500;
       if (status === 500) console.error('Database API request failed', { code: typeof error?.code === 'string' && /^[A-Z0-9_]+$/.test(error.code) ? error.code : 'INTERNAL_ERROR' });
       return json(response, status, { error: status === 500 ? 'Veritabanı işlemi başarısız.' : error.message });
     }

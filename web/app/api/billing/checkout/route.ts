@@ -6,7 +6,9 @@ import {
   paddleConfigured,
   paddleEnvironment,
   starterPriceId,
+  paddleApi,
 } from '@/lib/billing';
+import { isStarterMonthlyPrice } from '@/lib/billing-price';
 import { uuid } from '@/lib/security';
 
 export async function POST(request: Request) {
@@ -48,6 +50,12 @@ export async function POST(request: Request) {
 
   const checkoutRef = uuid();
   const priceId = starterPriceId();
+  try {
+    const { data } = await paddleApi<{ data: Parameters<typeof isStarterMonthlyPrice>[0] }>(`/prices/${encodeURIComponent(priceId)}`);
+    if (!isStarterMonthlyPrice(data)) return Response.json({ error: 'Aylık 29 USD paket fiyatı henüz doğrulanmadı. Lütfen destekle iletişime geçin.' }, { status: 503 });
+  } catch {
+    return Response.json({ error: 'Paket fiyatı doğrulanamadı. Lütfen daha sonra tekrar deneyin.' }, { status: 503 });
+  }
   await execute(
     `INSERT INTO billing_checkout_sessions(id,organization_id,user_id,plan_code,provider_price_id,expires_at) VALUES(?,?,?,'starter',?,DATE_ADD(CURRENT_TIMESTAMP(3),INTERVAL 30 MINUTE))`,
     [checkoutRef, account.organizationId, account.userId, priceId],
