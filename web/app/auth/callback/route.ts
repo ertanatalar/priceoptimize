@@ -1,6 +1,6 @@
 import { query, mysqlConfigured } from '@/db/mysql';
 import { sha256 } from '@/lib/security';
-import { normalizeLocale } from '../../../../shared/i18n.mjs';
+import { normalizeLocale } from '../../../i18n-shared/i18n.mjs';
 import { localeJson } from '@/lib/i18n-server';
 import { safeRelativeReturnPath, encryptAuth0Session } from '@/app/chatgpt-auth';
 import { cookies } from 'next/headers';

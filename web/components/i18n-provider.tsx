@@ -1,6 +1,6 @@
 'use client';
 import { createContext, useContext, useState } from 'react';
-import { intlLocales, languageNames, locales, normalizeLocale, translate } from '../../shared/i18n.mjs';
+import { intlLocales, languageNames, locales, normalizeLocale, translate } from '../i18n-shared/i18n.mjs';
 const LocaleContext=createContext('tr');
 export function I18nProvider({locale,children}:{locale:string;children:React.ReactNode}) {return <LocaleContext.Provider value={locale}>{children}</LocaleContext.Provider>;}
 export function useI18n(){const locale=useContext(LocaleContext);return {locale,intlLocale:intlLocales[normalizeLocale(locale) as keyof typeof intlLocales],t:(text:string,values:unknown[]=[])=>translate(locale,text,values)};}

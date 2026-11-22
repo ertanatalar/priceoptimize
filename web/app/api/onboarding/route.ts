@@ -1,4 +1,4 @@
-import { normalizeLocale, intlLocales, localeFromRequest } from '../../../../shared/i18n.mjs';
+import { normalizeLocale, intlLocales, localeFromRequest } from '../../../i18n-shared/i18n.mjs';
 import { localeJson } from '@/lib/i18n-server';
 import { rejectCrossOriginMutation } from '@/lib/request-security';
 import { getChatGPTUser } from '@/app/chatgpt-auth';

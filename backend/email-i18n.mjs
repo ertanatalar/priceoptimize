@@ -1,4 +1,4 @@
-import { translate, normalizeLocale, intlLocales } from '../shared/i18n.mjs';
+import { translate, normalizeLocale, intlLocales } from './i18n-shared/i18n.mjs';
 export async function clientNotificationLocale(pool, organizationId, clientId) {
   const [[row]] = await pool.execute(`SELECT COALESCE(
     (SELECT JSON_UNQUOTE(JSON_EXTRACT(a.metadata_json,'$.locale')) FROM audit_events a WHERE a.organization_id=c.organization_id AND a.event_type='locale.preference' AND a.object_type='client' AND a.object_id=CAST(c.id AS CHAR) ORDER BY a.occurred_at DESC,a.id DESC LIMIT 1),

@@ -1,4 +1,4 @@
-import { locales, translate, localeFromRequest } from '../../../shared/i18n.mjs';
+import { locales, translate, localeFromRequest } from '../../i18n-shared/i18n.mjs';
 export async function GET(request:Request){
   const url=new URL(request.url);const locale=url.searchParams.get('locale')||'tr';
   if(!locales.includes(locale))return Response.json({error:translate(localeFromRequest(request),'Dil tercihi kaydedilemedi.')},{status:400});

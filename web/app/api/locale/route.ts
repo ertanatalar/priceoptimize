@@ -3,7 +3,7 @@ import { getAccount } from '@/lib/account';
 import { execute, mysqlConfigured } from '@/db/mysql';
 import { rejectCrossOriginMutation } from '@/lib/request-security';
 import { localeJson } from '@/lib/i18n-server';
-import { intlLocales, locales } from '../../../../shared/i18n.mjs';
+import { intlLocales, locales } from '../../../i18n-shared/i18n.mjs';
 export async function POST(request:Request){
   const rejected=rejectCrossOriginMutation(request);if(rejected)return rejected;
   let body:{locale?:string};try{body=await request.json();}catch{return localeJson(request,{error:'Geçersiz JSON.'},{status:400});}
