@@ -1,5 +1,5 @@
 import { cookies, headers } from 'next/headers';
-import { localeFromRequest, normalizeLocale, translate, translateErrors } from '../../shared/i18n.mjs';
+import { localeFromRequest, normalizeLocale, translate, translateErrors } from '../i18n-shared/i18n.mjs';
 export async function getTranslator() {
   const cookieStore=await cookies();
   const requestHeaders=await headers();

@@ -23,7 +23,7 @@ Version 0.3.0 includes seven popup languages, translated batch messages and Chro
 
 After editing shared catalogs run:
 
-    node tools/build-extension-i18n.cjs
+    node tools/build-i18n.cjs
 
 Then rebuild web/public/price-optimizer-browser-extension.zip from that folder (preserve manifest.json at ZIP root). Existing unpacked installations need a user reload/update to use the new extension assets.
 
@@ -36,3 +36,5 @@ CI runs security/tenant isolation, preference validation, translation key/placeh
 All seven catalogs contain 504 display messages with exact key/placeholder parity. Local checks: 25 backend tests (including localized notification composition), 24 web security/localization/import tests, 7 web unit tests, TypeScript and production build passed. Browser QA verified switching Turkish→German and navigation to German legal pages without losing preference; 42 anonymous page responses across all seven locales returned the requested html language. No live email or payment was sent.
 
 Auth0's public login currently rendered Turkish and English, but de/fr/it/es/pt requests fell back to English. Correct-tenant management access was attempted and stopped at MFA; no MFA setting was changed or bypassed. The tenant owner must complete the open Auth0 Dashboard challenge before the remaining five hosted-login languages can be enabled. Application UI and service notification translations are independent of this external setting.
+
+Render service roots are isolated: web/i18n-shared and backend/i18n-shared are generated, tracked copies of the canonical shared directory. Always run tools/build-i18n.cjs after catalog or shared helper changes. CI checks byte parity to prevent drift; service runtime imports never depend on files outside their root.

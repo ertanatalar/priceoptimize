@@ -1,4 +1,4 @@
-import { translate, localeFromRequest } from '../../shared/i18n.mjs';
+import { translate, localeFromRequest } from '../i18n-shared/i18n.mjs';
 /** Browser mutation protection; API clients may omit Origin, browsers may not forge it. */
 export function rejectCrossOriginMutation(request: Request): Response | null {
   if (request.headers.get('sec-fetch-site') === 'cross-site') {

@@ -1,5 +1,5 @@
 import { localeJson } from '@/lib/i18n-server';
-import { localeFromRequest } from '../../../../shared/i18n.mjs';
+import { localeFromRequest } from '../../../i18n-shared/i18n.mjs';
 import { safeRelativeReturnPath, auth0Configured } from '@/app/chatgpt-auth';
 import { cookies } from 'next/headers';
 

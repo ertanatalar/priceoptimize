@@ -1,7 +1,7 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');const path=require('node:path');const vm=require('node:vm');const ts=require('typescript');
-const i18n=require('../../shared/i18n.mjs');
+const i18n=require('../i18n-shared/i18n.mjs');
 const root=path.resolve(__dirname,'..');
 function load(file,mocks={}){const source=ts.transpileModule(fs.readFileSync(path.join(root,file),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;const module={exports:{}};vm.runInNewContext(source,{module,exports:module.exports,require:name=>{if(name in mocks)return mocks[name];if(name.endsWith('shared/i18n.mjs'))return i18n;throw Error('Unexpected import '+name);},Request,Response,Headers,URL,process:{env:{}},console});return module.exports;}
 const localeResponse=(request,body,init)=>Response.json(i18n.translateErrors(i18n.localeFromRequest(request),body),init);
@@ -55,4 +55,12 @@ test('extension uses the same catalogs and injected page readers stay self-conta
 test('public pages, dashboard and capture contain no untranslated Turkish JSX text or labels',()=>{
  function list(dir){return fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?list(path.join(dir,e.name)):e.name.endsWith('.tsx')?[path.join(dir,e.name)]:[]);}
  for(const file of [...list(path.join(root,'app')),path.join(root,'components/public-site.tsx')]){const source=fs.readFileSync(file,'utf8');const ast=ts.createSourceFile(file,source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);function walk(node){if(ts.isJsxText(node))assert.doesNotMatch(node.text,/[çğıöşüÇĞİÖŞÜ]/,file);if(ts.isJsxAttribute(node)&&node.initializer&&ts.isStringLiteral(node.initializer)&&['title','intro','label','detail','description','placeholder','aria-label','alt'].includes(node.name.getText(ast)))assert.doesNotMatch(node.initializer.text,/[çğıöşüÇĞİÖŞÜ]/,file+': '+node.getText(ast));ts.forEachChild(node,walk);}walk(ast);}
+});
+test('Render service copies match the canonical shared module and catalogs',()=>{
+ const canonical=path.resolve(root,'../shared');if(!fs.existsSync(canonical))return;
+ for(const relative of ['i18n.mjs',...i18n.locales.map(l=>'locales/'+l+'.json')]){
+  const expected=fs.readFileSync(path.join(canonical,relative));
+  assert.deepEqual(fs.readFileSync(path.join(root,'i18n-shared',relative)),expected);
+  assert.deepEqual(fs.readFileSync(path.resolve(root,'../backend/i18n-shared',relative)),expected);
+ }
 });
