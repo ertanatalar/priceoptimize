@@ -5,7 +5,7 @@ Supported locales: tr, en, de, fr, it, es and pt (Portuguese formatting: pt-PT).
 ## Request and account behavior
 
 - Root layout resolves a validated po_locale cookie, then supported Accept-Language preferences; legacy/default fallback is Turkish. The selected language is rendered on the server, including html lang, metadata and legal pages.
-- POST /api/locale validates the language and request origin. Anonymous preferences are cookie-only. Authenticated users update their own users.locale; an owner can update their own organization's default_locale. Portal recipients record a client-scoped preference in audit_events. No schema migration is needed.
+- POST /api/locale validates the language and request origin. Anonymous preferences are cookie-only. Authenticated users update their own users.locale; an owner can record their own organization's notification-language preference in audit_events (no extra UPDATE grant on organizations is needed). Portal recipients record a client-scoped preference in audit_events. No schema migration is needed.
 - Language choice is restored from the existing user record at Auth0 callback if the browser has no language cookie. Auth0 authorization receives ui_locales; the tenant must permit those languages for its hosted screens. This does not change authentication permissions or MFA.
 - GET /language supports safe, same-origin return paths for shared links and extension capture; it only sets the language cookie.
 - HTML pages and localized API results vary by Cookie/Accept-Language and are private/no-store. No global mutable server locale is used.
@@ -15,7 +15,7 @@ Supported locales: tr, en, de, fr, it, es and pt (Portuguese formatting: pt-PT).
 
 shared/locales/*.json is the single catalog for UI, public/legal text, errors and notifications. Values keep indexed placeholders. The shared translation helper only translates display/error fields, preserving names, URL/CSV protocol keys, currencies and observation values.
 
-Email locale precedence is client-scoped preference, verified recipient account in the same organization, then organization default. Backend composePriceEmail formats localized plain-text messages; tests do not send actual emails. Auth0 verification/security emails and Paddle receipts remain provider-managed; provider templates/settings must support the requested language. Paddle checkout receives the selected locale when checkout is enabled.
+Email locale precedence is client-scoped preference, verified recipient account in the same organization, then the owner’s organization preference and initial organization default. Backend composePriceEmail formats localized plain-text messages; tests do not send actual emails. Auth0 verification/security emails and Paddle receipts remain provider-managed; provider templates/settings must support the requested language. Paddle checkout receives the selected locale when checkout is enabled.
 
 ## Browser extension
 
@@ -38,3 +38,5 @@ All seven catalogs contain 504 display messages with exact key/placeholder parit
 Auth0's public login currently rendered Turkish and English, but de/fr/it/es/pt requests fell back to English. Correct-tenant management access was attempted and stopped at MFA; no MFA setting was changed or bypassed. The tenant owner must complete the open Auth0 Dashboard challenge before the remaining five hosted-login languages can be enabled. Application UI and service notification translations are independent of this external setting.
 
 Render service roots are isolated: web/i18n-shared and backend/i18n-shared are generated, tracked copies of the canonical shared directory. Always run tools/build-i18n.cjs after catalog or shared helper changes. CI checks byte parity to prevent drift; service runtime imports never depend on files outside their root.
+
+The runtime account intentionally has no UPDATE grant on organizations. Language changes use the existing users UPDATE and audit_events INSERT privileges; no grants or security settings are expanded.

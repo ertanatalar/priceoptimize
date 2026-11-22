@@ -3,6 +3,7 @@ export async function clientNotificationLocale(pool, organizationId, clientId) {
   const [[row]] = await pool.execute(`SELECT COALESCE(
     (SELECT JSON_UNQUOTE(JSON_EXTRACT(a.metadata_json,'$.locale')) FROM audit_events a WHERE a.organization_id=c.organization_id AND a.event_type='locale.preference' AND a.object_type='client' AND a.object_id=CAST(c.id AS CHAR) ORDER BY a.occurred_at DESC,a.id DESC LIMIT 1),
     (SELECT u.locale FROM users u JOIN organization_memberships m ON m.user_id=u.id AND m.organization_id=c.organization_id WHERE LOWER(u.email)=LOWER(c.notification_email) AND u.status='active' AND u.email_verified_at IS NOT NULL ORDER BY u.last_login_at DESC LIMIT 1),
+    (SELECT JSON_UNQUOTE(JSON_EXTRACT(a.metadata_json,'$.locale')) FROM audit_events a WHERE a.organization_id=c.organization_id AND a.event_type='locale.preference' AND a.object_type='organization' AND a.object_id=c.organization_id ORDER BY a.occurred_at DESC,a.id DESC LIMIT 1),
     org.default_locale,'tr-TR') AS locale
     FROM clients c JOIN organizations org ON org.id=c.organization_id
     WHERE c.id=? AND c.organization_id=? AND c.active=TRUE AND c.deleted_at IS NULL LIMIT 1`,[clientId,organizationId]);
