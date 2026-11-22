@@ -33,7 +33,8 @@ test('anonymous language selection sets only a validated long-lived locale cooki
  assert.equal(h.writes.length,0);assert.equal((await h.route.POST(preferenceRequest('xx'))).status,400);assert.equal((await h.route.POST(preferenceRequest('de',{origin:'https://evil.test'}))).status,403);
 });
 test('owner preferences update only the authenticated user and organization',async()=>{
- const h=localeHarness({scope:'organization',role:'owner',userId:'u1',organizationId:'org1'});assert.equal((await h.route.POST(preferenceRequest('it'))).status,200);assert.equal(h.writes.length,2);assert.deepEqual(h.writes.map(w=>Array.from(w.params)),[['it-IT','u1'],['it-IT','org1']]);
+ const h=localeHarness({scope:'organization',role:'owner',userId:'u1',organizationId:'org1'});assert.equal((await h.route.POST(preferenceRequest('it'))).status,200);assert.equal(h.writes.length,2);assert.deepEqual(h.writes.map(w=>Array.from(w.params)),[['it-IT','u1'],['org1','u1','org1','it-IT']]);
+ assert.doesNotMatch(h.writes.map(w=>w.sql).join(' '),/UPDATE organizations/);
  const member=localeHarness({scope:'organization',role:'analyst',userId:'u2',organizationId:'org1'});await member.route.POST(preferenceRequest('es'));assert.equal(member.writes.length,1);assert.match(member.writes[0].sql,/UPDATE users/);
 });
 test('portal recipient language cannot update organization or other client preferences',async()=>{
