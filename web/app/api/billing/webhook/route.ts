@@ -1,3 +1,4 @@
+import { localeJson } from '@/lib/i18n-server';
 import { query, transaction } from '@/db/mysql';
 import {
   findOrganizationForBillingEvent,
@@ -31,7 +32,7 @@ export async function POST(request: Request) {
       request.headers.get('paddle-signature'),
     ))
   )
-    return Response.json(
+    return localeJson(request,
       { error: 'Geçersiz webhook imzası.' },
       { status: 401 },
     );
@@ -40,10 +41,10 @@ export async function POST(request: Request) {
   try {
     event = JSON.parse(rawBody) as PaddleEvent;
   } catch {
-    return Response.json({ error: 'Geçersiz JSON.' }, { status: 400 });
+    return localeJson(request, { error: 'Geçersiz JSON.' }, { status: 400 });
   }
   if (!event.event_id || !event.event_type || !event.occurred_at || !event.data)
-    return Response.json({ error: 'Eksik Paddle olayı.' }, { status: 400 });
+    return localeJson(request, { error: 'Eksik Paddle olayı.' }, { status: 400 });
   const eventId = event.event_id;
   const eventType = event.event_type;
 
@@ -51,11 +52,11 @@ export async function POST(request: Request) {
     `SELECT event_id AS eventId FROM billing_webhook_events WHERE provider='paddle' AND event_id=? LIMIT 1`,
     [eventId],
   );
-  if (duplicate.length) return Response.json({ status: 'duplicate' });
+  if (duplicate.length) return localeJson(request, { status: 'duplicate' });
 
   const eventTime = new Date(event.occurred_at);
   if (!Number.isFinite(eventTime.getTime()))
-    return Response.json({ error: 'Geçersiz olay zamanı.' }, { status: 400 });
+    return localeJson(request, { error: 'Geçersiz olay zamanı.' }, { status: 400 });
   const payloadHash = await sha256(rawBody);
   const eventInsert = {
     sql: `INSERT INTO billing_webhook_events(provider,event_id,event_type,payload_sha256,occurred_at) VALUES('paddle',?,?,?,?)`,
@@ -67,13 +68,13 @@ export async function POST(request: Request) {
     eventType === 'transaction.payment_failed';
   if (!relevant) {
     await transaction([eventInsert]);
-    return Response.json({ status: 'ignored' });
+    return localeJson(request, { status: 'ignored' });
   }
 
   const match = await findOrganizationForBillingEvent(event.data);
   if (!match) {
     await transaction([eventInsert]);
-    return Response.json({ status: 'unmatched' });
+    return localeJson(request, { status: 'unmatched' });
   }
   const current = await query<{ lastEventAt: string | null }>(
     `SELECT last_event_occurred_at AS lastEventAt FROM billing_accounts WHERE organization_id=? LIMIT 1`,
@@ -84,7 +85,7 @@ export async function POST(request: Request) {
     new Date(current[0].lastEventAt).getTime() > eventTime.getTime()
   ) {
     await transaction([eventInsert]);
-    return Response.json({ status: 'stale' });
+    return localeJson(request, { status: 'stale' });
   }
 
   const data = event.data;
@@ -112,7 +113,7 @@ export async function POST(request: Request) {
       conflicting[0].organizationId !== match.organizationId
     ) {
       await transaction([eventInsert]);
-      return Response.json({ status: 'identity_conflict' });
+      return localeJson(request, { status: 'identity_conflict' });
     }
   }
   const statements = [
@@ -149,5 +150,5 @@ export async function POST(request: Request) {
       params: [match.checkoutRef, match.organizationId],
     });
   await transaction(statements);
-  return Response.json({ status: 'processed' });
+  return localeJson(request, { status: 'processed' });
 }

@@ -1,10 +1,12 @@
+import { localeJson } from '@/lib/i18n-server';
+import { localeFromRequest } from '../../../../shared/i18n.mjs';
 import { safeRelativeReturnPath, auth0Configured } from '@/app/chatgpt-auth';
 import { cookies } from 'next/headers';
 
 const TRANSACTION_COOKIE = 'po_auth_tx';
 
 export async function GET(request: Request) {
-  if (!auth0Configured()) return Response.json({ error: 'Auth0 yapılandırılmadı.' }, { status: 503 });
+  if (!auth0Configured()) return localeJson(request, { error: 'Auth0 yapılandırılmadı.' }, { status: 503 });
 
   const url = new URL(request.url);
   const returnTo = safeRelativeReturnPath(url.searchParams.get('returnTo') || '/');
@@ -24,6 +26,7 @@ export async function GET(request: Request) {
   });
 
   const authorize = new URL(`https://${process.env.AUTH0_DOMAIN}/authorize`);
+  authorize.searchParams.set('ui_locales', localeFromRequest(request));
   authorize.searchParams.set('client_id', process.env.AUTH0_CLIENT_ID!);
   authorize.searchParams.set('response_type', 'code');
   authorize.searchParams.set('redirect_uri', callbackUrl);

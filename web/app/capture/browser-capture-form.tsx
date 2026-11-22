@@ -1,4 +1,5 @@
 'use client';
+import { useI18n } from '@/components/i18n-provider';
 
 import { useState } from 'react';
 import { ArrowLeft, CheckCircle2, MonitorUp, ShieldCheck } from 'lucide-react';
@@ -25,6 +26,8 @@ type Candidate = {
 };
 
 export function BrowserCaptureForm({ initial }: { initial: Initial }) {
+  const { t, locale, intlLocale } = useI18n();
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
@@ -58,7 +61,7 @@ export function BrowserCaptureForm({ initial }: { initial: Initial }) {
     setSaving(false);
     if (!response.ok) {
       if (result.candidates?.length) setCandidates(result.candidates);
-      setError(result.error ?? 'Fiyat kaydedilemedi.');
+      setError(result.error ?? t("Fiyat kaydedilemedi."));
       return;
     }
     setSaved({ anomaly: Boolean(result.isPriceAnomaly), message: result.anomalyReason });
@@ -73,12 +76,12 @@ export function BrowserCaptureForm({ initial }: { initial: Initial }) {
               <CheckCircle2 className="size-7" />
             </div>
             <div>
-              <h1 className="text-2xl font-semibold text-[#0b1720]">Fiyat kaydedildi</h1>
+              <h1 className="text-2xl font-semibold text-[#0b1720]">{t("Fiyat kaydedildi")}</h1>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                {saved.anomaly ? saved.message : 'Tarayıcıdan doğrulanan fiyat karşılaştırmaya dahil edildi.'}
+                {saved.anomaly ? saved.message : t("Tarayıcıdan doğrulanan fiyat karşılaştırmaya dahil edildi.")}
               </p>
             </div>
-            <a href="/" className={buttonVariants({ className: 'w-full bg-[#0b1720] text-white' })}>Panele dön</a>
+            <a href="/" className={buttonVariants({ className: 'w-full bg-[#0b1720] text-white' })}>{t("Panele dön")}</a>
           </CardContent>
         </Card>
       </main>
@@ -92,34 +95,34 @@ export function BrowserCaptureForm({ initial }: { initial: Initial }) {
           <div className="mb-3 grid size-11 place-items-center rounded-xl bg-emerald-100 text-emerald-700">
             <MonitorUp className="size-5" />
           </div>
-          <CardTitle>Tarayıcı fiyatını doğrula</CardTitle>
-          <CardDescription>Fiyatı ürün sayfasıyla karşılaştırın. Siz onaylamadan kayıt yapılmaz.</CardDescription>
+          <CardTitle>{t("Tarayıcı fiyatını doğrula")}</CardTitle>
+          <CardDescription>{t("Fiyatı ürün sayfasıyla karşılaştırın. Siz onaylamadan kayıt yapılmaz.")}</CardDescription>
         </CardHeader>
         <CardContent>
           <form action={save} className="space-y-5">
             <div className="rounded-xl bg-slate-50 p-4">
-              <p className="line-clamp-2 font-medium text-slate-800">{initial.title || 'Rakip ürün'}</p>
+              <p className="line-clamp-2 font-medium text-slate-800">{initial.title || t("Rakip ürün")}</p>
               <p className="mt-2 truncate text-xs text-slate-500">{initial.pageUrl}</p>
             </div>
             <div className="grid grid-cols-[1fr_110px] gap-3">
               <div className="space-y-2">
-                <Label htmlFor="price">Görünen fiyat</Label>
+                <Label htmlFor="price">{t("Görünen fiyat")}</Label>
                 <Input id="price" name="price" type="text" inputMode="decimal" defaultValue={initial.price} required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="currency">Para birimi</Label>
+                <Label htmlFor="currency">{t("Para birimi")}</Label>
                 <Input id="currency" name="currency" maxLength={3} defaultValue={(initial.currency || 'TRY').toUpperCase()} required />
               </div>
             </div>
             <label className="flex items-center gap-3 rounded-xl border border-slate-200 p-3 text-sm">
               <input name="inStock" type="checkbox" defaultChecked={initial.inStock !== 'false'} />
-              <span>Ürün stokta görünüyor</span>
+              <span>{t("Ürün stokta görünüyor")}</span>
             </label>
             {candidates.length > 0 && (
               <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-4">
-                <Label htmlFor="sourceId">Fiyatın ait olduğu kayıt</Label>
+                <Label htmlFor="sourceId">{t("Fiyatın ait olduğu kayıt")}</Label>
                 <select id="sourceId" name="sourceId" required defaultValue="" className="h-10 w-full rounded-lg border border-amber-300 bg-white px-3 text-sm text-slate-900">
-                  <option value="" disabled>Müşteri ve ürünü seçin</option>
+                  <option value="" disabled>{t("Müşteri ve ürünü seçin")}</option>
                   {candidates.map((candidate) => (
                     <option key={candidate.id} value={candidate.id}>
                       {candidate.clientName} — {candidate.productName} — {candidate.merchant}
@@ -128,15 +131,15 @@ export function BrowserCaptureForm({ initial }: { initial: Initial }) {
                 </select>
               </div>
             )}
-            {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm font-medium text-red-700">{error}</p>}
+            {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm font-medium text-red-700">{t(error ?? '')}</p>}
             <div className="flex items-start gap-3 rounded-xl bg-emerald-50 p-3 text-sm leading-5 text-emerald-900">
               <ShieldCheck className="mt-0.5 size-4 shrink-0" />
-              <span>Kayıt müşteri hesabınızla eşleştirilir ve %25 aşırı düşüş kontrolünden geçirilir.</span>
+              <span>{t("Kayıt müşteri hesabınızla eşleştirilir ve %25 aşırı düşüş kontrolünden geçirilir.")}</span>
             </div>
             <div className="flex gap-3">
-              <a href="/" className={buttonVariants({ variant: 'outline', className: 'flex-1' })}><ArrowLeft />Vazgeç</a>
+              <a href="/" className={buttonVariants({ variant: 'outline', className: 'flex-1' })}><ArrowLeft />{t("Vazgeç")}</a>
               <Button type="submit" disabled={saving} className="flex-1 bg-[#0b1720] text-white">
-                {saving ? 'Kaydediliyor…' : 'Fiyatı kaydet'}
+                {saving ? 'Kaydediliyor…' : t("Fiyatı kaydet")}
               </Button>
             </div>
           </form>

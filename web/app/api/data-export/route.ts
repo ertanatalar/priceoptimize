@@ -1,20 +1,21 @@
+import { localeJson } from '@/lib/i18n-server';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
 import { mysqlConfigured, query } from '@/db/mysql';
 import { getAccount } from '@/lib/account';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: Request) {
   const user = await getChatGPTUser();
-  if (!user) return Response.json({ error: 'Oturum gerekli' }, { status: 401 });
+  if (!user) return localeJson(request, { error: 'Oturum gerekli' }, { status: 401 });
   if (!mysqlConfigured())
-    return Response.json(
+    return localeJson(request,
       { error: 'MySQL bağlantısı yapılandırılmadı.' },
       { status: 503 },
     );
   const account = await getAccount(user);
   if (!account)
-    return Response.json({ error: 'Hesap bulunamadı.' }, { status: 404 });
+    return localeJson(request, { error: 'Hesap bulunamadı.' }, { status: 404 });
 
   const organizationId = account.organizationId;
   const clientId = account.scope === 'client' ? account.clientId : null;

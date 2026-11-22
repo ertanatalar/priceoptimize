@@ -11,6 +11,7 @@ function harness() {
   const account = { organizationId: 'org-1', userId: 'user-1' };
   let rejected = false;
   const mocks = {
+    '@/lib/i18n-server': { localeJson: (request,body,init) => Response.json(body,init) },
     '@/lib/request-security': { rejectCrossOriginMutation: () => null },
     '@/app/chatgpt-auth': { getChatGPTUser: async () => ({}) },
     '@/db/mysql': { DatabaseRequestError, mysqlConfigured: () => true, query: async () => [{ id: 1 }], transaction: async (statements, options) => { writes.push({ statements, options }); if (rejected) throw new DatabaseRequestError('Paketiniz en fazla 50 aktif rakip link içerir.', 409); } },
