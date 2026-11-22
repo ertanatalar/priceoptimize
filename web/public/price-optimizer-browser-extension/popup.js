@@ -1,3 +1,4 @@
+const t=(...args)=>PO_I18N.t(...args);
 const APP_ORIGIN = 'https://www.priceoptimize.ai';
 const statusElement = document.querySelector('#status');
 const form = document.querySelector('#captureForm');
@@ -13,7 +14,7 @@ let capture = null;
 let batchSources = [];
 
 function showError(message) {
-  statusElement.textContent = message;
+  statusElement.textContent = t(message);
   statusElement.className = 'status error';
   form.hidden = true;
 }
@@ -79,16 +80,19 @@ function extractPageOffer() {
 }
 
 async function initialize() {
+  const {poLocale}=await chrome.storage.local.get('poLocale');
+  if(poLocale)PO_I18N.setLocale(poLocale);
+  document.querySelector('#language').value=PO_I18N.locale;PO_I18N.render();
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (!tab?.id || !/^https?:/.test(tab.url || '')) return showError('Önce paneldeki tarayıcı simgesiyle bir ürün sayfası açın.');
+  if (!tab?.id || !/^https?:/.test(tab.url || '')) return showError(t("Önce paneldeki tarayıcı simgesiyle bir ürün sayfası açın."));
   const [{ result }] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: extractPageOffer });
   capture = result;
   const sourceId = String(capture?.sourceId ?? '').trim();
-  if (!/^\d+$/.test(sourceId) || Number(sourceId) <= 0) return showError('Bu sayfa paneldeki ekran simgesiyle açılmadı. Panele dönüp mağaza satırındaki ilk simgeye basın.');
+  if (!/^\d+$/.test(sourceId) || Number(sourceId) <= 0) return showError(t("Bu sayfa paneldeki ekran simgesiyle açılmadı. Panele dönüp mağaza satırındaki ilk simgeye basın."));
   capture.sourceId = sourceId;
   statusElement.hidden = true;
   form.hidden = false;
-  titleInput.value = capture.title || 'Rakip ürün';
+  titleInput.value = capture.title || t("Rakip ürün");
   priceInput.value = capture.price || '';
   currencyInput.value = capture.currency || 'TRY';
   stockInput.checked = capture.inStock !== false;
@@ -97,8 +101,8 @@ async function initialize() {
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
-  const query = new URLSearchParams({ sourceId: capture.sourceId, pageUrl: capture.pageUrl, title: capture.title || 'Rakip ürün', price: priceInput.value, currency: currencyInput.value.toUpperCase(), inStock: String(stockInput.checked) });
-  await chrome.tabs.create({ url: `${APP_ORIGIN}/capture?${query.toString()}` });
+  const query = new URLSearchParams({ sourceId: capture.sourceId, pageUrl: capture.pageUrl, title: capture.title || t("Rakip ürün"), price: priceInput.value, currency: currencyInput.value.toUpperCase(), inStock: String(stockInput.checked) });
+  await chrome.tabs.create({ url: `${APP_ORIGIN}/language?locale=${PO_I18N.locale}&returnTo=${encodeURIComponent('/capture?'+query.toString())}` });
   window.close();
 });
 
@@ -110,32 +114,33 @@ batchFileInput.addEventListener('change', async () => {
     const payload = JSON.parse(await file.text());
     if (payload.format !== 'priceoptimize-browser-queue-v1' || !Array.isArray(payload.sources) || !payload.sources.length) throw new Error();
     batchSources = payload.sources;
-    batchStatus.textContent = `${batchSources.length} URL sıraya alındı.`;
+    if(payload.locale){PO_I18N.setLocale(payload.locale);document.querySelector('#language').value=PO_I18N.locale;PO_I18N.render();await chrome.storage.local.set({poLocale:PO_I18N.locale});}
+    batchStatus.textContent = t("{0} URL sıraya alındı.", [batchSources.length]);
     batchStatus.className = 'status';
   } catch {
-    batchStatus.textContent = 'Bu dosya geçerli bir Price Optimizer kontrol listesi değil.';
+    batchStatus.textContent = t("Bu dosya geçerli bir Price Optimizer kontrol listesi değil.");
     batchStatus.className = 'status error';
   }
 });
 
 startBatchButton.addEventListener('click', async () => {
   if (!batchSources.length) {
-    batchStatus.textContent = 'Önce panelden indirdiğiniz kontrol listesini seçin.';
+    batchStatus.textContent = t("Önce panelden indirdiğiniz kontrol listesini seçin.");
     batchStatus.className = 'status error';
     return;
   }
   let origins;
   try { origins = [...new Set(batchSources.map((source) => `${new URL(source.url).origin}/*`))]; }
-  catch { batchStatus.textContent = 'Listede geçersiz ürün adresi var.'; batchStatus.className = 'status error'; return; }
+  catch { batchStatus.textContent = t("Listede geçersiz ürün adresi var."); batchStatus.className = 'status error'; return; }
   const granted = await chrome.permissions.request({ origins });
   if (!granted) {
-    batchStatus.textContent = 'Toplu kontrol için listedeki mağazalara erişim izni verilmelidir.';
+    batchStatus.textContent = t("Toplu kontrol için listedeki mağazalara erişim izni verilmelidir.");
     batchStatus.className = 'status error';
     return;
   }
-  const response = await chrome.runtime.sendMessage({ type: 'START_BROWSER_BATCH', sources: batchSources });
+  const response = await chrome.runtime.sendMessage({ type: 'START_BROWSER_BATCH', sources: batchSources, locale:PO_I18N.locale });
   if (!response?.ok) {
-    batchStatus.textContent = response?.error || 'Toplu kontrol başlatılamadı.';
+    batchStatus.textContent = response?.error || t("Toplu kontrol başlatılamadı.");
     batchStatus.className = 'status error';
     return;
   }
@@ -155,13 +160,15 @@ async function refreshBatchStatus() {
   if (!state) return;
   const completed = Number(state.index || 0);
   const total = Number(state.sources?.length || 0);
-  if (running) batchStatus.textContent = `${completed}/${total} tamamlandı. Başarılı: ${state.results?.length || 0}, inceleme: ${state.failures?.length || 0}. Chrome’u açık bırakın.`;
-  else if (state.status === 'completed') batchStatus.textContent = `Tamamlandı. ${state.results?.length || 0} sonuç indirildi; ${state.failures?.length || 0} kayıt inceleme bekliyor.`;
-  else if (state.status === 'cancelled') batchStatus.textContent = 'İşlem durduruldu. Tamamlanan sonuçlar indirildi.';
+  if (running) batchStatus.textContent = t("{0}/{1} tamamlandı. Başarılı: {2}, inceleme: {3}. Chrome’u açık bırakın.", [completed, total, state.results?.length || 0, state.failures?.length || 0]);
+  else if (state.status === 'completed') batchStatus.textContent = t("Tamamlandı. {0} sonuç indirildi; {1} kayıt inceleme bekliyor.", [state.results?.length || 0, state.failures?.length || 0]);
+  else if (state.status === 'cancelled') batchStatus.textContent = t("İşlem durduruldu. Tamamlanan sonuçlar indirildi.");
   batchStatus.className = 'status';
 }
 
 chrome.storage.onChanged.addListener((changes) => { if (changes.browserBatchState) void refreshBatchStatus(); });
 void refreshBatchStatus();
 
-initialize().catch(() => showError('Sayfadaki fiyat okunamadı. Fiyatı ürün sayfasında gördüğünüzden emin olun.'));
+initialize().catch(() => showError(t("Sayfadaki fiyat okunamadı. Fiyatı ürün sayfasında gördüğünüzden emin olun.")));
+
+document.querySelector('#language').addEventListener('change',async event=>{await chrome.storage.local.set({poLocale:event.target.value});window.location.reload();});

@@ -1,3 +1,4 @@
+import { localeJson } from '@/lib/i18n-server';
 import { rejectCrossOriginMutation } from '@/lib/request-security';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
 import { mysqlConfigured, query } from '@/db/mysql';
@@ -18,20 +19,20 @@ export async function POST(request: Request) {
   if (rejected) return rejected;
   const user = await getChatGPTUser();
   if (!user)
-    return Response.json({ error: 'Oturum gerekli.' }, { status: 401 });
+    return localeJson(request, { error: 'Oturum gerekli.' }, { status: 401 });
   if (!mysqlConfigured() || !paddleConfigured())
-    return Response.json(
+    return localeJson(request,
       { error: 'Faturalandırma sistemi hazır değil.' },
       { status: 503 },
     );
   const account = await getAccount(user);
   if (!account)
-    return Response.json({ error: 'Hesap bulunamadı.' }, { status: 404 });
+    return localeJson(request, { error: 'Hesap bulunamadı.' }, { status: 404 });
   if (
     account.scope !== 'organization' ||
     !['owner', 'admin'].includes(account.role)
   )
-    return Response.json(
+    return localeJson(request,
       { error: 'Bu işlem için yetkiniz yok.' },
       { status: 403 },
     );
@@ -41,7 +42,7 @@ export async function POST(request: Request) {
   );
   const billing = rows[0];
   if (!billing?.customerId)
-    return Response.json(
+    return localeJson(request,
       { error: 'Yönetilecek ücretli abonelik bulunamadı.' },
       { status: 404 },
     );
@@ -56,6 +57,6 @@ export async function POST(request: Request) {
       ),
     },
   );
-  return Response.json({ url: payload.data.urls.general.overview });
+  return localeJson(request, { url: payload.data.urls.general.overview });
 }
 

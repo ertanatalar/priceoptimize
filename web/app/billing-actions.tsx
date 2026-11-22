@@ -1,4 +1,5 @@
 'use client';
+import { useI18n } from '@/components/i18n-provider';
 
 import { useState } from 'react';
 import { CreditCard, ExternalLink, Loader2 } from 'lucide-react';
@@ -18,7 +19,7 @@ type PaddleInstance = {
       settings: {
         displayMode: 'overlay';
         theme: 'light';
-        locale: 'tr';
+        locale: string;
         allowLogout: false;
       };
     }) => void;
@@ -38,6 +39,8 @@ export function BillingActions({
   state: string;
   configured: boolean;
 }) {
+  const { t, locale, intlLocale } = useI18n();
+
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const paid = ['active', 'past_due', 'cancelled'].includes(state);
@@ -56,7 +59,7 @@ export function BillingActions({
         customerEmail?: string;
       };
       if (!response.ok)
-        throw new Error(payload.error ?? 'Ödeme başlatılamadı.');
+        throw new Error(payload.error ?? t("Ödeme başlatılamadı."));
       const paddle = await loadPaddle();
       if (payload.environment === 'sandbox') paddle.Environment.set('sandbox');
       paddle.Initialize({
@@ -72,13 +75,13 @@ export function BillingActions({
         settings: {
           displayMode: 'overlay',
           theme: 'light',
-          locale: 'tr',
+          locale,
           allowLogout: false,
         },
       });
     } catch (caught) {
       setError(
-        caught instanceof Error ? caught.message : 'Ödeme başlatılamadı.',
+        caught instanceof Error ? caught.message : t("Ödeme başlatılamadı."),
       );
     } finally {
       setBusy(false);
@@ -95,13 +98,13 @@ export function BillingActions({
         url?: string;
       };
       if (!response.ok || !payload.url)
-        throw new Error(payload.error ?? 'Abonelik portalı açılamadı.');
+        throw new Error(payload.error ?? t("Abonelik portalı açılamadı."));
       window.location.assign(payload.url);
     } catch (caught) {
       setError(
         caught instanceof Error
           ? caught.message
-          : 'Abonelik portalı açılamadı.',
+          : t("Abonelik portalı açılamadı."),
       );
       setBusy(false);
     }
@@ -110,8 +113,7 @@ export function BillingActions({
   if (!configured)
     return (
       <p className="text-xs font-medium text-amber-700">
-        Ödeme hesabı yapılandırması bekleniyor.
-      </p>
+        {t("Ödeme hesabı yapılandırması bekleniyor.")}</p>
     );
 
   return (
@@ -129,10 +131,10 @@ export function BillingActions({
         ) : (
           <CreditCard />
         )}
-        {paid ? 'Aboneliği ve faturaları yönet' : 'Başlangıç · 29 USD / ay · 50 link'}
+        {paid ? t("Aboneliği ve faturaları yönet") : t("Başlangıç · 29 USD / ay · 50 link")}
       </Button>
       {error && (
-        <span className="text-xs font-medium text-red-700">{error}</span>
+        <span className="text-xs font-medium text-red-700">{t(error ?? '')}</span>
       )}
     </div>
   );

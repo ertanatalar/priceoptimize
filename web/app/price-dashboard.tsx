@@ -1,4 +1,5 @@
 'use client';
+import { useI18n } from '@/components/i18n-provider';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -153,6 +154,8 @@ const initialData: DashboardData = {
 };
 
 export function PriceDashboard({ userEmail }: { userEmail: string }) {
+  const { t, locale, intlLocale } = useI18n();
+
   const [data, setData] = useState(initialData);
   const [search, setSearch] = useState('');
   const [message, setMessage] = useState<string | null>(null);
@@ -189,13 +192,13 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
         return;
       }
       if (!response.ok) {
-        setMessage(next.error ?? 'Veriler yüklenemedi.');
+        setMessage(next.error ?? t("Veriler yüklenemedi."));
         return;
       }
       setData(next);
       setLastUpdatedAt(new Date());
     } catch {
-      setMessage('Güvenli veri bağlantısına ulaşılamadı.');
+      setMessage(t("Güvenli veri bağlantısına ulaşılamadı."));
     }
   }, []);
 
@@ -239,9 +242,9 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
       modelContext.registerTool(
         {
           name: 'add_competitor_watches',
-          title: 'Rakip URL’leri ekle',
+          title: t("Rakip URL’leri ekle"),
           description:
-            'Seçilen müşteriye aynı ürün grubuna ait bir veya daha fazla rakip ürün URL’si ekler.',
+            t("Seçilen müşteriye aynı ürün grubuna ait bir veya daha fazla rakip ürün URL’si ekler."),
           inputSchema: {
             type: 'object',
             properties: {
@@ -284,7 +287,7 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
               imported?: number;
               status?: string;
             };
-            if (!response.ok) throw new Error(result.error ?? 'URL eklenemedi');
+            if (!response.ok) throw new Error(result.error ?? t("URL eklenemedi"));
             await load();
             return result;
           },
@@ -296,11 +299,11 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
   }, [load]);
 
   const filteredSources = useMemo(() => {
-    const query = search.trim().toLocaleLowerCase('tr');
+    const query = search.trim().toLocaleLowerCase(locale);
     if (!query) return data.sources;
     return data.sources.filter((source) =>
       [source.merchant, source.productName, source.clientName, source.sku].some(
-        (value) => value.toLocaleLowerCase('tr').includes(query),
+        (value) => value.toLocaleLowerCase(locale).includes(query),
       ),
     );
   }, [data.sources, search]);
@@ -324,13 +327,13 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
       await apiRequest(
         '/api/clients',
         { method: 'POST', body: JSON.stringify(payload) },
-        'Müşteri kaydedilemedi.',
+        t("Müşteri kaydedilemedi."),
       );
       setClientOpen(false);
-      setMessage('Müşteri kaydedildi.');
+      setMessage(t("Müşteri kaydedildi."));
       await load();
     } catch (error) {
-      setMessage(errorMessage(error, 'Müşteri kaydedilemedi.'));
+      setMessage(errorMessage(error, t("Müşteri kaydedilemedi.")));
     } finally {
       setSaving(false);
     }
@@ -357,13 +360,13 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
       await apiRequest(
         '/api/watches',
         { method: 'POST', body: JSON.stringify(payload) },
-        'Rakip URL kaydedilemedi.',
+        t("Rakip URL kaydedilemedi."),
       );
       setWatchOpen(false);
-      setMessage('Rakip URL kaydedildi.');
+      setMessage(t("Rakip URL kaydedildi."));
       await load();
     } catch (error) {
-      setMessage(errorMessage(error, 'Rakip URL kaydedilemedi.'));
+      setMessage(errorMessage(error, t("Rakip URL kaydedilemedi.")));
     } finally {
       setSaving(false);
     }
@@ -386,13 +389,13 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
             maxPriceDropPct: Number(values.maxPriceDropPct),
           }),
         },
-        'Ürün grubu kaydedilemedi.',
+        t("Ürün grubu kaydedilemedi."),
       );
       setProductOpen(false);
-      setMessage('Ürün grubu kaydedildi.');
+      setMessage(t("Ürün grubu kaydedildi."));
       await load();
     } catch (error) {
-      setMessage(errorMessage(error, 'Ürün grubu kaydedilemedi.'));
+      setMessage(errorMessage(error, t("Ürün grubu kaydedilemedi.")));
     } finally {
       setSaving(false);
     }
@@ -421,7 +424,7 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
     const result = (await response.json()) as { error?: string };
     setSaving(false);
     if (!response.ok) {
-      setMessage(result.error ?? 'Kayıt silinemedi.');
+      setMessage(result.error ?? t("Kayıt silinemedi."));
       return;
     }
     if (deleteTarget.kind === 'account') {
@@ -430,13 +433,13 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
     }
     const kindLabel =
       deleteTarget.kind === 'client'
-        ? 'Müşteri'
+        ? t("Müşteri")
         : deleteTarget.kind === 'product'
-          ? 'Ürün grubu'
-          : 'Rakip URL';
+          ? t("Ürün grubu")
+          : t("Rakip URL");
     setDeleteTarget(null);
     setMessage(
-      `${kindLabel} silindi. Geçmiş denetim kayıtları saklama politikasına göre korunur.`,
+      t("{0} silindi. Geçmiş denetim kayıtları saklama politikasına göre korunur.", [kindLabel]),
     );
     await load();
   }
@@ -452,7 +455,7 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
       });
       const result = (await response.json()) as { error?: string };
       if (!response.ok) {
-        setMessage(result.error ?? 'URL taşınamadı.');
+        setMessage(result.error ?? t("URL taşınamadı."));
         return;
       }
       const targetName = data.products.find(
@@ -461,11 +464,11 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
       setMoveTarget(null);
       setSelectedProductId(targetProductId);
       setMessage(
-        `Rakip URL${targetName ? ` “${targetName}”` : ''} ürün grubuna taşındı ve görünür durumda.`,
+        t("Rakip URL{0} ürün grubuna taşındı ve görünür durumda.", [targetName ? ` “${targetName}”` : '']),
       );
       await load();
     } catch {
-      setMessage('URL taşınırken bağlantı hatası oluştu.');
+      setMessage(t("URL taşınırken bağlantı hatası oluştu."));
     } finally {
       setSaving(false);
     }
@@ -478,7 +481,7 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
         product.id !== source.productId,
     );
     if (!firstTarget) {
-      setMessage('Bu müşteriye ait başka bir ürün grubu bulunmuyor.');
+      setMessage(t("Bu müşteriye ait başka bir ürün grubu bulunmuyor."));
       return;
     }
     setMoveTarget({ source, targetProductId: firstTarget.id });
@@ -488,13 +491,13 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
     setMessage(null);
     const rows = parseCsv(await file.text());
     if (!rows.length) {
-      setMessage('CSV içinde geçerli URL satırı bulunamadı.');
+      setMessage(t("CSV içinde geçerli URL satırı bulunamadı."));
       return;
     }
     const clientCode = rows[0].clientCode || data.clients[0]?.code;
     if (!clientCode) {
       setMessage(
-        'CSV dosyasında clientCode sütunu bulunmalı veya önce müşteri eklemelisiniz.',
+        t("CSV dosyasında clientCode sütunu bulunmalı veya önce müşteri eklemelisiniz."),
       );
       return;
     }
@@ -511,10 +514,10 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
     };
     setSaving(false);
     if (!response.ok) {
-      setMessage(result.error ?? 'CSV içe aktarılamadı.');
+      setMessage(result.error ?? t("CSV içe aktarılamadı."));
       return;
     }
-    setMessage(`${result.imported ?? rows.length} rakip URL içe aktarıldı.`);
+    setMessage(t("{0} rakip URL içe aktarıldı.", [result.imported ?? rows.length]));
     await load();
   }
 
@@ -522,20 +525,20 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
     const payload = createBrowserQueue(
       data.sources,
       scope === 'selected' && featuredProduct
-        ? { productId: featuredProduct.id }
-        : {},
+        ? { productId: featuredProduct.id, locale }
+        : { locale },
     );
     if (!payload.sources.length) {
       setMessage(
         scope === 'selected'
-          ? 'Seçili ürün grubunda indirilecek URL bulunmuyor.'
-          : 'İndirilecek rakip URL bulunmuyor.',
+          ? t("Seçili ürün grubunda indirilecek URL bulunmuyor.")
+          : t("İndirilecek rakip URL bulunmuyor."),
       );
       return;
     }
     if (payload.sources.length > 1000) {
       setMessage(
-        'Tek toplu kontrolde en fazla 1000 URL işlenebilir. URL’leri müşteri bazında bölün.',
+        t("Tek toplu kontrolde en fazla 1000 URL işlenebilir. URL’leri müşteri bazında bölün."),
       );
       return;
     }
@@ -544,7 +547,7 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
       `priceoptimize-kontrol-listesi-${scope === 'all' ? 'tum-urunler' : 'secili-urun'}-${new Date().toISOString().slice(0, 10)}.json`,
     );
     setMessage(
-      `${payload.productCount} ürün grubundaki ${payload.sources.length} URL tek kontrol listesine indirildi. Dosyayı Price Optimizer eklentisinde açın.`,
+      t("{0} ürün grubundaki {1} URL tek kontrol listesine indirildi. Dosyayı Price Optimizer eklentisinde açın.", [payload.productCount, payload.sources.length]),
     );
   }
 
@@ -554,14 +557,14 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
     try {
       payload = JSON.parse(await file.text()) as typeof payload;
     } catch {
-      setMessage('Sonuç dosyası geçerli JSON biçiminde değil.');
+      setMessage(t("Sonuç dosyası geçerli JSON biçiminde değil."));
       return;
     }
     if (
       payload.format !== 'priceoptimize-browser-results-v1' ||
       !Array.isArray(payload.results)
     ) {
-      setMessage('Bu dosya Price Optimizer toplu tarayıcı sonucu değil.');
+      setMessage(t("Bu dosya Price Optimizer toplu tarayıcı sonucu değil."));
       return;
     }
     setSaving(true);
@@ -578,16 +581,16 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
           method: 'POST',
           body: JSON.stringify({ observations: payload.results }),
         },
-        'Toplu sonuçlar kaydedilemedi.',
+        t("Toplu sonuçlar kaydedilemedi."),
       );
       const failedCount =
         (payload.failures?.length ?? 0) + (result.failures?.length ?? 0);
       setMessage(
-        `${result.imported ?? 0} fiyat kaydedildi${result.anomalies ? `, ${result.anomalies} anomali ayrıldı` : ''}${failedCount ? `; ${failedCount} kayıt inceleme bekliyor` : ''}${result.emailsSent ? `; ${result.emailsSent} değişiklik e-postası gönderildi` : ''}.`,
+        t("{0} fiyat kaydedildi{1}{2}{3}.", [result.imported ?? 0, result.anomalies ? t(", {0} anomali ayrıldı", [result.anomalies]) : '', failedCount ? t("; {0} kayıt inceleme bekliyor", [failedCount]) : '', result.emailsSent ? t("; {0} değişiklik e-postası gönderildi", [result.emailsSent]) : '']),
       );
       await load();
     } catch (error) {
-      setMessage(errorMessage(error, 'Toplu sonuçlar kaydedilemedi.'));
+      setMessage(errorMessage(error, t("Toplu sonuçlar kaydedilemedi.")));
     } finally {
       setSaving(false);
     }
@@ -602,6 +605,7 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         ...values,
+        locale,
         acceptedTerms: values.acceptedTerms === 'on',
         acceptedPrivacy: values.acceptedPrivacy === 'on',
         marketingConsent: values.marketingConsent === 'on',
@@ -610,11 +614,11 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
     const result = (await response.json()) as { error?: string };
     setSaving(false);
     if (!response.ok) {
-      setMessage(result.error ?? 'Hesap oluşturulamadı.');
+      setMessage(result.error ?? t("Hesap oluşturulamadı."));
       return;
     }
     setOnboardingOpen(false);
-    setMessage('30 günlük deneme hesabınız başladı.');
+    setMessage(t("30 günlük deneme hesabınız başladı."));
     await load();
   }
 
@@ -630,8 +634,8 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
     };
     setMessage(
       response.ok
-        ? `Veri erişim talebiniz alındı: ${result.requestId}`
-        : (result.error ?? 'Talep alınamadı.'),
+        ? t("Veri erişim talebiniz alındı: {0}", [result.requestId])
+        : (result.error ?? t("Talep alınamadı.")),
     );
   }
 
@@ -647,8 +651,8 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
     };
     setMessage(
       response.ok
-        ? `Silme talebiniz alındı: ${result.requestId}. Kimlik ve yasal saklama kontrolünden sonra en geç 30 gün içinde sonuçlandırılacaktır.`
-        : (result.error ?? 'Silme talebi alınamadı.'),
+        ? t("Silme talebiniz alındı: {0}. Kimlik ve yasal saklama kontrolünden sonra en geç 30 gün içinde sonuçlandırılacaktır.", [result.requestId])
+        : (result.error ?? t("Silme talebi alınamadı.")),
     );
   }
 
@@ -667,42 +671,41 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
               <p className="text-[15px] font-semibold tracking-tight">
                 Price Optimizer
               </p>
-              <p className="text-xs text-slate-400">Rakip fiyat merkezi</p>
+              <p className="text-xs text-slate-400">{t("Rakip fiyat merkezi")}</p>
             </div>
           </div>
         </SidebarHeader>
         <SidebarContent className="px-3 py-4">
           <SidebarGroup>
             <SidebarGroupLabel className="px-2 text-[11px] font-semibold tracking-[.12em] text-slate-500 uppercase">
-              Çalışma alanı
-            </SidebarGroupLabel>
+              {t("Çalışma alanı")}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <NavItem
                   icon={<LayoutDashboard />}
-                  label="Genel görünüm"
+                  label={t("Genel görünüm")}
                   active
                 />
                 {!isClientPortal && (
                   <NavItem
                     icon={<Building2 />}
-                    label="Müşteriler"
+                    label={t("Müşteriler")}
                     count={String(data.metrics.activeClients)}
                   />
                 )}
                 <NavItem
                   icon={<Store />}
-                  label="Ürün grupları"
+                  label={t("Ürün grupları")}
                   count={String(data.products.length)}
                 />
-                <NavItem icon={<Bell />} label="Bildirimler" />
+                <NavItem icon={<Bell />} label={t("Bildirimler")} />
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
           <SidebarGroup className="mt-auto">
             <SidebarGroupContent>
               <SidebarMenu>
-                <NavItem icon={<Settings2 />} label="Ayarlar" />
+                <NavItem icon={<Settings2 />} label={t("Ayarlar")} />
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -714,7 +717,7 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
             </div>
             <div className="min-w-0">
               <p className="truncate text-sm font-medium">
-                {isClientPortal ? 'Müşteri hesabı' : 'Yönetici'}
+                {isClientPortal ? t("Müşteri hesabı") : t("Yönetici")}
               </p>
               <p className="truncate text-xs text-slate-400">{userEmail}</p>
             </div>
@@ -723,15 +726,13 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
             href="/legal"
             className="mt-3 block text-center text-xs text-slate-400 hover:text-white"
           >
-            Gizlilik ve güvenlik
-          </a>
+            {t("Gizlilik ve güvenlik")}</a>
           <a
             href="/auth/logout"
             className="mt-2 flex items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-slate-300 hover:bg-white/10 hover:text-white"
           >
             <LogOut className="size-3.5" />
-            Oturumu kapat
-          </a>
+            {' '}{t("Oturumu kapat")}</a>
         </SidebarFooter>
       </Sidebar>
 
@@ -744,7 +745,7 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               className="h-9 border-slate-200 bg-slate-50 pl-9"
-              placeholder="Ürün veya mağaza ara"
+              placeholder={t("Ürün veya mağaza ara")}
             />
           </div>
           {!isClientPortal && (
@@ -767,7 +768,7 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                 onClick={() => fileRef.current?.click()}
               >
                 <Upload />
-                <span className="hidden lg:inline">CSV yükle</span>
+                <span className="hidden lg:inline">{t("CSV yükle")}</span>
               </Button>
               <Button
                 variant="outline"
@@ -776,14 +777,14 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                 onClick={() => setProductOpen(true)}
               >
                 <PackagePlus />
-                <span className="hidden sm:inline">Yeni ürün</span>
+                <span className="hidden sm:inline">{t("Yeni ürün")}</span>
               </Button>
               <Button
                 className="h-9 bg-[#0b1720] text-white hover:bg-[#15303d]"
                 onClick={() => setClientOpen(true)}
               >
                 <Plus />
-                <span className="hidden sm:inline">Yeni müşteri</span>
+                <span className="hidden sm:inline">{t("Yeni müşteri")}</span>
               </Button>
             </div>
           )}
@@ -792,31 +793,30 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
         <main className="mx-auto w-full max-w-[1480px] p-4 md:p-7">
           {message && (
             <output className="mb-4 block rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
-              {message}
+              {t(message ?? '')}
             </output>
           )}
           {data.account && (
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
               <span>
                 {isClientPortal ? (
-                  <strong>Müşteri görünümü · yalnızca size ait kayıtlar</strong>
+                  <strong>{t("Müşteri görünümü · yalnızca size ait kayıtlar")}</strong>
                 ) : data.account.subscriptionState === 'trialing' ? (
                   <>
-                    <strong>{data.account.trialDaysRemaining} gün</strong>{' '}
-                    deneme süreniz kaldı. Bitiş:{' '}
+                    <strong>{data.account.trialDaysRemaining} {' '}{t("gün")}</strong>{' '}
+                    {' '}{t("deneme süreniz kaldı. Bitiş:")}{' '}
                     {new Date(data.account.trialEndsAt).toLocaleDateString(
-                      'tr-TR',
+                      intlLocale,
                     )}
                   </>
-                ) : <strong>{subscriptionLabel(data.account.subscriptionState)} · {data.metrics.watchedUrls} / {data.account.sourceLimit} link</strong>}
+                ) : <strong>{t(subscriptionLabel(data.account.subscriptionState))} · {data.metrics.watchedUrls} / {data.account.sourceLimit} {' '}{t("link")}</strong>}
               </span>
               <span className="inline-flex items-center gap-2 font-medium">
                 <Database className="size-4" />
-                Aiven MySQL · {data.account.dataRegion} veri bölgesi · 30 sn
-                otomatik yenileme ·{' '}
+                {' '}{t("Aiven MySQL ·")}{' '}{data.account.dataRegion} {' '}{t("veri bölgesi · 30 sn otomatik yenileme ·")}{' '}
                 {lastUpdatedAt
-                  ? lastUpdatedAt.toLocaleTimeString('tr-TR')
-                  : 'yükleniyor'}
+                  ? lastUpdatedAt.toLocaleTimeString(intlLocale)
+                  : t("yükleniyor")}
               </span>
             </div>
           )}
@@ -826,11 +826,9 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm">
                 <div>
                   <p className="font-semibold text-[#0b1720]">
-                    {data.account.planName} · 29 USD / ay · {data.metrics.watchedUrls} / {data.account.sourceLimit} link
-                  </p>
+                    {t(data.account.planName)} {' '}{t("· 29 USD / ay ·")}{' '}{data.metrics.watchedUrls} / {data.account.sourceLimit} {' '}{t("link")}</p>
                   <p className="text-xs text-slate-500">
-                    <a href="/pricing" className="underline">Paket ayrıntıları</a> · <a href="/refunds" className="underline">İade ve iptal</a>. Ödeme etkinleştirildiğinde aylık yenilenir.
-                  </p>
+                    <a href="/pricing" className="underline">{t("Paket ayrıntıları")}</a> · <a href="/refunds" className="underline">{t("İade ve iptal")}</a>{t(". Ödeme etkinleştirildiğinde aylık yenilenir.")}</p>
                 </div>
                 <BillingActions
                   state={data.account.subscriptionState}
@@ -843,16 +841,15 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
               <div className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-500">
                 <Activity className="size-4 text-[#0aa77b]" />
                 {isClientPortal
-                  ? 'Müşteri paneli hazır'
-                  : 'Yönetim paneli hazır'}
+                  ? t("Müşteri paneli hazır")
+                  : t("Yönetim paneli hazır")}
               </div>
               <h1 className="text-2xl font-semibold tracking-[-.03em] text-[#0b1720] md:text-[32px]">
-                Fiyat operasyonu
-              </h1>
+                {t("Fiyat operasyonu")}</h1>
               <p className="mt-1 text-[15px] text-slate-500">
                 {isClientPortal
-                  ? 'Rakip fiyatlarınızı, stok ve anomali durumlarını takip edin.'
-                  : 'Müşterilerinizin rakip fiyatlarını ve istisnalarını tek yerden yönetin.'}
+                  ? t("Rakip fiyatlarınızı, stok ve anomali durumlarını takip edin.")
+                  : t("Müşterilerinizin rakip fiyatlarını ve istisnalarını tek yerden yönetin.")}
               </p>
             </div>
             {!isClientPortal && (
@@ -861,39 +858,38 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                 className="w-fit bg-[#0b1720] text-white hover:bg-[#15303d]"
               >
                 <Plus />
-                Rakip URL ekle
-              </Button>
+                {' '}{t("Rakip URL ekle")}</Button>
             )}
           </div>
 
           <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <Metric
-              title="Aktif müşteri"
+              title={t("Aktif müşteri")}
               value={String(data.metrics.activeClients)}
-              detail={`${data.clients.reduce((sum, client) => sum + Number(client.productCount), 0)} ürün grubu`}
+              detail={t("{0} ürün grubu", [data.clients.reduce((sum, client) => sum + Number(client.productCount), 0)])}
               icon={<Building2 />}
             />
             <Metric
-              title="İzlenen URL"
+              title={t("İzlenen URL")}
               value={String(data.metrics.watchedUrls)}
-              detail={`${data.metrics.validPrices} geçerli fiyat`}
+              detail={t("{0} geçerli fiyat", [data.metrics.validPrices])}
               icon={<Store />}
             />
             <Metric
-              title="En iyi fiyat"
+              title={t("En iyi fiyat")}
               value={
                 best
-                  ? money(best.price, featuredProduct?.currency ?? 'TRY')
+                  ? money(best.price, featuredProduct?.currency ?? 'TRY', locale)
                   : '—'
               }
-              detail={best?.merchant ?? 'Henüz fiyat yok'}
+              detail={best?.merchant ?? t("Henüz fiyat yok")}
               icon={<Tag />}
               accent
             />
             <Metric
-              title="Dikkat gerekiyor"
+              title={t("Dikkat gerekiyor")}
               value={String(data.metrics.issues)}
-              detail="Erişim veya fiyat anomalisi"
+              detail={t("Erişim veya fiyat anomalisi")}
               icon={<AlertTriangle />}
               warning
             />
@@ -908,8 +904,7 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                       htmlFor="active-product"
                       className="mb-1.5 block text-xs text-slate-500"
                     >
-                      Görüntülenen ürün grubu
-                    </Label>
+                      {t("Görüntülenen ürün grubu")}</Label>
                     <select
                       id="active-product"
                       value={featuredProduct?.id ?? ''}
@@ -927,13 +922,13 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                           </option>
                         ))
                       ) : (
-                        <option value="">Henüz ürün grubu yok</option>
+                        <option value="">{t("Henüz ürün grubu yok")}</option>
                       )}
                     </select>
                     <CardDescription className="mt-2">
                       {featuredProduct
-                        ? `${featuredProduct.sourceCount} rakip URL bu gruba bağlı`
-                        : 'Önce müşteri ve ürün grubu ekleyin'}
+                        ? t("{0} rakip URL bu gruba bağlı", [featuredProduct.sourceCount])
+                        : t("Önce müşteri ve ürün grubu ekleyin")}
                     </CardDescription>
                   </div>
                   {featuredProduct && (
@@ -942,8 +937,7 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                         variant="outline"
                         className="border-emerald-200 bg-emerald-50 text-emerald-700"
                       >
-                        %{featuredProduct.maxPriceDropPct} düşüş filtresi
-                      </Badge>
+                        %{featuredProduct.maxPriceDropPct} {' '}{t("düşüş filtresi")}</Badge>
                       {!isClientPortal && (
                         <Button
                           size="sm"
@@ -958,8 +952,7 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                           }
                         >
                           <Trash2 />
-                          Ürünü sil
-                        </Button>
+                          {' '}{t("Ürünü sil")}</Button>
                       )}
                     </div>
                   )}
@@ -970,19 +963,15 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                   <TableHeader>
                     <TableRow className="bg-slate-50/70 hover:bg-slate-50/70">
                       <TableHead className="h-11 pl-5 text-xs font-semibold text-slate-500">
-                        Mağaza
-                      </TableHead>
+                        {t("Mağaza")}</TableHead>
                       <TableHead className="text-xs font-semibold text-slate-500">
-                        Fiyat
-                      </TableHead>
+                        {t("Fiyat")}</TableHead>
                       <TableHead className="text-xs font-semibold text-slate-500">
-                        Durum
-                      </TableHead>
+                        {t("Durum")}</TableHead>
                       <TableHead className="hidden text-xs font-semibold text-slate-500 md:table-cell">
-                        Son kontrol
-                      </TableHead>
+                        {t("Son kontrol")}</TableHead>
                       <TableHead className="min-w-40 text-right text-xs font-semibold text-slate-500">
-                        {isClientPortal ? 'Bağlantı' : 'Yönet'}
+                        {isClientPortal ? t("Bağlantı") : t("Yönet")}
                       </TableHead>
                     </TableRow>
                   </TableHeader>
@@ -999,7 +988,7 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                             setDeleteTarget({
                               kind: 'source',
                               id: source.id,
-                              label: `${source.merchant} URL’si`,
+                              label: t("{0} URL’si", [source.merchant]),
                             })
                           }
                           saving={saving}
@@ -1012,8 +1001,7 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                           colSpan={5}
                           className="h-28 text-center text-slate-500"
                         >
-                          Bu ürün grubuna henüz URL eklenmedi.
-                        </TableCell>
+                          {t("Bu ürün grubuna henüz URL eklenmedi.")}</TableCell>
                       </TableRow>
                     )}
                   </TableBody>
@@ -1024,11 +1012,10 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
               <Card className="border-0 bg-[#0b1720] text-white shadow-[0_16px_40px_rgba(11,23,32,.16)] ring-0">
                 <CardHeader>
                   <CardDescription className="text-slate-400">
-                    En iyi geçerli fiyat
-                  </CardDescription>
+                    {t("En iyi geçerli fiyat")}</CardDescription>
                   <CardTitle className="mt-1 text-[30px] font-semibold tracking-[-.04em]">
                     {best
-                      ? money(best.price, featuredProduct?.currency ?? 'TRY')
+                      ? money(best.price, featuredProduct?.currency ?? 'TRY', locale)
                       : '—'}
                   </CardTitle>
                 </CardHeader>
@@ -1036,12 +1023,12 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                   <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-3">
                     <div>
                       <p className="text-sm font-medium">
-                        {best?.merchant ?? 'Fiyat bekleniyor'}
+                        {best?.merchant ?? t("Fiyat bekleniyor")}
                       </p>
                       <p className="mt-0.5 text-xs text-slate-400">
                         {best
-                          ? 'Stokta • Geçerli fiyat'
-                          : 'İlk kontrol henüz yapılmadı'}
+                          ? t("Stokta • Geçerli fiyat")
+                          : t("İlk kontrol henüz yapılmadı")}
                       </p>
                     </div>
                     <CheckCircle2 className="size-5 text-[#28d7a1]" />
@@ -1051,28 +1038,18 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
               <Card className="border-0 bg-white shadow-sm ring-1 ring-slate-200/80">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-                    <Activity className="size-4 text-[#087e60]" /> Kontrol
-                    takvimi
-                  </CardTitle>
+                    <Activity className="size-4 text-[#087e60]" /> {' '}{t("Kontrol takvimi")}</CardTitle>
                   <CardDescription>
-                    Açık ürün sayfaları buluttan 6 saatte bir kontrol edilir.
-                    “Tarayıcı kontrolü gerekli” satırları Chrome doğrulamasını
-                    bekler.
-                  </CardDescription>
+                    {t("Açık ürün sayfaları buluttan 6 saatte bir kontrol edilir. “Tarayıcı kontrolü gerekli” satırları Chrome doğrulamasını bekler.")}</CardDescription>
                 </CardHeader>
               </Card>
               {!isClientPortal && (
                 <Card className="border-0 bg-white shadow-sm ring-1 ring-slate-200/80">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-                      <MonitorUp className="size-4 text-[#087e60]" /> Toplu
-                      tarayıcı kontrolü
-                    </CardTitle>
+                      <MonitorUp className="size-4 text-[#087e60]" /> {' '}{t("Toplu tarayıcı kontrolü")}</CardTitle>
                     <CardDescription>
-                      Tüm ürün gruplarındaki URL’leri tek kontrol ve tek sonuç
-                      dosyasıyla normal Chrome oturumunuzda sırayla kontrol
-                      edin.
-                    </CardDescription>
+                      {t("Tüm ürün gruplarındaki URL’leri tek kontrol ve tek sonuç dosyasıyla normal Chrome oturumunuzda sırayla kontrol edin.")}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <a
@@ -1084,15 +1061,14 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                       })}
                     >
                       <Download />
-                      Chrome eklentisini indir
-                    </a>
+                      {' '}{t("Chrome eklentisini indir")}</a>
                     <Button
                       className="w-full bg-[#0b1720] text-white hover:bg-[#15303d]"
                       disabled={saving || data.sources.length === 0}
                       onClick={() => downloadBrowserQueue('all')}
                     >
                       <Download />
-                      Tüm ürün gruplarını indir ({data.sources.length})
+                      {' '}{t("Tüm ürün gruplarını indir (")}{data.sources.length})
                     </Button>
                     <Button
                       variant="outline"
@@ -1101,8 +1077,7 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                       onClick={() => downloadBrowserQueue('selected')}
                     >
                       <Download />
-                      Yalnız seçili ürünü indir (
-                      {featuredProduct?.sourceCount ?? 0})
+                      {' '}{t("Yalnız seçili ürünü indir (")}{' '}{featuredProduct?.sourceCount ?? 0})
                     </Button>
                     <input
                       ref={batchResultRef}
@@ -1122,35 +1097,26 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                       onClick={() => batchResultRef.current?.click()}
                     >
                       <Upload />
-                      Sonuç dosyasını yükle
-                    </Button>
+                      {' '}{t("Sonuç dosyasını yükle")}</Button>
                     <p className="text-xs leading-5 text-slate-500">
-                      Listeyi eklentide başlatın. Eklenti aynı sekmeyi kullanır,
-                      siteler arasında bekler ve CAPTCHA’yı aşmadan sorunlu
-                      kayıtları ayırır.
-                    </p>
+                      {t("Listeyi eklentide başlatın. Eklenti aynı sekmeyi kullanır, siteler arasında bekler ve CAPTCHA’yı aşmadan sorunlu kayıtları ayırır.")}</p>
                   </CardContent>
                 </Card>
               )}
               <Card className="border-0 bg-white shadow-sm ring-1 ring-slate-200/80">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-                    <ShieldCheck className="size-4 text-emerald-600" /> Güvenlik
-                    ve gizlilik
-                  </CardTitle>
+                    <ShieldCheck className="size-4 text-emerald-600" /> {' '}{t("Güvenlik ve gizlilik")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <p className="text-sm text-slate-600">
-                    Kuruluş ve müşteri bazlı veri ayrımı, denetim kaydı ve
-                    saklama politikası etkin.
-                  </p>
+                    {t("Kuruluş ve müşteri bazlı veri ayrımı, denetim kaydı ve saklama politikası etkin.")}</p>
                   <Button
                     variant="outline"
                     className="w-full"
                     onClick={() => void requestPrivacyAction()}
                   >
-                    Verilerime erişim talebi
-                  </Button>
+                    {t("Verilerime erişim talebi")}</Button>
                   <a
                     href="/api/data-export"
                     download
@@ -1160,8 +1126,7 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                     })}
                   >
                     <Download />
-                    MySQL verilerimi indir
-                  </a>
+                    {' '}{t("MySQL verilerimi indir")}</a>
                   {isClientPortal ? (
                     <Button
                       variant="outline"
@@ -1170,13 +1135,12 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                         setDeleteTarget({
                           kind: 'account',
                           id: data.account?.clientId ?? 0,
-                          label: 'Hesabınız ve tüm kayıtlarınız',
+                          label: t("Hesabınız ve tüm kayıtlarınız"),
                         })
                       }
                     >
                       <Trash2 />
-                      Hesabımı ve verilerimi sil
-                    </Button>
+                      {' '}{t("Hesabımı ve verilerimi sil")}</Button>
                   ) : (
                     <Button
                       variant="outline"
@@ -1184,8 +1148,7 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                       onClick={() => void requestErasureAction()}
                     >
                       <Trash2 />
-                      Kuruluş verilerini silme talebi
-                    </Button>
+                      {' '}{t("Kuruluş verilerini silme talebi")}</Button>
                   )}
                 </CardContent>
               </Card>
@@ -1195,23 +1158,20 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
           {!isClientPortal && (
             <Card className="mt-5 border-0 bg-white shadow-sm ring-1 ring-slate-200/80">
               <CardHeader>
-                <CardTitle>Müşteriler</CardTitle>
+                <CardTitle>{t("Müşteriler")}</CardTitle>
                 <CardDescription>
-                  Her müşterinin ürün ve URL kayıtları birbirinden ayrıdır.
-                  Bildirim e-postasıyla giriş yapan müşteri yalnızca kendi
-                  kayıtlarını görür.
-                </CardDescription>
+                  {t("Her müşterinin ürün ve URL kayıtları birbirinden ayrıdır. Bildirim e-postasıyla giriş yapan müşteri yalnızca kendi kayıtlarını görür.")}</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="pl-5">Müşteri</TableHead>
-                      <TableHead>Kod</TableHead>
-                      <TableHead>E-posta</TableHead>
-                      <TableHead>Ürün</TableHead>
+                      <TableHead className="pl-5">{t("Müşteri")}</TableHead>
+                      <TableHead>{t("Kod")}</TableHead>
+                      <TableHead>{t("E-posta")}</TableHead>
+                      <TableHead>{t("Ürün")}</TableHead>
                       <TableHead>URL</TableHead>
-                      <TableHead className="w-24 text-right">Yönet</TableHead>
+                      <TableHead className="w-24 text-right">{t("Yönet")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1232,8 +1192,8 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                               size="icon-sm"
                               variant="ghost"
                               className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                              title="Müşteriyi sil"
-                              aria-label={`${client.name} müşterisini sil`}
+                              title={t("Müşteriyi sil")}
+                              aria-label={t("{0} müşterisini sil", [client.name])}
                               onClick={() =>
                                 setDeleteTarget({
                                   kind: 'client',
@@ -1253,8 +1213,7 @@ export function PriceDashboard({ userEmail }: { userEmail: string }) {
                           colSpan={6}
                           className="h-24 text-center text-slate-500"
                         >
-                          Henüz müşteri eklenmedi.
-                        </TableCell>
+                          {t("Henüz müşteri eklenmedi.")}</TableCell>
                       </TableRow>
                     )}
                   </TableBody>
@@ -1325,24 +1284,24 @@ function OnboardingDialog({
   saving: boolean;
   onSubmit: (form: FormData) => Promise<void>;
 }) {
+  const { t, locale, intlLocale } = useI18n();
+
   return (
     <Dialog open={open} onOpenChange={() => undefined}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>30 günlük denemenizi başlatın</DialogTitle>
+          <DialogTitle>{t("30 günlük denemenizi başlatın")}</DialogTitle>
           <DialogDescription>
-            Yalnızca hizmet için gerekli kuruluş ve hesap bilgileri saklanır.
-            Pazarlama izni isteğe bağlıdır.
-          </DialogDescription>
+            {t("Yalnızca hizmet için gerekli kuruluş ve hesap bilgileri saklanır. Pazarlama izni isteğe bağlıdır.")}</DialogDescription>
         </DialogHeader>
         <form action={onSubmit} className="space-y-4">
           <Field
-            label="Kuruluş adı"
+            label={t("Kuruluş adı")}
             name="organizationName"
-            placeholder="ABC Fiyat Danışmanlığı"
+            placeholder={t("ABC Fiyat Danışmanlığı")}
           />
           <Field
-            label="Kuruluş kodu"
+            label={t("Kuruluş kodu")}
             name="organizationCode"
             placeholder="abc-fiyat"
           />
@@ -1354,7 +1313,7 @@ function OnboardingDialog({
                 required
                 className="mt-1"
               />
-              <span><a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline">Gizlilik ve aydınlatma metnini</a> okudum.</span>
+              <span><a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline">{t("Gizlilik ve aydınlatma metnini")}</a> {' '}{t("okudum.")}</span>
             </label>
             <label className="flex items-start gap-3">
               <input
@@ -1363,16 +1322,16 @@ function OnboardingDialog({
                 required
                 className="mt-1"
               />
-              <span><a href="/terms" target="_blank" rel="noopener noreferrer" className="underline">Hizmet koşullarını</a> kabul ediyorum. 30 günlük deneme 10 link içerir; otomatik ücretli geçiş yapılmaz.</span>
+              <span><a href="/terms" target="_blank" rel="noopener noreferrer" className="underline">{t("Hizmet koşullarını")}</a> {' '}{t("kabul ediyorum. 30 günlük deneme 10 link içerir; otomatik ücretli geçiş yapılmaz.")}</span>
             </label>
             <label className="flex items-start gap-3 text-slate-600">
               <input name="marketingConsent" type="checkbox" className="mt-1" />
-              <span>Ürün haberleri almak istiyorum (isteğe bağlı).</span>
+              <span>{t("Ürün haberleri almak istiyorum (isteğe bağlı).")}</span>
             </label>
           </div>
           <DialogFooter>
             <Button type="submit" disabled={saving}>
-              {saving ? 'Başlatılıyor…' : 'Denemeyi başlat'}
+              {saving ? t("Başlatılıyor…") : t("Denemeyi başlat")}
             </Button>
           </DialogFooter>
         </form>
@@ -1392,42 +1351,38 @@ function ClientDialog({
   saving: boolean;
   onSubmit: (form: FormData) => Promise<void>;
 }) {
+  const { t, locale, intlLocale } = useI18n();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Yeni müşteri</DialogTitle>
+          <DialogTitle>{t("Yeni müşteri")}</DialogTitle>
           <DialogDescription>
-            Müşterinin kayıtları benzersiz koduyla ayrılır. Giriş yapacak
-            kişinin doğrulanmış ChatGPT e-postasını bildirim adresi olarak
-            yazın.
-          </DialogDescription>
+            {t("Müşterinin kayıtları benzersiz koduyla ayrılır. Giriş yapacak kişinin doğrulanmış ChatGPT e-postasını bildirim adresi olarak yazın.")}</DialogDescription>
         </DialogHeader>
         <form action={onSubmit} className="space-y-4">
-          <Field label="Müşteri adı" name="name" placeholder="ABC Kozmetik" />
-          <Field label="Müşteri kodu" name="code" placeholder="abc-kozmetik" />
+          <Field label={t("Müşteri adı")} name="name" placeholder={t("ABC Kozmetik")} />
+          <Field label={t("Müşteri kodu")} name="code" placeholder="abc-kozmetik" />
           <Field
-            label="Müşteri giriş ve bildirim e-postası"
+            label={t("Müşteri giriş ve bildirim e-postası")}
             name="email"
             type="email"
             required
             placeholder="fiyatlar@firma.com"
           />
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-600">
-            <strong className="text-slate-800">Kaydedilmeyen bilgiler:</strong>{' '}
-            parola, telefon, adres, ödeme/kart bilgisi, kimlik belgesi, ham IP,
-            konum ve özel nitelikli kişisel veriler.
-          </div>
+            <strong className="text-slate-800">{t("Kaydedilmeyen bilgiler:")}</strong>{' '}
+            {' '}{t("parola, telefon, adres, ödeme/kart bilgisi, kimlik belgesi, ham IP, konum ve özel nitelikli kişisel veriler.")}</div>
           <DialogFooter>
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Vazgeç
-            </Button>
+              {t("Vazgeç")}</Button>
             <Button type="submit" disabled={saving}>
-              {saving ? 'Kaydediliyor…' : 'Müşteriyi kaydet'}
+              {saving ? 'Kaydediliyor…' : t("Müşteriyi kaydet")}
             </Button>
           </DialogFooter>
         </form>
@@ -1449,19 +1404,19 @@ function ProductDialog({
   clients: Client[];
   onSubmit: (form: FormData) => Promise<void>;
 }) {
+  const { t, locale, intlLocale } = useI18n();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Yeni ürün grubu</DialogTitle>
+          <DialogTitle>{t("Yeni ürün grubu")}</DialogTitle>
           <DialogDescription>
-            Bir müşteriye ait ürünü oluşturun; rakip URL’leri daha sonra bu
-            gruba ekleyebilirsiniz.
-          </DialogDescription>
+            {t("Bir müşteriye ait ürünü oluşturun; rakip URL’leri daha sonra bu gruba ekleyebilirsiniz.")}</DialogDescription>
         </DialogHeader>
         <form action={onSubmit} className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="product-client">Müşteri</Label>
+            <Label htmlFor="product-client">{t("Müşteri")}</Label>
             <select
               id="product-client"
               name="clientCode"
@@ -1475,17 +1430,17 @@ function ProductDialog({
               ))}
             </select>
           </div>
-          <Field label="Grup kodu" name="sku" placeholder="IPHONE-17-PROMAX" />
-          <Field label="Para birimi" name="currency" defaultValue="TRY" />
+          <Field label={t("Grup kodu")} name="sku" placeholder="IPHONE-17-PROMAX" />
+          <Field label={t("Para birimi")} name="currency" defaultValue="TRY" />
           <div className="sm:col-span-2">
             <Field
-              label="Ürün adı"
+              label={t("Ürün adı")}
               name="name"
-              placeholder="iPhone 17 Pro Max 256 GB"
+              placeholder={t("iPhone 17 Pro Max 256 GB")}
             />
           </div>
           <Field
-            label="Düşüş eşiği (%)"
+            label={t("Düşüş eşiği (%)")}
             name="maxPriceDropPct"
             type="number"
             defaultValue="25"
@@ -1499,10 +1454,9 @@ function ProductDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Vazgeç
-            </Button>
+              {t("Vazgeç")}</Button>
             <Button type="submit" disabled={saving || !clients.length}>
-              {saving ? 'Kaydediliyor…' : 'Ürünü kaydet'}
+              {saving ? 'Kaydediliyor…' : t("Ürünü kaydet")}
             </Button>
           </DialogFooter>
         </form>
@@ -1524,18 +1478,19 @@ function WatchDialog({
   clients: Client[];
   onSubmit: (form: FormData) => Promise<void>;
 }) {
+  const { t, locale, intlLocale } = useI18n();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Rakip URL ekle</DialogTitle>
+          <DialogTitle>{' '}{t("Rakip URL ekle")}</DialogTitle>
           <DialogDescription>
-            Aynı ürünün rakip URL’lerinde aynı grup kodunu kullanın.
-          </DialogDescription>
+            {t("Aynı ürünün rakip URL’lerinde aynı grup kodunu kullanın.")}</DialogDescription>
         </DialogHeader>
         <form action={onSubmit} className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="clientCode">Müşteri</Label>
+            <Label htmlFor="clientCode">{t("Müşteri")}</Label>
             <select
               id="clientCode"
               name="clientCode"
@@ -1549,25 +1504,25 @@ function WatchDialog({
               ))}
             </select>
           </div>
-          <Field label="Grup kodu" name="group" placeholder="LIORA-50ML" />
-          <Field label="Para birimi" name="currency" defaultValue="TRY" />
+          <Field label={t("Grup kodu")} name="group" placeholder="LIORA-50ML" />
+          <Field label={t("Para birimi")} name="currency" defaultValue="TRY" />
           <div className="sm:col-span-2">
             <Field
-              label="Ürün adı"
+              label={t("Ürün adı")}
               name="name"
-              placeholder="Liora Kadın Parfüm 50 ml"
+              placeholder={t("Liora Kadın Parfüm 50 ml")}
             />
           </div>
-          <Field label="Mağaza" name="merchant" placeholder="Trendyol" />
+          <Field label={t("Mağaza")} name="merchant" placeholder="Trendyol" />
           <Field
-            label="Düşüş eşiği (%)"
+            label={t("Düşüş eşiği (%)")}
             name="maxPriceDropPct"
             type="number"
             defaultValue="25"
           />
           <div className="sm:col-span-2">
             <Field
-              label="Rakip ürün URL’si"
+              label={t("Rakip ürün URL’si")}
               name="url"
               type="url"
               placeholder="https://..."
@@ -1579,10 +1534,9 @@ function WatchDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Vazgeç
-            </Button>
+              {t("Vazgeç")}</Button>
             <Button type="submit" disabled={saving || !clients.length}>
-              {saving ? 'Kaydediliyor…' : 'URL’yi kaydet'}
+              {saving ? 'Kaydediliyor…' : t("URL’yi kaydet")}
             </Button>
           </DialogFooter>
         </form>
@@ -1606,14 +1560,16 @@ function DeleteDialog({
   onCancel: () => void;
   onConfirm: () => Promise<void>;
 }) {
+  const { t, locale, intlLocale } = useI18n();
+
   const detail =
     target?.kind === 'account'
-      ? 'Müşteri hesabınız, ürünleriniz, URL’leriniz ve fiyat kayıtlarınızdaki tanımlayıcı içerik geri alınamayacak biçimde silinir veya anonimleştirilir. Yalnızca yasal imha kanıtı tutulur.'
+      ? t("Müşteri hesabınız, ürünleriniz, URL’leriniz ve fiyat kayıtlarınızdaki tanımlayıcı içerik geri alınamayacak biçimde silinir veya anonimleştirilir. Yalnızca yasal imha kanıtı tutulur.")
       : target?.kind === 'client'
-        ? 'Bu müşteriye bağlı tüm ürün grupları ve rakip URL’ler de panelden kaldırılır.'
+        ? t("Bu müşteriye bağlı tüm ürün grupları ve rakip URL’ler de panelden kaldırılır.")
         : target?.kind === 'product'
-          ? 'Bu ürün grubuna bağlı tüm rakip URL’ler de panelden kaldırılır.'
-          : 'Bu URL artık izlenmez. Geçmiş denetim kayıtları saklama politikasına göre korunur.';
+          ? t("Bu ürün grubuna bağlı tüm rakip URL’ler de panelden kaldırılır.")
+          : t("Bu URL artık izlenmez. Geçmiş denetim kayıtları saklama politikasına göre korunur.");
   return (
     <AlertDialog
       open={Boolean(target)}
@@ -1623,19 +1579,18 @@ function DeleteDialog({
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{target?.label} silinsin mi?</AlertDialogTitle>
+          <AlertDialogTitle>{target?.label} {' '}{t("silinsin mi?")}</AlertDialogTitle>
           <AlertDialogDescription>
-            {detail} Bu işlemden önce doğru kaydı seçtiğinizi kontrol edin.
-          </AlertDialogDescription>
+            {detail} {' '}{t("Bu işlemden önce doğru kaydı seçtiğinizi kontrol edin.")}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={saving}>Vazgeç</AlertDialogCancel>
+          <AlertDialogCancel disabled={saving}>{t("Vazgeç")}</AlertDialogCancel>
           <AlertDialogAction
             disabled={saving}
             className="bg-red-600 text-white hover:bg-red-700"
             onClick={() => void onConfirm()}
           >
-            {saving ? 'Siliniyor…' : 'Evet, sil'}
+            {saving ? 'Siliniyor…' : t("Evet, sil")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -1658,6 +1613,8 @@ function MoveSourceDialog({
   onCancel: () => void;
   onConfirm: () => Promise<void>;
 }) {
+  const { t, locale, intlLocale } = useI18n();
+
   const targets = target
     ? products.filter(
         (product) =>
@@ -1681,16 +1638,12 @@ function MoveSourceDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Rakip URL’yi başka gruba taşı</DialogTitle>
+          <DialogTitle>{t("Rakip URL’yi başka gruba taşı")}</DialogTitle>
           <DialogDescription>
-            {target?.source.merchant ?? 'Bu URL'} kaydı
-            {currentProduct ? ` “${currentProduct.name}”` : ''} grubundan
-            seçtiğiniz gruba taşınır. Kayıt silinmez; işlemden sonra hedef grup
-            otomatik olarak açılır.
-          </DialogDescription>
+            {target?.source.merchant ?? t("Bu URL")} {' '}{t("kaydı")}{' '}{currentProduct ? ` “${currentProduct.name}”` : ''} {' '}{t("grubundan seçtiğiniz gruba taşınır. Kayıt silinmez; işlemden sonra hedef grup otomatik olarak açılır.")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
-          <Label htmlFor="move-source-target">Hedef ürün grubu</Label>
+          <Label htmlFor="move-source-target">{t("Hedef ürün grubu")}</Label>
           <select
             id="move-source-target"
             value={target?.targetProductId ?? ''}
@@ -1712,15 +1665,14 @@ function MoveSourceDialog({
             disabled={saving}
             onClick={onCancel}
           >
-            Vazgeç
-          </Button>
+            {t("Vazgeç")}</Button>
           <Button
             type="button"
             disabled={saving || !destination}
             onClick={() => void onConfirm()}
           >
             <ArrowRightLeft />
-            {saving ? 'Taşınıyor…' : 'URL’yi taşı'}
+            {saving ? t("Taşınıyor…") : t("URL’yi taşı")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -1823,6 +1775,8 @@ function SourceRow({
   saving: boolean;
   readOnly: boolean;
 }) {
+  const { t, locale, intlLocale } = useI18n();
+
   const isBest =
     best && source.price === best.price && source.merchant === best.merchant;
   const targets = products.filter(
@@ -1842,12 +1796,12 @@ function SourceRow({
       >
         <div>
           <p>
-            {source.price == null ? '—' : money(source.price, source.currency)}
+            {source.price == null ? '—' : money(source.price, source.currency, locale)}
           </p>
           {source.isStale && source.lastSuccessfulCheckedAt && (
             <p className="mt-0.5 text-[11px] font-normal text-amber-700">
-              Son geçerli fiyat ·{' '}
-              {new Date(source.lastSuccessfulCheckedAt).toLocaleString('tr-TR')}
+              {t("Son geçerli fiyat ·")}{' '}
+              {new Date(source.lastSuccessfulCheckedAt).toLocaleString(intlLocale)}
             </p>
           )}
         </div>
@@ -1857,8 +1811,8 @@ function SourceRow({
       </TableCell>
       <TableCell className="hidden text-slate-500 md:table-cell">
         {source.checkedAt
-          ? new Date(source.checkedAt).toLocaleString('tr-TR')
-          : 'Kontrol bekliyor'}
+          ? new Date(source.checkedAt).toLocaleString(intlLocale)
+          : t("Kontrol bekliyor")}
       </TableCell>
       <TableCell>
         <div className="flex items-center justify-end gap-1">
@@ -1869,18 +1823,17 @@ function SourceRow({
                 variant="outline"
                 disabled={saving || targets.length < 2}
                 onClick={() => onRequestMove(source)}
-                aria-label={`${source.merchant} URL’sini ürün grubuna taşı`}
-                title="URL’yi başka ürün grubuna taşı"
+                aria-label={t("{0} URL’sini ürün grubuna taşı", [source.merchant])}
+                title={t("URL’yi başka ürün grubuna taşı")}
                 className="h-8"
               >
                 <ArrowRightLeft />
-                Gruba taşı
-              </Button>
+                {' '}{t("Gruba taşı")}</Button>
               <Button
                 size="icon-sm"
                 variant="ghost"
-                title="Tarayıcıdan kontrol et"
-                aria-label={`${source.merchant} fiyatını tarayıcıdan kontrol et`}
+                title={t("Tarayıcıdan kontrol et")}
+                aria-label={t("{0} fiyatını tarayıcıdan kontrol et", [source.merchant])}
                 onClick={() => openBrowserCapture(source.url, source.id)}
               >
                 <MonitorUp />
@@ -1890,8 +1843,8 @@ function SourceRow({
           <Button
             size="icon-sm"
             variant="ghost"
-            title="Ürün bağlantısını aç"
-            aria-label={`${source.merchant} bağlantısını aç`}
+            title={t("Ürün bağlantısını aç")}
+            aria-label={t("{0} bağlantısını aç", [source.merchant])}
             onClick={() =>
               window.open(source.url, '_blank', 'noopener,noreferrer')
             }
@@ -1903,8 +1856,8 @@ function SourceRow({
               size="icon-sm"
               variant="ghost"
               className="text-red-600 hover:bg-red-50 hover:text-red-700"
-              title="Rakip URL’yi sil"
-              aria-label={`${source.merchant} URL’sini sil`}
+              title={t("Rakip URL’yi sil")}
+              aria-label={t("{0} URL’sini sil", [source.merchant])}
               onClick={onDelete}
             >
               <Trash2 />
@@ -1916,12 +1869,14 @@ function SourceRow({
   );
 }
 function StatusBadge({ source, isBest }: { source: Source; isBest: boolean }) {
+  const { t, locale, intlLocale } = useI18n();
+
   if (isBest)
     return (
-      <Badge className="bg-emerald-100 text-emerald-800">En iyi fiyat</Badge>
+      <Badge className="bg-emerald-100 text-emerald-800">{t("En iyi fiyat")}</Badge>
     );
   if (source.isPriceAnomaly)
-    return <Badge variant="destructive">%25 filtresi</Badge>;
+    return <Badge variant="destructive">{t("%25 filtresi")}</Badge>;
   if (
     source.error === 'HTTP_403' ||
     source.error === 'ROBOTS_DENIED' ||
@@ -1930,28 +1885,24 @@ function StatusBadge({ source, isBest }: { source: Source; isBest: boolean }) {
     return (
       <div className="space-y-1">
         <Badge className="bg-amber-100 text-amber-800">
-          Tarayıcı kontrolü gerekli
-        </Badge>
+          {t("Tarayıcı kontrolü gerekli")}</Badge>
         {source.isStale && (
           <p className="text-[11px] text-amber-700">
-            Gösterilen fiyat güncel değil
-          </p>
+            {t("Gösterilen fiyat güncel değil")}</p>
         )}
       </div>
     );
-  if (source.error) return <Badge variant="destructive">Erişim hatası</Badge>;
+  if (source.error) return <Badge variant="destructive">{t("Erişim hatası")}</Badge>;
   if (source.inStock === 0)
     return (
       <Badge variant="secondary" className="text-slate-500">
-        Stok yok
-      </Badge>
+        {t("Stok yok")}</Badge>
     );
   if (source.price == null)
-    return <Badge variant="outline">Kontrol bekliyor</Badge>;
+    return <Badge variant="outline">{t("Kontrol bekliyor")}</Badge>;
   return (
     <Badge variant="outline" className="border-slate-200 text-slate-600">
-      Stokta
-    </Badge>
+      {t("Stokta")}</Badge>
   );
 }
 function browserCaptureUrl(rawUrl: string, sourceId: number) {
@@ -1983,8 +1934,8 @@ function bestFromSources(sources: Source[]) {
       null,
     );
 }
-function money(value: number, currency: string) {
-  return new Intl.NumberFormat('tr-TR', {
+function money(value: number, currency: string, locale = 'tr') {
+  return new Intl.NumberFormat(({tr:"tr-TR",en:"en-GB",de:"de-DE",fr:"fr-FR",it:"it-IT",es:"es-ES",pt:"pt-PT"} as Record<string,string>)[locale] || locale, {
     style: 'currency',
     currency,
     minimumFractionDigits: 2,

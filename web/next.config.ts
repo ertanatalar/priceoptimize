@@ -20,7 +20,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  async headers() { return [{ source: '/(.*)', headers: securityHeaders }, { source: '/api/(.*)', headers: [{ key: 'Cache-Control', value: 'private, no-store' }, { key: 'Vary', value: 'Cookie' }] }, { source: '/auth/(.*)', headers: [{ key: 'Cache-Control', value: 'private, no-store' }] }]; },
+  async headers() { return [{ source: '/(.*)', headers: securityHeaders }, ...['/', '/pricing', '/terms', '/privacy', '/refunds', '/contact', '/capture', '/language'].map(source => ({ source, headers: [{key:'Cache-Control',value:'private, no-store'},{key:'Vary',value:'Cookie, Accept-Language'}] })), { source: '/api/(.*)', headers: [{ key: 'Cache-Control', value: 'private, no-store' }, { key: 'Vary', value: 'Cookie, Accept-Language' }] }, { source: '/auth/(.*)', headers: [{ key: 'Cache-Control', value: 'private, no-store' }] }]; },
 };
 
 export default nextConfig;

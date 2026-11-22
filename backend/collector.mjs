@@ -1,3 +1,4 @@
+import { clientNotificationLocale, composePriceEmail } from './email-i18n.mjs';
 import { isIP } from 'node:net';
 import { lookup } from 'node:dns/promises';
 
@@ -328,14 +329,9 @@ export async function notifyBrowserChanges(pool, { organizationId, clientId, cha
      ORDER BY latest.price ASC LIMIT 1`,
     [organizationId, clientId],
   );
-  let text = `Merhaba,\n\n${client.name} için rakip fiyat takibinde değişiklik tespit edildi:\n\n${cleanChanges.map((item) => `- ${item}`).join('\n')}`;
-  if (best) text += `\n\nEn iyi geçerli fiyat: ${best.price} ${best.currency} (${best.merchant})`;
-  text += '\n\n%25 veya üzerindeki aşırı düşüşler en iyi fiyat hesabına dahil edilmez.';
-  return sendEmail({
-    to: client.notification_email,
-    subject: `Rakip fiyat değişikliği: ${client.name}`,
-    text,
-  });
+  const locale = await clientNotificationLocale(pool, organizationId, clientId);
+  const email = composePriceEmail(locale, client.name, cleanChanges, best);
+  return sendEmail({ to: client.notification_email, ...email });
 }
 
 export async function purgeExpiredRecords(pool) {
@@ -442,10 +438,9 @@ export async function monitorAll(pool, { concurrency = 3, perOriginIntervalMs = 
       try {
         const valid = results.filter((item) => item.client_id === source.client_id && item.price != null && !item.errorCode && !item.isAnomaly && item.inStock !== false && item.currency === item.product_currency);
         const best = valid.sort((a, b) => a.price - b.price)[0];
-        let text = `Merhaba,\n\n${source.client_name} için rakip fiyat takibinde değişiklik tespit edildi:\n\n${changes.map((item) => `- ${item}`).join('\n')}`;
-        if (best) text += `\n\nEn iyi geçerli fiyat: ${best.price} ${best.currency} (${best.merchant})`;
-        text += '\n\n%25 veya üzerindeki aşırı düşüşler en iyi fiyat hesabına dahil edilmez.';
-        const sent = await sendEmail({ to: source.notification_email, subject: `Rakip fiyat değişikliği: ${source.client_name}`, text });
+        const locale = await clientNotificationLocale(pool, source.organization_id, source.client_id);
+        const email = composePriceEmail(locale, source.client_name, changes, best);
+        const sent = await sendEmail({ to: source.notification_email, ...email });
         if (sent.status === 'sent') emailsSent += 1;
       } catch (error) {
         emailFailures.push({ clientId: source.client_id, code: publicError(error).code });

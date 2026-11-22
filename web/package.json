@@ -12,7 +12,7 @@
     "test": "node --experimental-strip-types --test lib/*.test.ts",
     "lint": "oxlint",
     "format": "oxfmt",
-    "test:security": "node --test tests/security.test.cjs tests/watch-plan.test.cjs"
+    "test:security": "node --test tests/security.test.cjs tests/watch-plan.test.cjs tests/i18n.test.cjs"
   },
   "dependencies": {
     "react": "19.2.6",

@@ -12,8 +12,9 @@ export function createBrowserQueue(
   sources: BrowserQueueSource[],
   {
     productId,
+    locale = 'tr',
     generatedAt = new Date().toISOString(),
-  }: { productId?: number; generatedAt?: string } = {},
+  }: { productId?: number; locale?: string; generatedAt?: string } = {},
 ) {
   const selected =
     productId == null
@@ -21,6 +22,7 @@ export function createBrowserQueue(
       : sources.filter((source) => source.productId === productId);
   return {
     format: 'priceoptimize-browser-queue-v1',
+    locale,
     scope: productId == null ? 'all-products' : 'selected-product',
     generatedAt,
     productCount: new Set(selected.map((source) => source.productId)).size,

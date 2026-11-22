@@ -1,3 +1,4 @@
+import { localeJson } from '@/lib/i18n-server';
 import { rejectCrossOriginMutation } from '@/lib/request-security';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
 import { mysqlConfigured, transaction } from '@/db/mysql';
@@ -8,11 +9,11 @@ export async function DELETE(request: Request) {
   const rejected = rejectCrossOriginMutation(request);
   if (rejected) return rejected;
   const user = await getChatGPTUser();
-  if (!user) return Response.json({ error: 'Oturum gerekli' }, { status: 401 });
-  if (!mysqlConfigured()) return Response.json({ error: 'MySQL bağlantısı henüz yapılandırılmadı.' }, { status: 503 });
+  if (!user) return localeJson(request, { error: 'Oturum gerekli' }, { status: 401 });
+  if (!mysqlConfigured()) return localeJson(request, { error: 'MySQL bağlantısı henüz yapılandırılmadı.' }, { status: 503 });
   const account = await getAccount(user);
-  if (!account) return Response.json({ error: 'Hesap bulunamadı.' }, { status: 404 });
-  if (account.scope !== 'client' || !account.clientId) return Response.json({ error: 'Bu işlem müşteri portalı hesabı içindir.' }, { status: 403 });
+  if (!account) return localeJson(request, { error: 'Hesap bulunamadı.' }, { status: 404 });
+  if (account.scope !== 'client' || !account.clientId) return localeJson(request, { error: 'Bu işlem müşteri portalı hesabı içindir.' }, { status: 403 });
 
   const clientId = account.clientId;
   const subjectReferenceHash = await sha256(`${account.organizationId}|${clientId}|${user.email.toLowerCase()}`);
@@ -42,5 +43,5 @@ export async function DELETE(request: Request) {
       params: [account.organizationId, clientId],
     },
   ]);
-  return Response.json({ status: 'ok' });
+  return localeJson(request, { status: 'ok' });
 }

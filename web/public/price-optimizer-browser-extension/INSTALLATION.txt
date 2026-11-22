@@ -1,0 +1,22 @@
+Price Optimizer — Browser Checks 0.3.0
+
+Türkçe
+ZIP dosyasını açın. Chrome > Uzantılar > Uzantıları yönet bölümünde Geliştirici modunu açıp “Paketlenmemiş öğe yükle” ile bu klasörü seçin. Açılır pencereden dili seçin. Paneldeki tarayıcı simgesinden ürün sayfasını açın veya panelden indirdiğiniz kontrol listesini eklentiye yükleyin. CAPTCHA aşılmaz. Fiyatı panelde doğrulamadan kayıt yapılmaz.
+
+English
+Extract the ZIP. In Chrome > Extensions > Manage extensions, enable Developer mode and use “Load unpacked” to select this folder. Choose your language in the popup. Open a product using the browser icon in the dashboard, or load a dashboard-exported check list. CAPTCHA is not bypassed. Confirm the price in the dashboard before saving.
+
+Deutsch
+ZIP-Datei entpacken. Unter Chrome > Erweiterungen > Erweiterungen verwalten den Entwicklermodus aktivieren und diesen Ordner über „Entpackte Erweiterung laden“ auswählen. Sprache im Popup wählen. Produkte über das Browsersymbol im Dashboard öffnen oder eine dort exportierte Prüfliste laden. CAPTCHA wird nicht umgangen. Den Preis vor dem Speichern im Dashboard bestätigen.
+
+Français
+Décompressez le ZIP. Dans Chrome > Extensions > Gérer les extensions, activez le mode développeur, puis sélectionnez ce dossier avec « Charger l’extension non empaquetée ». Choisissez la langue dans la fenêtre. Ouvrez un produit via l’icône du navigateur du tableau de bord ou chargez une liste exportée. Aucun CAPTCHA n’est contourné. Confirmez le prix dans le tableau de bord avant l’enregistrement.
+
+Italiano
+Estrai lo ZIP. In Chrome > Estensioni > Gestisci estensioni, attiva la modalità sviluppatore e seleziona questa cartella con «Carica estensione non pacchettizzata». Scegli la lingua nella finestra. Apri il prodotto con l’icona del browser nel pannello o carica un elenco esportato dal pannello. I CAPTCHA non vengono aggirati. Conferma il prezzo nel pannello prima di salvarlo.
+
+Español
+Extrae el ZIP. En Chrome > Extensiones > Gestionar extensiones, activa el modo de desarrollador y selecciona esta carpeta con «Cargar descomprimida». Elige el idioma en la ventana. Abre un producto mediante el icono del navegador del panel o carga una lista exportada. No se eluden los CAPTCHA. Confirma el precio en el panel antes de guardarlo.
+
+Português
+Extraia o ZIP. Em Chrome > Extensões > Gerir extensões, ative o modo de programador e selecione esta pasta com «Carregar expandida». Escolha o idioma na janela. Abra um produto através do ícone do navegador no painel ou carregue uma lista exportada. Os CAPTCHA não são contornados. Confirme o preço no painel antes de guardar.

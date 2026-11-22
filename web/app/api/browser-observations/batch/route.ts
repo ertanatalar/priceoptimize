@@ -1,3 +1,4 @@
+import { localeJson } from '@/lib/i18n-server';
 import { rejectCrossOriginMutation } from '@/lib/request-security';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
 import {
@@ -52,25 +53,25 @@ export async function POST(request: Request) {
   const rejected = rejectCrossOriginMutation(request);
   if (rejected) return rejected;
   const user = await getChatGPTUser();
-  if (!user) return Response.json({ error: 'Oturum gerekli' }, { status: 401 });
+  if (!user) return localeJson(request, { error: 'Oturum gerekli' }, { status: 401 });
   if (!mysqlConfigured())
-    return Response.json(
+    return localeJson(request,
       { error: 'MySQL bağlantısı henüz yapılandırılmadı.' },
       { status: 503 },
     );
   const account = await getAccount(user);
   if (!account)
-    return Response.json({ error: 'Hesap bulunamadı.' }, { status: 409 });
+    return localeJson(request, { error: 'Hesap bulunamadı.' }, { status: 409 });
   try {
     assertWritable(account);
   } catch (error) {
     if (error instanceof TrialExpiredError)
-      return Response.json(
+      return localeJson(request,
         { error: 'Deneme süresi sona erdi.' },
         { status: 402 },
       );
     if (error instanceof ForbiddenError)
-      return Response.json(
+      return localeJson(request,
         { error: 'Bu işlem için yetkiniz yok.' },
         { status: 403 },
       );
@@ -82,12 +83,12 @@ export async function POST(request: Request) {
     ? body.observations.slice(0, 1000)
     : [];
   if (!observations.length)
-    return Response.json(
+    return localeJson(request,
       { error: 'İçe aktarılacak fiyat sonucu bulunamadı.' },
       { status: 400 },
     );
   if ((body.observations?.length ?? 0) > 1000)
-    return Response.json(
+    return localeJson(request,
       { error: 'Bir işlemde en fazla 1000 sonuç yüklenebilir.' },
       { status: 413 },
     );
@@ -100,7 +101,7 @@ export async function POST(request: Request) {
     ),
   ];
   if (!ids.length)
-    return Response.json(
+    return localeJson(request,
       { error: 'Geçerli rakip URL kimliği bulunamadı.' },
       { status: 400 },
     );
@@ -237,7 +238,7 @@ export async function POST(request: Request) {
       });
     }
   }
-  return Response.json(
+  return localeJson(request,
     { status: 'ok', imported, anomalies, failures, emailsSent, emailFailures },
     { status: 201 },
   );

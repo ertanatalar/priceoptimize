@@ -1,7 +1,8 @@
+import { translate, localeFromRequest } from '../../shared/i18n.mjs';
 /** Browser mutation protection; API clients may omit Origin, browsers may not forge it. */
 export function rejectCrossOriginMutation(request: Request): Response | null {
   if (request.headers.get('sec-fetch-site') === 'cross-site') {
-    return Response.json({ error: 'Geçersiz istek kaynağı.' }, { status: 403 });
+    return Response.json({ error: translate(localeFromRequest(request), 'Geçersiz istek kaynağı.') }, { status: 403 });
   }
   const origin = request.headers.get('origin');
   if (origin) {
@@ -15,10 +16,10 @@ export function rejectCrossOriginMutation(request: Request): Response | null {
       }
       expectedOrigin = publicUrl.origin;
     } catch {
-      return Response.json({ error: 'Geçersiz istek kaynağı.' }, { status: 403 });
+      return Response.json({ error: translate(localeFromRequest(request), 'Geçersiz istek kaynağı.') }, { status: 403 });
     }
     if (origin !== expectedOrigin) {
-      return Response.json({ error: 'Geçersiz istek kaynağı.' }, { status: 403 });
+      return Response.json({ error: translate(localeFromRequest(request), 'Geçersiz istek kaynağı.') }, { status: 403 });
     }
   }
   return null;

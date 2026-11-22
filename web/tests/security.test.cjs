@@ -9,7 +9,7 @@ const root = path.resolve(__dirname, '..');
 function load(file, mocks = {}, env = {}) {
   const source = ts.transpileModule(fs.readFileSync(path.join(root, file), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
   const module = { exports: {} };
-  vm.runInNewContext(source, { module, exports: module.exports, require: (name) => { if (name in mocks) return mocks[name]; throw Error(`Unexpected import ${name}`); }, process: { env }, Response, Request, Headers, URL, Date, JSON, crypto: webcrypto, TextEncoder, TextDecoder, Uint8Array, atob, btoa, console });
+  vm.runInNewContext(source, { module, exports: module.exports, require: (name) => { if (name in mocks) return mocks[name]; if (name === '@/lib/i18n-server') return { localeJson: (request,body,init) => Response.json(body,init) }; if (name.endsWith('shared/i18n.mjs')) return require(path.resolve(path.dirname(path.join(root,file)),name)); throw Error(`Unexpected import ${name}`); }, process: { env }, Response, Request, Headers, URL, Date, JSON, crypto: webcrypto, TextEncoder, TextDecoder, Uint8Array, atob, btoa, console });
   return module.exports;
 }
 function authHarness(env = {}) {

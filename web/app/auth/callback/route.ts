@@ -1,3 +1,7 @@
+import { query, mysqlConfigured } from '@/db/mysql';
+import { sha256 } from '@/lib/security';
+import { normalizeLocale } from '../../../../shared/i18n.mjs';
+import { localeJson } from '@/lib/i18n-server';
 import { safeRelativeReturnPath, encryptAuth0Session } from '@/app/chatgpt-auth';
 import { cookies } from 'next/headers';
 
@@ -27,7 +31,7 @@ export async function GET(request: Request) {
   const transaction = readTransaction(cookieStore.get(TRANSACTION_COOKIE)?.value);
   cookieStore.delete(TRANSACTION_COOKIE);
   if (!code || !state || !transaction || !constantTimeEqual(state, transaction.state)) {
-    return Response.json({ error: 'Geçersiz veya süresi dolmuş giriş isteği.' }, { status: 400 });
+    return localeJson(request, { error: 'Geçersiz veya süresi dolmuş giriş isteği.' }, { status: 400 });
   }
 
   const tokenResponse = await fetch(`https://${process.env.AUTH0_DOMAIN}/oauth/token`, {
@@ -42,17 +46,17 @@ export async function GET(request: Request) {
       code_verifier: transaction.verifier,
     }),
   });
-  if (!tokenResponse.ok) return Response.json({ error: 'Oturum anahtarı alınamadı.' }, { status: 401 });
+  if (!tokenResponse.ok) return localeJson(request, { error: 'Oturum anahtarı alınamadı.' }, { status: 401 });
   const tokens = (await tokenResponse.json()) as { access_token?: string };
-  if (!tokens.access_token) return Response.json({ error: 'Geçersiz oturum yanıtı.' }, { status: 401 });
+  if (!tokens.access_token) return localeJson(request, { error: 'Geçersiz oturum yanıtı.' }, { status: 401 });
 
   const profileResponse = await fetch(`https://${process.env.AUTH0_DOMAIN}/userinfo`, {
     headers: { authorization: `Bearer ${tokens.access_token}` },
   });
-  if (!profileResponse.ok) return Response.json({ error: 'Kullanıcı bilgisi alınamadı.' }, { status: 401 });
+  if (!profileResponse.ok) return localeJson(request, { error: 'Kullanıcı bilgisi alınamadı.' }, { status: 401 });
   const profile = (await profileResponse.json()) as UserInfo;
   if (!profile.sub || !profile.email || profile.email_verified !== true) {
-    return Response.json({ error: 'Doğrulanmış e-posta gerekli.' }, { status: 403 });
+    return localeJson(request, { error: 'Doğrulanmış e-posta gerekli.' }, { status: 403 });
   }
 
   const session = await encryptAuth0Session({
@@ -69,7 +73,13 @@ export async function GET(request: Request) {
     path: '/',
     maxAge: 60 * 60 * 8,
   });
-  return Response.redirect(new URL(safeRelativeReturnPath(transaction.returnTo), url.origin));
+  if (!cookieStore.get('po_locale') && mysqlConfigured()) {
+    try {
+      const rows=await query<{locale:string}>("SELECT locale FROM users WHERE identity_provider='auth0' AND identity_subject_hash=? AND status='active' LIMIT 1",[await sha256(profile.sub)]);
+      if(rows[0])cookieStore.set('po_locale',normalizeLocale(rows[0].locale),{path:'/',secure:url.protocol==='https:',sameSite:'lax',maxAge:60*60*24*365});
+    } catch { /* Login remains available if preference lookup fails. */ }
+  }
+  return Response.redirect(new URL(safeRelativeReturnPath(transaction.returnTo), process.env.PUBLIC_BASE_URL || url.origin));
 }
 
 function readTransaction(value: string | undefined): Transaction | null {

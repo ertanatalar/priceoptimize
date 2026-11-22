@@ -7,24 +7,25 @@
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <main>
-      <div class="brand"><span>₺</span><div><strong>Price Optimizer</strong><small>Tarayıcı kontrolü</small></div></div>
-      <p id="status" class="status">Sayfadaki fiyat okunuyor…</p>
+    <main><label><span data-i18n="Dil">Dil</span><select id="language"><option value="tr">Türkçe</option><option value="en">English</option><option value="de">Deutsch</option><option value="fr">Français</option><option value="it">Italiano</option><option value="es">Español</option><option value="pt">Português</option></select></label>
+      <div class="brand"><span>₺</span><div><strong>Price Optimizer</strong><small><span data-i18n="Tarayıcı kontrolü">Tarayıcı kontrolü</span></small></div></div>
+      <p id="status" class="status"><span data-i18n="Sayfadaki fiyat okunuyor…">Sayfadaki fiyat okunuyor…</span></p>
       <form id="captureForm" hidden>
-        <label>Ürün<input id="title" type="text" readonly /></label>
-        <div class="row"><label>Fiyat<input id="price" type="number" min="0.01" step="0.01" required /></label><label>Para birimi<input id="currency" type="text" maxlength="3" value="TRY" required /></label></div>
-        <label class="check"><input id="inStock" type="checkbox" checked /> Ürün stokta görünüyor</label>
-        <p class="note">Fiyatı sayfadaki değerle karşılaştırın. Son kayıt panelde yapılacaktır.</p>
-        <button type="submit">Price Optimizer’da doğrula</button>
+        <label><span data-i18n="Ürün">Ürün</span><input id="title" type="text" readonly /></label>
+        <div class="row"><label><span data-i18n="Fiyat">Fiyat</span><input id="price" type="number" min="0.01" step="0.01" required /></label><label><span data-i18n="Para birimi">Para birimi</span><input id="currency" type="text" maxlength="3" value="TRY" required /></label></div>
+        <label class="check"><input id="inStock" type="checkbox" checked /><span data-i18n="Ürün stokta görünüyor">Ürün stokta görünüyor</span></label>
+        <p class="note"><span data-i18n="Fiyatı sayfadaki değerle karşılaştırın. Son kayıt panelde yapılacaktır.">Fiyatı sayfadaki değerle karşılaştırın. Son kayıt panelde yapılacaktır.</span></p>
+        <button type="submit"><span data-i18n="Price Optimizer’da doğrula">Price Optimizer’da doğrula</span></button>
       </form>
       <section class="batch">
-        <div class="divider"><span>TOPLU KONTROL</span></div>
-        <p class="note">Panelden indirdiğiniz kontrol listesini seçin. Yalnızca listedeki mağazalar için izin istenir.</p>
-        <label>Kontrol listesi<input id="batchFile" type="file" accept=".json,application/json" /></label>
-        <p id="batchStatus" class="status">Toplu işlem hazır.</p>
-        <div class="actions"><button id="startBatch" type="button">Toplu kontrolü başlat</button><button id="cancelBatch" type="button" class="secondary" hidden>Durdur</button></div>
+        <div class="divider"><span><span data-i18n="TOPLU KONTROL">TOPLU KONTROL</span></span></div>
+        <p class="note"><span data-i18n="Panelden indirdiğiniz kontrol listesini seçin. Yalnızca listedeki mağazalar için izin istenir.">Panelden indirdiğiniz kontrol listesini seçin. Yalnızca listedeki mağazalar için izin istenir.</span></p>
+        <label><span data-i18n="Kontrol listesi">Kontrol listesi</span><input id="batchFile" type="file" accept=".json,application/json" /></label>
+        <p id="batchStatus" class="status"><span data-i18n="Toplu işlem hazır.">Toplu işlem hazır.</span></p>
+        <div class="actions"><button id="startBatch" type="button"><span data-i18n="Toplu kontrolü başlat">Toplu kontrolü başlat</span></button><button id="cancelBatch" type="button" class="secondary" hidden><span data-i18n="Durdur">Durdur</span></button></div>
       </section>
     </main>
+    <script src="i18n.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

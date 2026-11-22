@@ -1,0 +1,7 @@
+'use client';
+import { createContext, useContext, useState } from 'react';
+import { intlLocales, languageNames, locales, normalizeLocale, translate } from '../../shared/i18n.mjs';
+const LocaleContext=createContext('tr');
+export function I18nProvider({locale,children}:{locale:string;children:React.ReactNode}) {return <LocaleContext.Provider value={locale}>{children}</LocaleContext.Provider>;}
+export function useI18n(){const locale=useContext(LocaleContext);return {locale,intlLocale:intlLocales[normalizeLocale(locale) as keyof typeof intlLocales],t:(text:string,values:unknown[]=[])=>translate(locale,text,values)};}
+export function LanguageSelector(){const {locale,t}=useI18n();const [busy,setBusy]=useState(false);return <label className="inline-flex items-center gap-2 text-sm"><span className="sr-only">{t('Dil')}</span><select aria-label={t('Dil')} value={locale} disabled={busy} className="h-10 max-w-36 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900" onChange={async event=>{const selected=event.target.value;setBusy(true);try{const response=await fetch('/api/locale',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({locale:selected})});if(response.ok)window.location.reload();else window.alert(t('Dil tercihi kaydedilemedi.'));}catch{window.alert(t('Dil tercihi kaydedilemedi.'));}finally{setBusy(false);}}}>{locales.map(code=><option key={code} value={code}>{languageNames[code as keyof typeof languageNames]}</option>)}</select></label>;}

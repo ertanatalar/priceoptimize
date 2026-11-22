@@ -1,3 +1,4 @@
+import { localeJson } from '@/lib/i18n-server';
 import { rejectCrossOriginMutation } from '@/lib/request-security';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
 import { mysqlConfigured, query, transaction } from '@/db/mysql';
@@ -28,14 +29,14 @@ export async function POST(request: Request) {
   const rejected = rejectCrossOriginMutation(request);
   if (rejected) return rejected;
   const user = await getChatGPTUser();
-  if (!user) return Response.json({ error: 'Oturum gerekli' }, { status: 401 });
-  if (!mysqlConfigured()) return Response.json({ error: 'MySQL bağlantısı henüz yapılandırılmadı.' }, { status: 503 });
+  if (!user) return localeJson(request, { error: 'Oturum gerekli' }, { status: 401 });
+  if (!mysqlConfigured()) return localeJson(request, { error: 'MySQL bağlantısı henüz yapılandırılmadı.' }, { status: 503 });
   const account = await getAccount(user);
-  if (!account) return Response.json({ error: 'Hesap bulunamadı.' }, { status: 409 });
+  if (!account) return localeJson(request, { error: 'Hesap bulunamadı.' }, { status: 409 });
   try { assertWritable(account); }
   catch (error) {
-    if (error instanceof TrialExpiredError) return Response.json({ error: 'Deneme süresi sona erdi.' }, { status: 402 });
-    if (error instanceof ForbiddenError) return Response.json({ error: 'Bu işlem için yetkiniz yok.' }, { status: 403 });
+    if (error instanceof TrialExpiredError) return localeJson(request, { error: 'Deneme süresi sona erdi.' }, { status: 402 });
+    if (error instanceof ForbiddenError) return localeJson(request, { error: 'Bu işlem için yetkiniz yok.' }, { status: 403 });
     throw error;
   }
 
@@ -45,9 +46,9 @@ export async function POST(request: Request) {
   const price = Number(body.price);
   const currency = String(body.currency ?? '').trim().toUpperCase();
   if (!Number.isFinite(price) || price <= 0 || price > 1_000_000_000) {
-    return Response.json({ error: 'Pozitif bir fiyat girilmelidir.' }, { status: 400 });
+    return localeJson(request, { error: 'Pozitif bir fiyat girilmelidir.' }, { status: 400 });
   }
-  if (!/^[A-Z]{3}$/.test(currency)) return Response.json({ error: 'Para birimi üç harfli ISO kodu olmalıdır.' }, { status: 400 });
+  if (!/^[A-Z]{3}$/.test(currency)) return localeJson(request, { error: 'Para birimi üç harfli ISO kodu olmalıdır.' }, { status: 400 });
 
   const selectSource = `
     SELECT s.id,s.url,s.merchant,p.name AS productName,c.code AS clientCode,c.name AS clientName,p.currency,
@@ -71,30 +72,30 @@ export async function POST(request: Request) {
   } else {
     let observed: ReturnType<typeof comparableProductLocation>;
     try { observed = comparableProductLocation(String(body.pageUrl ?? '')); }
-    catch (error) { return Response.json({ error: error instanceof Error ? error.message : 'Ürün adresi doğrulanamadı.' }, { status: 400 }); }
+    catch (error) { return localeJson(request, { error: error instanceof Error ? error.message : 'Ürün adresi doğrulanamadı.' }, { status: 400 }); }
     const locationKey = `${observed.host}${observed.path}`;
     candidates = await query<SourceRow>(`${selectSource}
       AND LOWER(TRIM(TRAILING '/' FROM SUBSTRING_INDEX(SUBSTRING_INDEX(SUBSTRING_INDEX(s.url,'?',1),'#',1),'://',-1))) IN (?,?)
       LIMIT 50`, [account.organizationId, locationKey, `www.${locationKey}`]);
     if (candidates.length > 1) {
-      return Response.json({
+      return localeJson(request, {
         error: 'Bu URL birden fazla rakip kaydında kullanılıyor. Fiyatın ait olduğu müşteri ve ürünü seçin.',
         candidates: candidates.map(({ id, clientCode, clientName, productName, merchant }) => ({ id, clientCode, clientName, productName, merchant })),
       }, { status: 409 });
     }
   }
   const source = candidates[0];
-  if (!source) return Response.json({ error: 'Rakip URL bulunamadı.' }, { status: 404 });
-  if (currency !== source.currency) return Response.json({ error: `Bu ürün için ${source.currency} bekleniyor.` }, { status: 400 });
+  if (!source) return localeJson(request, { error: 'Rakip URL bulunamadı.' }, { status: 404 });
+  if (currency !== source.currency) return localeJson(request, { error: `Bu ürün için ${source.currency} bekleniyor.` }, { status: 400 });
 
   try {
     const expected = comparableProductLocation(source.url);
     const observed = comparableProductLocation(String(body.pageUrl ?? ''));
     if (expected.host !== observed.host || expected.path !== observed.path) {
-      return Response.json({ error: 'Açılan sayfa kayıtlı rakip ürün URL’siyle eşleşmiyor.' }, { status: 400 });
+      return localeJson(request, { error: 'Açılan sayfa kayıtlı rakip ürün URL’siyle eşleşmiyor.' }, { status: 400 });
     }
   } catch (error) {
-    return Response.json({ error: error instanceof Error ? error.message : 'Ürün adresi doğrulanamadı.' }, { status: 400 });
+    return localeJson(request, { error: error instanceof Error ? error.message : 'Ürün adresi doğrulanamadı.' }, { status: 400 });
   }
 
   const referencePrice = source.referencePrice == null ? null : Number(source.referencePrice);
@@ -115,7 +116,7 @@ export async function POST(request: Request) {
     },
   ]);
 
-  return Response.json({
+  return localeJson(request, {
     status: 'ok',
     merchant: source.merchant,
     productName: source.productName,

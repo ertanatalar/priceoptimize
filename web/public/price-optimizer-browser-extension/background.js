@@ -1,3 +1,5 @@
+importScripts('i18n.js');
+const t=(...args)=>PO_I18N.t(...args);
 const STATE_KEY = 'browserBatchState';
 const NEXT_ALARM = 'priceoptimize-batch-next';
 const TIMEOUT_ALARM = 'priceoptimize-batch-timeout';
@@ -7,7 +9,7 @@ let processingTabId = null;
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === 'START_BROWSER_BATCH') {
-    startBatch(message.sources).then(() => sendResponse({ ok: true })).catch((error) => sendResponse({ ok: false, error: error.message }));
+    startBatch(message.sources,message.locale).then(() => sendResponse({ ok: true })).catch((error) => sendResponse({ ok: false, error: error.message }));
     return true;
   }
   if (message?.type === 'CANCEL_BROWSER_BATCH') {
@@ -22,20 +24,21 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
 
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === NEXT_ALARM) void openNext();
-  if (alarm.name === TIMEOUT_ALARM) void failCurrent('Sayfa 45 saniyede yüklenemedi.');
+  if (alarm.name === TIMEOUT_ALARM) void failCurrent("Sayfa 45 saniyede yüklenemedi.");
 });
 
-async function startBatch(rawSources) {
+async function startBatch(rawSources,locale) {
   const existing = await readState();
-  if (existing?.status === 'running') throw new Error('Devam eden bir toplu kontrol zaten var.');
+  PO_I18N.setLocale(locale||PO_I18N.locale);
+  if (existing?.status === 'running') throw new Error(t("Devam eden bir toplu kontrol zaten var."));
   const sources = (Array.isArray(rawSources) ? rawSources : []).slice(0, 1000).map((source) => ({
     id: Number(source.id),
     url: String(source.url || ''),
     merchant: String(source.merchant || ''),
     currency: String(source.currency || 'TRY').toUpperCase(),
   })).filter((source) => Number.isInteger(source.id) && source.id > 0 && /^https:\/\//i.test(source.url));
-  if (!sources.length) throw new Error('Listede geçerli HTTPS ürün adresi bulunamadı.');
-  await writeState({ status: 'running', sources, index: 0, results: [], failures: [], activeTabId: null, startedAt: new Date().toISOString() });
+  if (!sources.length) throw new Error(t("Listede geçerli HTTPS ürün adresi bulunamadı."));
+  await writeState({ status: 'running', locale:PO_I18N.locale, sources, index: 0, results: [], failures: [], activeTabId: null, startedAt: new Date().toISOString() });
   await openNext();
 }
 
@@ -76,12 +79,12 @@ async function handleLoadedTab(tabId) {
   try {
     const [{ result }] = await chrome.scripting.executeScript({ target: { tabId }, func: extractPageOffer });
     const item = state.sources[state.index];
-    if (result?.error) state.failures.push({ sourceId: item.id, merchant: item.merchant, url: item.url, error: result.error });
-    else if (!result?.price) state.failures.push({ sourceId: item.id, merchant: item.merchant, url: item.url, error: 'Sayfada pozitif fiyat bulunamadı.' });
+    if (result?.error) state.failures.push({ sourceId: item.id, merchant: item.merchant, url: item.url, error: t(result.error) });
+    else if (!result?.price) state.failures.push({ sourceId: item.id, merchant: item.merchant, url: item.url, error: t("Sayfada pozitif fiyat bulunamadı.") });
     else state.results.push({ sourceId: item.id, pageUrl: result.pageUrl, price: result.price, currency: result.currency || item.currency, inStock: result.inStock });
     await advance(state);
   } catch (error) {
-    await failCurrent(error instanceof Error ? error.message : 'Sayfa okunamadı.');
+    await failCurrent(error instanceof Error ? error.message : t("Sayfa okunamadı."));
   } finally {
     processingTabId = null;
   }
@@ -91,7 +94,7 @@ async function failCurrent(error) {
   const state = await readState();
   if (!state || state.status !== 'running') return;
   const item = state.sources[state.index];
-  if (item) state.failures.push({ sourceId: item.id, merchant: item.merchant, url: item.url, error });
+  if (item) state.failures.push({ sourceId: item.id, merchant: item.merchant, url: item.url, error: t(error) });
   await advance(state);
 }
 
@@ -120,7 +123,7 @@ async function finishBatch(status) {
 }
 
 async function readState() {
-  return (await chrome.storage.local.get(STATE_KEY))[STATE_KEY];
+  const state=(await chrome.storage.local.get(STATE_KEY))[STATE_KEY];if(state?.locale)PO_I18N.setLocale(state.locale);return state;
 }
 
 async function writeState(state) {

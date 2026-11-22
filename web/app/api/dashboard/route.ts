@@ -1,3 +1,4 @@
+import { localeJson } from '@/lib/i18n-server';
 import { getChatGPTUser } from '@/app/chatgpt-auth';
 import { mysqlConfigured, query } from '@/db/mysql';
 import { getAccount } from '@/lib/account';
@@ -6,11 +7,11 @@ import { STARTER_PLAN, sourceLimitForState } from '@/lib/plans';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: Request) {
   const user = await getChatGPTUser();
-  if (!user) return Response.json({ error: 'Oturum gerekli' }, { status: 401 });
+  if (!user) return localeJson(request, { error: 'Oturum gerekli' }, { status: 401 });
   if (!mysqlConfigured())
-    return Response.json(
+    return localeJson(request,
       {
         error: 'MySQL bağlantısı henüz yapılandırılmadı.',
         databaseEngine: 'MySQL',
@@ -19,7 +20,7 @@ export async function GET() {
     );
   const account = await getAccount(user);
   if (!account)
-    return Response.json({ needsOnboarding: true, databaseEngine: 'MySQL' });
+    return localeJson(request, { needsOnboarding: true, databaseEngine: 'MySQL' });
   const organizationId = account.organizationId;
   const clientId = account.scope === 'client' ? account.clientId : null;
   const [clients, products, sources] = await Promise.all([
@@ -91,7 +92,7 @@ export async function GET() {
     if (!current || price < current.price)
       bestByProduct.set(productId, { price, merchant: String(row.merchant) });
   }
-  return Response.json({
+  return localeJson(request, {
     clients,
     products: products.map((row) => ({
       ...row,
